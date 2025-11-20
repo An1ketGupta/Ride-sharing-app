@@ -1,0 +1,63 @@
+/* Global App Styles */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 80px;
+  min-height: calc(100vh - 80px);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .main-content {
+    padding-top: 70px;
+  }
+}
+
+/* Legacy support for CSS variables (being phased out for Tailwind) */
+:root {
+  --primary-color: hsl(248, 86%, 66%);
+  --primary-dark: hsl(248, 80%, 56%);
+  --primary-light: hsl(248, 86%, 76%);
+  --secondary-color: hsl(192, 94%, 44%);
+  --success-color: hsl(142, 71%, 45%);
+  --danger-color: hsl(0, 78%, 55%);
+  --dark-color: hsl(222, 47%, 11%);
+  --text-primary: hsl(222, 47%, 10%);
+  --text-secondary: hsl(220, 9%, 46%);
+  --border-color: hsl(220, 13%, 91%);
+  --light-color: hsl(220, 14%, 96%);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark {
+  --text-primary: hsl(210, 20%, 98%);
+  --text-secondary: hsl(215, 15%, 65%);
+  --border-color: hsl(217, 27%, 20%);
+  --light-color: hsl(222, 30%, 12%);
+}
+
+/* Footer */
+.footer {
+  background: hsl(222, 47%, 11%);
+  color: white;
+  text-align: center;
+  padding: 30px 20px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 500;
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ride-sharing</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      // Apply theme immediately before React loads to prevent flash
+      (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.classList.toggle('dark', saved === 'dark');
+        } else {
+          const mql = window.matchMedia('(prefers-color-scheme: dark)');
+          document.documentElement.classList.toggle('dark', mql.matches);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

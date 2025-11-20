@@ -1,0 +1,374 @@
+// Prisma Schema for Ride Sharing DBMS
+// Migrated from MySQL to PostgreSQL (Neon)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  userId              Int       @id @default(autoincrement()) @map("user_id")
+  name                String   @db.VarChar(100)
+  email               String   @unique @db.VarChar(100)
+  phone               String   @unique @db.VarChar(15)
+  password            String   @db.VarChar(255)
+  userType            String   @default("passenger") @map("user_type") @db.VarChar(20) // ENUM: 'driver', 'passenger', 'both', 'admin'
+  rating              Decimal? @default(0.00) @db.Decimal(3, 2)
+  profilePicUrl       String?  @map("profile_pic_url") @db.Text
+  isAvailable         Boolean  @default(false) @map("is_available")
+  latitude            Decimal? @db.Decimal(10, 8)
+  longitude           Decimal? @db.Decimal(11, 8)
+  emergencyContactName  String? @map("emergency_contact_name") @db.VarChar(100)
+  emergencyContactPhone String? @map("emergency_contact_phone") @db.VarChar(20)
+  emergencyContactEmail String? @map("emergency_contact_email") @db.VarChar(150)
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  // Relations
+  vehicles            Vehicle[]
+  ridesAsDriver       Ride[]   @relation("DriverRides")
+  bookings            Booking[]
+  feedback            Feedback[]
+  savedLocations      SavedLocation[]
+  driverDocuments     DriverDocument[]
+  notifications       Notification[]
+  sosAlerts           SosAlert[]
+  userPromoCodes      UserPromoCode[]
+  wallet              Wallet?
+  walletTransactions  WalletTransaction[]
+  rideSchedules       RideSchedule[]
+  bookingMessages     BookingMessage[] @relation("MessageFromUser")
+  safetyChecks        NightRideSafetyCheck[]
+
+  @@index([email])
+  @@index([userType])
+  @@index([isAvailable])
+  @@map("users")
+}
+
+model Vehicle {
+  vehicleId      Int      @id @default(autoincrement()) @map("vehicle_id")
+  userId        Int      @map("user_id")
+  model         String   @db.VarChar(100)
+  licensePlate  String   @unique @map("license_plate") @db.VarChar(20)
+  capacity      Int
+  color         String?  @db.VarChar(50)
+  vehicleImageUrl String? @map("vehicle_image_url") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  rides         Ride[]
+
+  @@index([userId])
+  @@map("vehicles")
+}
+
+model Ride {
+  rideId        Int      @id @default(autoincrement()) @map("ride_id")
+  driverId      Int      @map("driver_id")
+  vehicleId     Int?     @map("vehicle_id")
+  source        String   @db.VarChar(100)
+  destination   String   @db.VarChar(100)
+  date          DateTime @db.Date
+  time          String   @db.VarChar(10)
+  totalSeats    Int      @map("total_seats")
+  availableSeats Int    @map("available_seats")
+  farePerKm     Decimal  @map("fare_per_km") @db.Decimal(10, 2)
+  distanceKm    Decimal  @default(0.00) @map("distance_km") @db.Decimal(10, 2)
+  status        String   @default("scheduled") @db.VarChar(20) // ENUM: 'scheduled', 'ongoing', 'completed', 'cancelled'
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  driver        User     @relation("DriverRides", fields: [driverId], references: [userId], onDelete: Cascade)
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [vehicleId], onDelete: SetNull)
+  bookings      Booking[]
+  feedback      Feedback[]
+  rideWaypoints RideWaypoint[]
+  safetyChecks  NightRideSafetyCheck[]
+
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([date])
+  @@index([source, destination])
+  @@index([status])
+  @@map("rides")
+}
+
+model Booking {
+  bookingId       Int      @id @default(autoincrement()) @map("booking_id")
+  rideId          Int      @map("ride_id")
+  passengerId     Int      @map("passenger_id")
+  seatsBooked     Int      @map("seats_booked")
+  amount          Decimal  @db.Decimal(10, 2)
+  bookingStatus   String   @default("pending") @map("booking_status") @db.VarChar(30) // ENUM: 'pending', 'confirmed', 'in_progress', 'completed', 'canceled_by_driver', 'canceled_by_passenger'
+  cancellationFee Decimal  @default(0.00) @map("cancellation_fee") @db.Decimal(10, 2)
+  notes           String?  @db.Text
+  waitMinutes     Int      @default(0) @map("wait_minutes")
+  extraCharges    Decimal  @default(0) @map("extra_charges") @db.Decimal(10, 2)
+  bookingDate     DateTime @default(now()) @map("booking_date")
+
+  // Relations
+  ride            Ride     @relation(fields: [rideId], references: [rideId], onDelete: Cascade)
+  passenger      User     @relation(fields: [passengerId], references: [userId], onDelete: Cascade)
+  payments       Payment[]
+  stops          Stop[]
+  sosAlerts       SosAlert[]
+  bookingMessages BookingMessage[]
+  safetyChecks   NightRideSafetyCheck[]
+
+  @@index([rideId])
+  @@index([passengerId])
+  @@index([bookingStatus])
+  @@map("bookings")
+}
+
+model Payment {
+  paymentId      Int      @id @default(autoincrement()) @map("payment_id")
+  bookingId      Int      @map("booking_id")
+  amount         Decimal  @db.Decimal(10, 2)
+  paymentMethod  String   @map("payment_method") @db.VarChar(20) // ENUM: 'cash', 'card', 'upi', 'wallet'
+  paymentDate    DateTime @default(now()) @map("payment_date")
+  paymentStatus  String   @default("pending") @map("payment_status") @db.VarChar(20) // ENUM: 'pending', 'completed', 'failed', 'refunded'
+  transactionId  String?  @map("transaction_id") @db.VarChar(100)
+  paymentIntentId String? @map("payment_intent_id") @db.VarChar(255)
+
+  // Relations
+  booking        Booking  @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([paymentStatus])
+  @@index([paymentIntentId])
+  @@map("payments")
+}
+
+model Feedback {
+  feedbackId Int      @id @default(autoincrement()) @map("feedback_id")
+  rideId     Int      @map("ride_id")
+  userId     Int      @map("user_id")
+  rating     Int      // 1-5
+  comments   String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  ride       Ride     @relation(fields: [rideId], references: [rideId], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([rideId])
+  @@index([userId])
+  @@map("feedback")
+}
+
+model SavedLocation {
+  locationId Int      @id @default(autoincrement()) @map("location_id")
+  userId     Int      @map("user_id")
+  name       String   @db.VarChar(50)
+  lat        Float    @db.DoublePrecision
+  lon        Float    @db.DoublePrecision
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_locations")
+}
+
+model DriverDocument {
+  documentId Int      @id @default(autoincrement()) @map("document_id")
+  driverId   Int      @map("driver_id")
+  docType   String   @map("doc_type") @db.VarChar(50)
+  fileUrl   String   @map("file_url") @db.Text
+  status    String   @default("pending") @db.VarChar(20) // ENUM: 'pending', 'approved', 'rejected'
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  // Relations
+  driver     User     @relation(fields: [driverId], references: [userId], onDelete: Cascade)
+
+  @@index([driverId])
+  @@index([status])
+  @@map("driver_documents")
+}
+
+model Notification {
+  notificationId Int      @id @default(autoincrement()) @map("notification_id")
+  userId         Int?     @map("user_id")
+  message        String   @db.VarChar(255)
+  isRead         Boolean  @default(false) @map("is_read")
+  type           String?  @db.VarChar(50)
+  bookingId      Int?     @map("booking_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user           User?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model SosAlert {
+  alertId  Int      @id @default(autoincrement()) @map("alert_id")
+  rideId   Int      @map("ride_id") // Actually references booking_id
+  userId   Int      @map("user_id")
+  details  String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  booking  Booking  @relation(fields: [rideId], references: [bookingId], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([rideId])
+  @@index([userId])
+  @@map("sos_alerts")
+}
+
+model PromoCode {
+  code            String   @id @db.VarChar(20)
+  discountPercent Decimal? @map("discount_percent") @db.Decimal(5, 2)
+  discountAmount  Decimal? @map("discount_amount") @db.Decimal(10, 2)
+  expiryDate      DateTime? @map("expiry_date") @db.Date
+  maxUses         Int?     @map("max_uses")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userPromoCodes  UserPromoCode[]
+
+  @@map("promo_codes")
+}
+
+model UserPromoCode {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  code      String   @map("code") @db.VarChar(20)
+  isUsed    Boolean  @default(false) @map("is_used")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  promoCode PromoCode @relation(fields: [code], references: [code], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@map("user_promo_codes")
+}
+
+model Stop {
+  stopId    Int      @id @default(autoincrement()) @map("stop_id")
+  rideId    Int      @map("ride_id") // Actually references booking_id
+  lat       Float    @db.DoublePrecision
+  lon       Float    @db.DoublePrecision
+  stopOrder Int      @map("stop_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  booking   Booking  @relation(fields: [rideId], references: [bookingId], onDelete: Cascade)
+
+  @@index([rideId])
+  @@map("stops")
+}
+
+model Wallet {
+  userId    Int      @id @map("user_id")
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("wallet")
+}
+
+model WalletTransaction {
+  txId      Int      @id @default(autoincrement()) @map("tx_id")
+  userId    Int      @map("user_id")
+  amount    Decimal  @db.Decimal(12, 2)
+  type      String   @db.VarChar(20) // ENUM: 'topup', 'debit', 'refund'
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("wallet_transaction")
+}
+
+model RideSchedule {
+  scheduleId Int      @id @default(autoincrement()) @map("schedule_id")
+  driverId   Int      @map("driver_id")
+  cronExpr   String   @map("cron_expr") @db.VarChar(64)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  driver     User     @relation(fields: [driverId], references: [userId], onDelete: Cascade)
+
+  @@index([driverId])
+  @@map("ride_schedule")
+}
+
+model RideWaypoint {
+  waypointId Int      @id @default(autoincrement()) @map("waypoint_id")
+  rideId     Int      @map("ride_id")
+  name       String?  @db.VarChar(100)
+  lat        Decimal  @db.Decimal(10, 7)
+  lon        Decimal  @db.Decimal(10, 7)
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  ride       Ride     @relation(fields: [rideId], references: [rideId], onDelete: Cascade)
+
+  @@index([rideId])
+  @@map("ride_waypoint")
+}
+
+model NightRideSafetyCheck {
+  safetyCheckId            Int       @id @default(autoincrement()) @map("safety_check_id")
+  bookingId                Int       @map("booking_id")
+  rideId                   Int       @map("ride_id")
+  passengerId              Int       @map("passenger_id")
+  isConfirmed              Boolean   @default(false) @map("is_confirmed")
+  confirmationTime         DateTime? @map("confirmation_time")
+  passengerCalled          Boolean   @default(false) @map("passenger_called")
+  passengerCallTime        DateTime? @map("passenger_call_time")
+  passengerCallAnswered    Boolean?  @map("passenger_call_answered")
+  emergencyContactCalled   Boolean   @default(false) @map("emergency_contact_called")
+  emergencyContactCallTime DateTime? @map("emergency_contact_call_time")
+  callAttemptCount         Int       @default(0) @map("call_attempt_count")
+  lastCallAttemptTime      DateTime? @map("last_call_attempt_time")
+  adminNotified            Boolean   @default(false) @map("admin_notified")
+  rideCompletedAt          DateTime  @default(now()) @map("ride_completed_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  booking                  Booking   @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
+  ride                     Ride      @relation(fields: [rideId], references: [rideId], onDelete: Cascade)
+  passenger                User      @relation(fields: [passengerId], references: [userId], onDelete: Cascade)
+
+  @@index([passengerId])
+  @@index([rideId])
+  @@index([bookingId])
+  @@index([isConfirmed])
+  @@index([rideCompletedAt])
+  @@map("night_ride_safety_checks")
+}
+
+model BookingMessage {
+  messageId   Int      @id @default(autoincrement()) @map("message_id")
+  bookingId   Int      @map("booking_id")
+  fromUserId  Int      @map("from_user_id")
+  messageText String   @map("message_text") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
+  fromUser    User     @relation("MessageFromUser", fields: [fromUserId], references: [userId], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([fromUserId])
+  @@index([createdAt])
+  @@map("booking_messages")
+}

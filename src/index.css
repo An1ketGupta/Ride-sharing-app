@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Theme tokens (HSL for Tailwind consumption) */
+:root {
+  /* Light mode: warm neutral with vibrant accents */
+  --background: 220 20% 98%;
+  --foreground: 222 47% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 248 80% 60%;
+
+  /* Enhanced brand accents - more vibrant */
+  --primary: 248 86% 66%; /* indigo */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 192 94% 48%; /* brighter cyan */
+  --secondary-foreground: 0 0% 100%;
+  --accent: 280 83% 68%; /* violet */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 78% 55%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+.dark {
+  /* Dark mode: deep neutral with elevated contrast */
+  --background: 222 47% 6%;
+  --foreground: 210 20% 98%;
+  --muted: 222 30% 12%;
+  --muted-foreground: 215 15% 65%;
+  --card: 222 47% 8%;
+  --card-foreground: 210 20% 98%;
+  --popover: 222 47% 8%;
+  --popover-foreground: 210 20% 98%;
+  --border: 217 27% 20%;
+  --input: 217 27% 20%;
+  --ring: 248 80% 72%;
+
+  --primary: 248 86% 70%;
+  --primary-foreground: 222 47% 8%;
+  --secondary: 192 94% 52%;
+  --secondary-foreground: 222 47% 8%;
+  --accent: 280 83% 70%;
+  --accent-foreground: 222 47% 8%;
+  --destructive: 0 63% 45%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+#root { min-height: 100vh; }
+
+h1, h2, h3, h4, h5, h6 { @apply font-extrabold tracking-tight text-foreground; }
+
+/* Smooth scrolling */
+html { scroll-behavior: smooth; }
+
+/* Selection */
+::selection { background-color: hsl(var(--primary)); color: white; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+/* Glass + Neumorphism + Enhanced UI helpers */
+.glass {
+  @apply bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-soft-xl;
+  backdrop-filter: blur(16px) saturate(180%);
+}
+.glass-thick {
+  @apply bg-white/80 dark:bg-white/10 backdrop-blur-2xl border-2 border-white/70 dark:border-white/15 shadow-glow-lg;
+  backdrop-filter: blur(24px) saturate(180%);
+}
+.neo {
+  box-shadow: 12px 12px 24px rgba(2, 6, 23, 0.25), -12px -12px 24px rgba(255, 255, 255, 0.45);
+}
+
+/* Enhanced gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent;
+  background-size: 200% auto;
+  animation: gradient-shift 3s ease infinite;
+}
+.gradient-text-vibrant {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #6366f1, #06b6d4, #8b5cf6, #ec4899);
+  background-size: 300% auto;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Card styles */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.01];
+}
+.card-interactive {
+  @apply cursor-pointer transition-all duration-200 active:scale-[0.98];
+}
+
+/* Button effects */
+.btn-shimmer {
+  background-size: 200% auto;
+  background-image: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 50%, hsl(var(--primary)) 100%);
+  transition: background-position 0.5s ease;
+}
+.btn-shimmer:hover {
+  background-position: 100% 0;
+}
+
+/* Floating animations */
+.float-1 { animation: float 3s ease-in-out infinite; }
+.float-2 { animation: float 4s ease-in-out infinite; animation-delay: 0.5s; }
+.float-3 { animation: float 5s ease-in-out infinite; animation-delay: 1s; }
+
+/* Glow effects */
+.glow-on-hover {
+  transition: box-shadow 0.3s ease;
+}
+.glow-on-hover:hover {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 20px 50px -15px rgba(99, 102, 241, 0.6);
+}
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: rgba(99, 102, 241, 1);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Smooth scroll for entire page */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  @apply outline-none ring-4 ring-primary/20 ring-offset-2 ring-offset-background;
+}
+
+/* Better disabled states */
+:disabled,
+[disabled] {
+  @apply cursor-not-allowed opacity-60;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Backdrop effects */
+.backdrop-frosted {
+  @apply backdrop-blur-2xl backdrop-saturate-150 backdrop-brightness-110 dark:backdrop-brightness-75;
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-primary via-secondary to-primary;
+  background-size: 200% auto;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary:hover {
+  background-position: 100% 0;
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* Enhanced input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  transform: translateY(-1px);
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
