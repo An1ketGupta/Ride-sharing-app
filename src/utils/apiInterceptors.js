@@ -3,10 +3,6 @@ import axios from 'axios';
 // Store toast function reference
 let toastFunction = null;
 
-export const setToastFunction = (toast) => {
-    toastFunction = toast;
-};
-
 // Throttle connection error toasts to avoid spamming
 let lastConnectionErrorToast = 0;
 const CONNECTION_ERROR_THROTTLE_MS = 10000; // Show connection error toast max once per 10 seconds

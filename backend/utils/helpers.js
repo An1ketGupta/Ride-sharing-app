@@ -27,11 +27,6 @@ export const calculateRideAmount = (farePerKm, distanceKm, seatsBooked) => {
     return (10 * distanceKm * seatsBooked).toFixed(2);
 };
 
-// Format date for database
-export const formatDateForDB = (date) => {
-    return new Date(date).toISOString().split('T')[0];
-};
-
 // Error response helper
 export const errorResponse = (res, statusCode, message) => {
     return res.status(statusCode).json({

@@ -64,6 +64,4 @@ export const markRideAccepted = (requestId) => {
   }
 };
 
-export const removeActiveRide = (requestId) => activeRides.delete(requestId);
-
 
