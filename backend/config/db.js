@@ -19,7 +19,7 @@ const adapter = new PrismaPg(pool);
 // Create Prisma client instance with adapter
 const prisma = new PrismaClient({
   adapter: adapter,
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: ['error'], // Only log errors, no query logs
 });
 
 // Test connection

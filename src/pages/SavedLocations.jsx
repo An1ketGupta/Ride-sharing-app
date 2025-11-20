@@ -3,13 +3,15 @@ import { userExtras } from '../services/userExtras';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Plus, Trash2, Home, Briefcase, Heart, Star, Navigation } from 'lucide-react';
+import { MapPin, Plus, Trash2, Home, Briefcase, Heart, Star, Navigation, X, Search, Clock } from 'lucide-react';
 
 const SavedLocations = () => {
     const [locations, setLocations] = useState([]);
+    const [locationAddresses, setLocationAddresses] = useState({});
     const [loading, setLoading] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [formData, setFormData] = useState({ name: '', address: '' });
+    const [searchQuery, setSearchQuery] = useState('');
     const [geoCache] = useState(() => new Map());
     const { user } = useAuth();
     const toast = useToast();
@@ -53,7 +55,26 @@ const SavedLocations = () => {
         setLoading(true);
         try {
             const response = await userExtras.getSavedLocations(user.user_id);
-            setLocations(Array.isArray(response.data) ? response.data : []);
+            const locs = Array.isArray(response.data) ? response.data : [];
+            setLocations(locs);
+            
+            // Reverse geocode addresses for all locations
+            const addressMap = {};
+            await Promise.all(
+                locs.map(async (loc) => {
+                    if (loc.lat && loc.lon) {
+                        try {
+                            const address = await reverseGeocode(loc.lat, loc.lon);
+                            if (address) {
+                                addressMap[loc.location_id] = address;
+                            }
+                        } catch (err) {
+                            console.error('Failed to geocode location', err);
+                        }
+                    }
+                })
+            );
+            setLocationAddresses(addressMap);
         } catch (err) {
             toast.error('Failed to load saved locations');
         } finally {
@@ -79,7 +100,7 @@ const SavedLocations = () => {
                 lat: coords.lat,
                 lon: coords.lon
             });
-            toast.success('Location saved');
+            toast.success('Location saved successfully');
             setFormData({ name: '', address: '' });
             setShowAddForm(false);
             loadLocations();
@@ -89,7 +110,7 @@ const SavedLocations = () => {
     };
 
     const handleDelete = async (locationId) => {
-        if (!window.confirm('Delete this location?')) return;
+        if (!window.confirm('Are you sure you want to delete this location?')) return;
         try {
             await userExtras.deleteSavedLocation(user.user_id, locationId);
             toast.success('Location deleted');
@@ -101,165 +122,296 @@ const SavedLocations = () => {
 
     const getIcon = (name) => {
         const lower = name.toLowerCase();
-        if (lower.includes('home')) return <Home className="w-5 h-5" />;
-        if (lower.includes('work') || lower.includes('office')) return <Briefcase className="w-5 h-5" />;
-        if (lower.includes('favorite') || lower.includes('favourite')) return <Heart className="w-5 h-5" />;
-        return <MapPin className="w-5 h-5" />;
+        if (lower.includes('home')) return <Home className="w-5 h-5 text-blue-400" />;
+        if (lower.includes('work') || lower.includes('office')) return <Briefcase className="w-5 h-5 text-purple-400" />;
+        if (lower.includes('favorite') || lower.includes('favourite')) return <Heart className="w-5 h-5 text-red-400" />;
+        return <MapPin className="w-5 h-5 text-[#0EA5E9]" />;
     };
 
+    const getIconColor = (name) => {
+        const lower = name.toLowerCase();
+        if (lower.includes('home')) return 'from-blue-500/20 to-cyan-500/20';
+        if (lower.includes('work') || lower.includes('office')) return 'from-purple-500/20 to-pink-500/20';
+        if (lower.includes('favorite') || lower.includes('favourite')) return 'from-red-500/20 to-rose-500/20';
+        return 'from-indigo-500/20 to-blue-500/20';
+    };
+
+    const filteredLocations = locations.filter(loc =>
+        loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        locationAddresses[loc.location_id]?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8">
+            <div className="max-w-6xl mx-auto">
+                {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8"
                 >
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                        Saved Locations
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">Manage your frequently visited places</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-[#0EA5E9] via-blue-400 to-purple-500 bg-clip-text text-transparent">
+                                Saved Locations
+                            </h1>
+                            <p className="text-gray-400 text-sm sm:text-base">
+                                Manage your frequently visited places for quick access
+                            </p>
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowAddForm(!showAddForm)}
+                            className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                        >
+                            <Plus className="w-5 h-5" />
+                            <span>Add New Location</span>
+                        </motion.button>
+                    </div>
+
+                    {/* Search Bar */}
+                    {locations.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="relative"
+                        >
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search locations..."
+                                className="w-full pl-12 pr-4 py-3 bg-[#111111] border border-[#1A1A1A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent text-white placeholder-gray-500"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            )}
+                        </motion.div>
+                    )}
                 </motion.div>
 
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="mb-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-                >
-                    <Plus className="w-5 h-5" />
-                    Add New Location
-                </motion.button>
-
+                {/* Add Location Form */}
                 <AnimatePresence>
                     {showAddForm && (
                         <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="mb-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+                            initial={{ opacity: 0, height: 0, y: -20 }}
+                            animate={{ opacity: 1, height: 'auto', y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -20 }}
+                            className="mb-8 overflow-hidden"
                         >
-                            <form onSubmit={handleAdd} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Location Name</label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="e.g., Home, Office, Gym"
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
+                            <div className="p-6 bg-[#111111] border border-[#1A1A1A] rounded-2xl shadow-xl">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-semibold text-white">Add New Location</h2>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddForm(false);
+                                            setFormData({ name: '', address: '' });
+                                        }}
+                                        className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-gray-400" />
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Address</label>
-                                    <div className="flex gap-2">
-                                        <div className="flex-1 relative">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
-                                            <input
-                                                type="text"
-                                                value={formData.address}
-                                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                                placeholder="Enter full address (e.g., 123 Main St, City, State)"
-                                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                if (navigator.geolocation) {
-                                                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                                                        const address = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-                                                        if (address) {
-                                                            setFormData({ ...formData, address });
-                                                        } else {
-                                                            toast.error('Could not get address from location');
-                                                        }
-                                                    }, () => {
-                                                        toast.error('Unable to get your location');
-                                                    });
-                                                } else {
-                                                    toast.error('Geolocation is not supported');
-                                                }
-                                            }}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                                            title="Use current location"
-                                        >
-                                            <Navigation className="w-5 h-5" />
-                                        </button>
+                                <form onSubmit={handleAdd} className="space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            Location Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder="e.g., Home, Office, Gym, Favorite Restaurant"
+                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
+                                            autoFocus
+                                        />
                                     </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        type="submit"
-                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                        Save Location
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAddForm(false)}
-                                        className="px-6 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            Address
+                                        </label>
+                                        <div className="flex gap-3">
+                                            <div className="flex-1 relative">
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0EA5E9]" />
+                                                <input
+                                                    type="text"
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                                    placeholder="Enter full address or use current location"
+                                                    className="w-full pl-12 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
+                                                />
+                                            </div>
+                                            <motion.button
+                                                type="button"
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={async () => {
+                                                    if (navigator.geolocation) {
+                                                        navigator.geolocation.getCurrentPosition(async (pos) => {
+                                                            const address = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+                                                            if (address) {
+                                                                setFormData({ ...formData, address });
+                                                                toast.success('Location detected');
+                                                            } else {
+                                                                toast.error('Could not get address from location');
+                                                            }
+                                                        }, () => {
+                                                            toast.error('Unable to get your location');
+                                                        });
+                                                    } else {
+                                                        toast.error('Geolocation is not supported');
+                                                    }
+                                                }}
+                                                className="px-5 py-3 bg-[#1A1A1A] hover:bg-[#252525] border border-[#1A1A1A] text-white rounded-xl transition-all flex items-center gap-2"
+                                                title="Use current location"
+                                            >
+                                                <Navigation className="w-5 h-5" />
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <motion.button
+                                            type="submit"
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="flex-1 px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)]"
+                                        >
+                                            Save Location
+                                        </motion.button>
+                                        <motion.button
+                                            type="button"
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setShowAddForm(false);
+                                                setFormData({ name: '', address: '' });
+                                            }}
+                                            className="px-6 py-3 bg-[#1A1A1A] hover:bg-[#252525] text-white rounded-xl font-semibold transition-all border border-[#1A1A1A]"
+                                        >
+                                            Cancel
+                                        </motion.button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
+                {/* Content Section */}
                 {loading ? (
-                    <div className="text-center py-12">
-                        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-                        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading locations...</p>
+                    <div className="text-center py-20">
+                        <div className="animate-spin w-12 h-12 border-4 border-[#0EA5E9] border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p className="text-gray-400">Loading your locations...</p>
                     </div>
-                ) : locations.length === 0 ? (
+                ) : filteredLocations.length === 0 && locations.length === 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-20 bg-[#111111] border border-[#1A1A1A] rounded-2xl"
+                    >
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#0EA5E9]/20 to-purple-500/20 mb-6">
+                            <MapPin className="w-10 h-10 text-[#0EA5E9]" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">No saved locations yet</h3>
+                        <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                            Add your frequently visited places for quick access when booking rides
+                        </p>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowAddForm(true)}
+                            className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold transition-all flex items-center gap-2 mx-auto"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add Your First Location
+                        </motion.button>
+                    </motion.div>
+                ) : filteredLocations.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+                        className="text-center py-20 bg-[#111111] border border-[#1A1A1A] rounded-2xl"
                     >
-                        <MapPin className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                        <p className="text-gray-600 dark:text-gray-400">No saved locations yet</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Add your frequently visited places for quick access</p>
+                        <Search className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                        <h3 className="text-xl font-semibold text-white mb-2">No locations found</h3>
+                        <p className="text-gray-400">Try adjusting your search query</p>
                     </motion.div>
                 ) : (
-                    <div className="grid gap-4">
-                        {locations.map((loc, idx) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredLocations.map((loc, idx) => (
                             <motion.div
                                 key={loc.location_id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
-                                className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                                whileHover={{ y: -4, scale: 1.02 }}
+                                className="group relative p-6 bg-[#111111] border border-[#1A1A1A] rounded-2xl hover:border-[#0EA5E9]/50 transition-all cursor-pointer"
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                                            {getIcon(loc.name)}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-semibold mb-1">{loc.name}</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {loc.lat && loc.lon ? `${loc.lat.toFixed(6)}, ${loc.lon.toFixed(6)}` : 'Coordinates not available'}
-                                            </p>
-                                            {loc.created_at && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                                                    Added {new Date(loc.created_at).toLocaleDateString()}
-                                                </p>
-                                            )}
-                                        </div>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className={`p-3 rounded-xl bg-gradient-to-br ${getIconColor(loc.name)} border border-white/10`}>
+                                        {getIcon(loc.name)}
                                     </div>
-                                    <button
-                                        onClick={() => handleDelete(loc.location_id)}
-                                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    <motion.button
+                                        whileHover={{ scale: 1.1, rotate: 5 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(loc.location_id);
+                                        }}
+                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                     >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                                        <Trash2 className="w-4 h-4" />
+                                    </motion.button>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{loc.name}</h3>
+                                    <div className="space-y-2">
+                                        {locationAddresses[loc.location_id] ? (
+                                            <p className="text-sm text-gray-400 line-clamp-2 flex items-start gap-2">
+                                                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#0EA5E9]" />
+                                                <span>{locationAddresses[loc.location_id]}</span>
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-gray-500 flex items-start gap-2">
+                                                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                                <span>
+                                                    {loc.lat && loc.lon 
+                                                        ? `${loc.lat.toFixed(6)}, ${loc.lon.toFixed(6)}` 
+                                                        : 'Coordinates not available'}
+                                                </span>
+                                            </p>
+                                        )}
+                                        {loc.created_at && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-2">
+                                                <Clock className="w-3 h-3" />
+                                                <span>Added {new Date(loc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
                     </div>
+                )}
+
+                {/* Stats Footer */}
+                {locations.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="mt-8 p-4 bg-[#111111] border border-[#1A1A1A] rounded-xl text-center"
+                    >
+                        <p className="text-sm text-gray-400">
+                            You have <span className="text-[#0EA5E9] font-semibold">{locations.length}</span> saved location{locations.length !== 1 ? 's' : ''}
+                        </p>
+                    </motion.div>
                 )}
             </div>
         </div>

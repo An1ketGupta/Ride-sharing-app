@@ -419,37 +419,37 @@ const SearchRides = () => {
     };
 
     return (
-        <div className="min-h-screen px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-7xl mx-auto">
             {/* Loading Overlay */}
             {loading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="rounded-lg p-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg text-center">
-                        <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-700">
-                            <Loader className="w-8 h-8 text-primary animate-spin" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="rounded-xl p-8 border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)] text-center">
+                        <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 rounded-xl bg-[#0A0A0A]">
+                            <Loader className="w-8 h-8 text-[#0EA5E9] animate-spin" />
                         </div>
-                        <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">Searching rides...</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fetching best matches near you</div>
+                        <div className="text-lg font-semibold text-white">Searching rides...</div>
+                        <div className="text-sm text-white/60 mt-1">Fetching best matches near you</div>
                     </div>
                 </div>
             )}
             
             {/* Header Section */}
-            <div className="mb-4 sm:mb-6 md:mb-8">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-2 sm:mb-3 text-gray-900 dark:text-gray-100">Find Your Ride</h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base md:text-lg">Search and book rides from verified drivers across the city</p>
+            <div className="mb-6 sm:mb-8 md:mb-10">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 text-white">Find Your Ride</h1>
+                <p className="text-white/60 text-base sm:text-lg md:text-xl">Search and book rides from verified drivers across the city</p>
                 {userLocality && (
-                    <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/30">
                         <MapPin className="w-4 h-4" />
-                        <span className="text-sm font-medium">Showing rides near {userLocality}</span>
+                        <span className="text-sm font-semibold">Showing rides near {userLocality}</span>
                     </div>
                 )}
             </div>
 
             {/* Search Form */}
-            <div className="rounded-lg p-3 sm:p-4 md:p-6 lg:p-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm mb-4 sm:mb-6 md:mb-8">
-                <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="rounded-xl p-6 sm:p-8 border border-[#1A1A1A] bg-[#111111] mb-6 sm:mb-8 md:mb-10">
+                <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
                             type="text"
                             name="source"
@@ -457,11 +457,11 @@ const SearchRides = () => {
                             onChange={handleChange}
                             onFocus={() => setActiveField('source')}
                             placeholder="From (e.g., Bangalore)"
-                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                            className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                         />
                     </div>
                     <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
                             type="text"
                             name="destination"
@@ -469,22 +469,22 @@ const SearchRides = () => {
                             onChange={handleChange}
                             onFocus={() => setActiveField('destination')}
                             placeholder="To (e.g., Electronic City)"
-                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                            className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                         />
                     </div>
                     <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                         <input
                             type="date"
                             name="date"
                             value={searchParams.date}
                             onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                            className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full sm:w-auto py-2.5 sm:py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                        className="w-full sm:w-auto py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                         <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                         Search
@@ -493,10 +493,10 @@ const SearchRides = () => {
                 </form>
 
                 {/* Famous Cities Quick Select */}
-                <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm font-semibold text-muted-foreground">Famous cities</div>
-                        <div className="text-xs text-muted-foreground">Fills {activeField}</div>
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-semibold text-white/60">Famous cities</div>
+                        <div className="text-xs text-white/40">Fills {activeField}</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {famousCities.map((city) => (
@@ -504,7 +504,7 @@ const SearchRides = () => {
                                 key={city}
                                 type="button"
                                 onClick={() => handleCityClick(city)}
-                                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors text-gray-700 dark:text-gray-300"
+                                className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#0A0A0A] hover:bg-[#1A1A1A] border border-[#1A1A1A] transition-all duration-200 text-white"
                             >
                                 {city}
                             </button>
@@ -515,8 +515,8 @@ const SearchRides = () => {
 
             {/* Results Section */}
             <div>
-                <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">Available Rides ({rides.length})</h2>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Available Rides ({rides.length})</h2>
                 </div>
 
                 {loading ? (
@@ -526,19 +526,19 @@ const SearchRides = () => {
                         ))}
                     </div>
                 ) : rides.length === 0 ? (
-                    <div className="rounded-lg p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                        <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">No rides found</h3>
-                        <p className="text-gray-600 dark:text-gray-400">Try adjusting your search criteria or clear filters</p>
+                    <div className="rounded-xl p-12 text-center border border-[#1A1A1A] bg-[#111111]">
+                        <Car className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold mb-2 text-white">No rides found</h3>
+                        <p className="text-white/60">Try adjusting your search criteria or clear filters</p>
                         <div className="mt-6">
                             <button
                                 onClick={openRequestModal}
-                                className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                                className="px-6 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200"
                             >
                                 Request a ride to my location
                             </button>
                             <div className="mt-3 text-sm">
-                                <button onClick={()=>{ setMinRating(''); setTimeSlot(''); setMaxPrice(''); setSearchParams({ source:'', destination:'', date:'' }); }} className="text-primary hover:underline">Clear all</button>
+                                <button onClick={()=>{ setMinRating(''); setTimeSlot(''); setMaxPrice(''); setSearchParams({ source:'', destination:'', date:'' }); }} className="text-[#0EA5E9] hover:underline">Clear all</button>
                             </div>
                         </div>
                     </div>
@@ -547,10 +547,10 @@ const SearchRides = () => {
                         {rides.map((ride) => (
                             <div
                                 key={ride.ride_id}
-                                className="rounded-lg p-3 sm:p-4 md:p-6 lg:p-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                className="rounded-xl p-6 sm:p-8 border border-[#1A1A1A] bg-[#111111] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200 cursor-pointer"
                                 onClick={() => handleBookRide(ride)}
                             >
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 md:gap-6">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                                     <div className="flex items-start gap-4">
                                         {/* Vehicle Image */}
                                         <div className="flex-shrink-0">
@@ -558,59 +558,59 @@ const SearchRides = () => {
                                                 <img
                                                     src={ride.vehicle_image_url}
                                                     alt={`${ride.vehicle_model || 'Vehicle'} - ${ride.vehicle_color || ''}`}
-                                                    className="w-24 h-20 sm:w-32 sm:h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                                                    className="w-24 h-20 sm:w-32 sm:h-24 object-cover rounded-xl border border-[#1A1A1A]"
                                                     loading="lazy"
                                                     onError={(e) => {
                                                         e.target.style.display = 'none';
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                                    <Car className="w-8 h-8 text-gray-400" />
+                                                <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-xl border border-[#1A1A1A] bg-[#0A0A0A] flex items-center justify-center">
+                                                    <Car className="w-8 h-8 text-white/40" />
                                                 </div>
                                             )}
                                         </div>
                                         <div className="flex-1 space-y-3">
                                             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
+                                                <div className="text-lg sm:text-xl font-bold text-white">
                                                     {ride.source}
                                                 </div>
-                                                <ArrowRight className="w-5 h-5 text-gray-400" />
-                                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
+                                                <ArrowRight className="w-5 h-5 text-[#0EA5E9]" />
+                                                <div className="text-lg sm:text-xl font-bold text-white">
                                                     {ride.destination}
                                                 </div>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <div className="p-1.5 rounded-lg bg-primary/10">
-                                                        <User className="w-4 h-4 text-primary" />
+                                                    <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                        <User className="w-4 h-4 text-[#0EA5E9]" />
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{ride.driver_name}</span>
+                                                    <span className="font-semibold text-white">{ride.driver_name}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <div className="p-1.5 rounded-lg bg-amber-500/10">
-                                                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                                                    <div className="p-2 rounded-lg bg-[#f59e0b]/10">
+                                                        <Star className="w-4 h-4 text-[#f59e0b] fill-[#f59e0b]" />
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{ride.driver_rating || 'New'}</span>
+                                                    <span className="font-semibold text-white">{ride.driver_rating || 'New'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700">
-                                                        <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                    <div className="p-2 rounded-lg bg-[#0A0A0A]">
+                                                        <Calendar className="w-4 h-4 text-white/60" />
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{new Date(ride.date).toLocaleDateString()}</span>
+                                                    <span className="font-semibold text-white">{new Date(ride.date).toLocaleDateString()}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                                                        <Car className="w-4 h-4 text-emerald-600" />
+                                                    <div className="p-2 rounded-lg bg-[#10b981]/10">
+                                                        <Car className="w-4 h-4 text-[#10b981]" />
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{(ride.total_seats - ride.available_seats)}/{ride.total_seats}</span>
+                                                    <span className="font-semibold text-white">{(ride.total_seats - ride.available_seats)}/{ride.total_seats}</span>
                                                 </div>
                                             </div>
                                             
                                             {ride.vehicle_model && (
-                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 w-fit">
-                                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] w-fit">
+                                                    <span className="text-sm font-medium text-white/60">
                                                         {ride.vehicle_model} • {ride.vehicle_color}
                                                     </span>
                                                 </div>
@@ -620,18 +620,18 @@ const SearchRides = () => {
                                     
                                     <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-3">
                                         <div className="text-center md:text-right">
-                                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Fare per Seat</div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">(₹10/km × distance)</div>
-                                            <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                            <div className="text-xs text-white/60 mb-1 font-semibold">Fare per Seat</div>
+                                            <div className="text-xs text-white/40 mb-1">(₹10/km × distance)</div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-white">
                                                 ₹{ride.estimated_fare}
                                             </div>
                                             {typeof ride._distance_km === 'number' && isFinite(ride._distance_km) && (
-                                                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">~{ride._distance_km.toFixed(1)} km away</div>
+                                                <div className="text-xs text-white/40 mt-1">~{ride._distance_km.toFixed(1)} km away</div>
                                             )}
                                         </div>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleBookRide(ride); }}
-                                            className="px-6 py-2.5 sm:px-8 sm:py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap"
+                                            className="px-6 py-2.5 sm:px-8 sm:py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2 whitespace-nowrap"
                                         >
                                             Book Now
                                             <ArrowRight className="w-5 h-5" />
@@ -647,67 +647,67 @@ const SearchRides = () => {
             {/* Booking Modal */}
             {selectedRide && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
                     onClick={() => setSelectedRide(null)}
                 >
                     <div
-                        className="rounded-lg p-4 sm:p-6 md:p-8 max-w-md w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-[90vh] overflow-y-auto"
+                        className="rounded-xl p-6 sm:p-8 max-w-md w-full border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)] max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Confirm Booking</h3>
+                                <h3 className="text-2xl font-bold text-white">Confirm Booking</h3>
                                 <button
                                     onClick={() => setSelectedRide(null)}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
+                                    className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
 
                             <div className="space-y-4 mb-6">
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                    <MapPin className="w-5 h-5 text-primary" />
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                    <MapPin className="w-5 h-5 text-[#0EA5E9]" />
                                     <div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">Route</div>
-                                        <div className="font-semibold text-gray-900 dark:text-gray-100">{selectedRide.source} → {selectedRide.destination}</div>
+                                        <div className="text-sm text-white/60">Route</div>
+                                        <div className="font-semibold text-white">{selectedRide.source} → {selectedRide.destination}</div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                    <Calendar className="w-5 h-5 text-primary" />
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                    <Calendar className="w-5 h-5 text-[#0EA5E9]" />
                                     <div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">Date & Time</div>
-                                        <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                        <div className="text-sm text-white/60">Date & Time</div>
+                                        <div className="font-semibold text-white">
                                             {new Date(selectedRide.date).toLocaleDateString()} at {selectedRide.time}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                    <User className="w-5 h-5 text-primary" />
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                    <User className="w-5 h-5 text-[#0EA5E9]" />
                                     <div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">Driver</div>
-                                        <div className="font-semibold text-gray-900 dark:text-gray-100">{selectedRide.driver_name}</div>
+                                        <div className="text-sm text-white/60">Driver</div>
+                                        <div className="font-semibold text-white">{selectedRide.driver_name}</div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Number of Seats</label>
+                                    <label className="text-sm font-semibold text-white">Number of Seats</label>
                                     <input
                                         type="number"
                                         min="1"
                                         max={selectedRide.available_seats}
                                         value={seats}
                                         onChange={(e) => setSeats(parseInt(e.target.value))}
-                                        className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white"
                                     />
                                 </div>
 
                                 {/* Vehicle Image in Booking Modal */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Vehicle</label>
+                                    <label className="text-sm font-semibold text-white">Vehicle</label>
                                     {selectedRide.vehicle_image_url ? (
-                                        <div className="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <div className="relative overflow-hidden rounded-xl border border-[#1A1A1A]">
                                             <img
                                                 src={selectedRide.vehicle_image_url}
                                                 alt={`${selectedRide.vehicle_model || 'Vehicle'} - ${selectedRide.vehicle_color || ''}`}
@@ -717,19 +717,19 @@ const SearchRides = () => {
                                                 }}
                                             />
                                             {selectedRide.vehicle_model && (
-                                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-3 text-white">
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 text-white">
                                                     <div className="font-semibold text-sm">{selectedRide.vehicle_model}</div>
                                                     <div className="text-xs opacity-90">{selectedRide.vehicle_color} • {selectedRide.license_plate || selectedRide.plate_number}</div>
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="w-full h-48 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                        <div className="w-full h-48 rounded-xl border border-[#1A1A1A] bg-[#0A0A0A] flex items-center justify-center">
                                             <div className="text-center">
-                                                <Car className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                                                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">No vehicle image available</span>
+                                                <Car className="w-12 h-12 text-white/40 mx-auto mb-2" />
+                                                <span className="text-sm text-white/60 font-medium">No vehicle image available</span>
                                                 {selectedRide.vehicle_model && (
-                                                    <div className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                    <div className="mt-2 text-sm font-medium text-white/60">
                                                         {selectedRide.vehicle_model} • {selectedRide.vehicle_color}
                                                     </div>
                                                 )}
@@ -739,32 +739,32 @@ const SearchRides = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Notes for driver</label>
+                                    <label className="text-sm font-semibold text-white">Notes for driver</label>
                                     <input
                                         type="text"
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
                                         placeholder="I'm at the blue gate"
-                                        className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                     />
                                 </div>
 
                                 {/* Save location UI */}
                                 <div className="grid sm:grid-cols-2 gap-3 mt-2">
-                                    <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 cursor-pointer select-none">
+                                    <label className="flex items-center gap-3 p-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] cursor-pointer select-none hover:bg-[#1A1A1A] transition-all duration-200">
                                         <input
                                             type="checkbox"
                                             checked={saveLocChecked}
                                             onChange={(e) => setSaveLocChecked(e.target.checked)}
                                             className="w-4 h-4"
                                         />
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Save pickup location</span>
+                                        <span className="text-sm font-semibold text-white">Save pickup location</span>
                                     </label>
                                     {saveLocChecked && (
                                         <select
                                             value={saveLocName}
                                             onChange={(e) => setSaveLocName(e.target.value)}
-                                            className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white"
                                         >
                                             <option value="Home">Home</option>
                                             <option value="Work">Work</option>
@@ -772,14 +772,14 @@ const SearchRides = () => {
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
-                                    <span className="font-semibold text-gray-700 dark:text-gray-300">Total Amount</span>
-                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30">
+                                    <span className="font-semibold text-white">Total Amount</span>
+                                    <span className="text-2xl font-bold text-[#0EA5E9]">
                                         ₹{(parseFloat(selectedRide.estimated_fare) * seats).toFixed(2)}
                                     </span>
                                 </div>
                                 {bookingError && (
-                                    <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
+                                    <div className="mt-3 p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444] text-sm">
                                         {bookingError}
                                     </div>
                                 )}
@@ -788,14 +788,14 @@ const SearchRides = () => {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setSelectedRide(null)}
-                                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                                    className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmBooking}
                                     disabled={bookingLoading}
-                                    className="flex-1 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {bookingLoading ? (
                                         <>
@@ -817,42 +817,42 @@ const SearchRides = () => {
             {/* Request Ride Modal */}
             {showRequestModal && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
                     onClick={() => setShowRequestModal(false)}
                 >
                     <div
-                        className="rounded-lg p-6 sm:p-8 max-w-lg w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-[90vh] overflow-y-auto"
+                        className="rounded-xl p-6 sm:p-8 max-w-lg w-full border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)] max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h3 className="text-2xl font-bold mb-1 text-gray-900 dark:text-gray-100">Request a Ride</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Fill in the details to find nearby drivers</p>
+                                    <h3 className="text-2xl font-bold mb-1 text-white">Request a Ride</h3>
+                                    <p className="text-sm text-white/60">Fill in the details to find nearby drivers</p>
                                 </div>
                                 <button
                                     onClick={() => setShowRequestModal(false)}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
+                                    className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
 
                             <div className="space-y-5 mb-6">
                                 {/* Pickup Location */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                        <MapPin className="w-4 h-4 text-primary" />
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                        <MapPin className="w-4 h-4 text-[#0EA5E9]" />
                                         Pickup Location
                                     </label>
                                     <div className="flex gap-2">
                                         <div className="relative flex-1">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0EA5E9]" />
                                             <input
                                                 type="text"
                                                 value={pickupAddress}
                                                 onChange={(e) => setPickupAddress(e.target.value)}
                                                 placeholder="Enter pickup address or landmark"
-                                                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                                className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                             />
                                         </div>
                                         <button
@@ -871,14 +871,14 @@ const SearchRides = () => {
                                                     });
                                                 }
                                             }}
-                                            className="px-4 py-3 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-semibold transition-colors flex items-center gap-2 border border-primary/20"
+                                            className="px-4 py-3 bg-[#0EA5E9]/10 hover:bg-[#0EA5E9]/20 text-[#0EA5E9] rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 border border-[#0EA5E9]/30"
                                             title="Use current location"
                                         >
                                             <Navigation className="w-5 h-5" />
                                         </button>
                                     </div>
                                     {pickupCoords.lat && pickupCoords.lon && (
-                                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                                        <p className="text-xs text-white/40">
                                             Coordinates: {pickupCoords.lat.toFixed(6)}, {pickupCoords.lon.toFixed(6)}
                                         </p>
                                     )}
@@ -886,22 +886,22 @@ const SearchRides = () => {
 
                                 {/* Destination */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                        <MapPin className="w-4 h-4 text-primary" />
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                        <MapPin className="w-4 h-4 text-[#0EA5E9]" />
                                         Destination
                                     </label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                         <input
                                             type="text"
                                             value={destinationAddress}
                                             onChange={(e) => setDestinationAddress(e.target.value)}
                                             placeholder="Enter destination address"
-                                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                            className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                         />
                                     </div>
                                     {destinationCoords.lat && destinationCoords.lon && (
-                                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                                        <p className="text-xs text-white/40">
                                             Coordinates: {destinationCoords.lat.toFixed(6)}, {destinationCoords.lon.toFixed(6)}
                                         </p>
                                     )}
@@ -910,8 +910,8 @@ const SearchRides = () => {
                                 {/* Date and Time */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                            <Calendar className="w-4 h-4 text-primary" />
+                                        <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                            <Calendar className="w-4 h-4 text-[#0EA5E9]" />
                                             Date
                                         </label>
                                         <input
@@ -919,27 +919,27 @@ const SearchRides = () => {
                                             value={rideDate}
                                             onChange={(e) => setRideDate(e.target.value)}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                            <Clock className="w-4 h-4 text-primary" />
+                                        <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                            <Clock className="w-4 h-4 text-[#0EA5E9]" />
                                             Time
                                         </label>
                                         <input
                                             type="time"
                                             value={rideTime}
                                             onChange={(e) => setRideTime(e.target.value)}
-                                            className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Number of Seats Required */}
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                        <User className="w-4 h-4 text-primary" />
+                                    <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                        <User className="w-4 h-4 text-[#0EA5E9]" />
                                         Number of Seats Required
                                     </label>
                                     <input
@@ -959,25 +959,25 @@ const SearchRides = () => {
                                             }
                                         }}
                                         placeholder="Enter number of passengers"
-                                        className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                     />
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-xs text-white/40">
                                         Only drivers with vehicles that can accommodate this many passengers will be notified
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex gap-3 pt-4 border-t border-[#1A1A1A]">
                                 <button
                                     onClick={() => setShowRequestModal(false)}
-                                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold rounded-lg transition-colors text-gray-700 dark:text-gray-300"
+                                    className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={submitRideRequest}
                                     disabled={requesting || !pickupAddress.trim() || !destinationAddress.trim() || !rideDate || !rideTime || numberOfPeople < 1}
-                                    className="flex-1 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {requesting ? (
                                         <>

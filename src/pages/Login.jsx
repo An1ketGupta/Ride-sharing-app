@@ -51,55 +51,55 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#000000]">
             <div className="w-full max-w-md">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-6 sm:p-8 md:p-10">
+                <div className="rounded-xl border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)] p-8 sm:p-10">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-primary mb-4">
+                        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#0EA5E9] mb-4">
                             <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                         </div>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 mb-2">Welcome Back</h2>
-                        <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg">Sign in to continue your journey</p>
+                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">Welcome Back</h2>
+                        <p className="text-white/60 text-base sm:text-lg">Sign in to continue your journey</p>
                     </div>
 
                     {/* Error Message */}
                     {error && (
-                        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        <div className="mb-6 p-4 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-[#ef4444]">{error}</p>
                         </div>
                     )}
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Email</label>
+                            <label className="text-sm font-semibold text-white">Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="your@email.com"
-                                    className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                    className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                     required
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
+                            <label className="text-sm font-semibold text-white">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                 <input
                                     type="password"
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="••••••••"
-                                    className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-gray-900 dark:text-gray-100"
+                                    className="w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                                     required
                                 />
                             </div>
@@ -108,7 +108,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3.5 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>
@@ -126,11 +126,11 @@ const Login = () => {
 
                     {/* Footer */}
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-white/60">
                             Don't have an account?{' '}
                             <Link 
                                 to="/register" 
-                                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                                className="font-semibold text-[#0EA5E9] hover:text-[#0EA5E9] hover:brightness-110 transition-colors"
                             >
                                 Create one now
                             </Link>
@@ -139,7 +139,7 @@ const Login = () => {
                 </div>
 
                 {/* Additional Info */}
-                <p className="text-center text-xs text-gray-500 dark:text-gray-500 mt-6">
+                <p className="text-center text-xs text-white/40 mt-6">
                     By signing in, you agree to our Terms of Service and Privacy Policy
                 </p>
             </div>

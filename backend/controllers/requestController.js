@@ -1,54 +1,18 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { getIO, addActiveRide, getSocketIdForDriver } from '../utils/socketRegistry.js';
 
-// Haversine query to find 5 nearest available drivers within ~10 km
-// Uses the User table with driver type and location: (user_id as driver_id, latitude, longitude, is_available)
-// Note: is_available check is optional - drivers with location are considered available
-const FIND_NEAREST_DRIVERS_SQL = `
-  SELECT 
-    u.user_id AS driver_id,
-    u.latitude,
-    u.longitude,
-    (6371 * 2 * ASIN(
-      SQRT(
-        POWER(SIN(RADIANS((u.latitude  - ?) / 2)), 2) +
-        COS(RADIANS(?)) * COS(RADIANS(u.latitude)) *
-        POWER(SIN(RADIANS((u.longitude - ?) / 2)), 2)
-      )
-    )) AS distance_km
-  FROM users u
-  WHERE 
-    u.user_type IN ('driver', 'both')
-    AND (u.is_available = 1 OR u.is_available IS NULL)
-    AND u.latitude IS NOT NULL
-    AND u.longitude IS NOT NULL
-  HAVING distance_km <= 10
-  ORDER BY distance_km ASC
-  LIMIT 5;
-`;
-
-// Fallback if is_available column is missing
-const FIND_NEAREST_DRIVERS_SQL_NO_AVAILABLE = `
-  SELECT 
-    u.user_id AS driver_id,
-    u.latitude,
-    u.longitude,
-    (6371 * 2 * ASIN(
-      SQRT(
-        POWER(SIN(RADIANS((u.latitude  - ?) / 2)), 2) +
-        COS(RADIANS(?)) * COS(RADIANS(u.latitude)) *
-        POWER(SIN(RADIANS((u.longitude - ?) / 2)), 2)
-      )
-    )) AS distance_km
-  FROM users u
-  WHERE 
-    u.user_type IN ('driver', 'both')
-    AND u.latitude IS NOT NULL
-    AND u.longitude IS NOT NULL
-  HAVING distance_km <= 10
-  ORDER BY distance_km ASC
-  LIMIT 5;
-`;
+// Haversine formula for calculating distance between two points
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 export const requestRide = async (req, res, next) => {
   try {
@@ -67,55 +31,80 @@ export const requestRide = async (req, res, next) => {
     }
     const numPeople = number_of_people ? Math.max(1, parseInt(number_of_people) || 1) : 1;
 
-    // 1) Query 5 closest available drivers via Haversine
-    let rows;
-    try {
-      const [r] = await promisePool.query(FIND_NEAREST_DRIVERS_SQL, [source_lat, source_lat, source_lon]);
-      rows = r;
-    } catch (e) {
-      const msg = String(e?.message || '').toLowerCase();
-      if (e?.code === 'ER_BAD_FIELD_ERROR' && msg.includes('is_available')) {
-        const [r2] = await promisePool.query(FIND_NEAREST_DRIVERS_SQL_NO_AVAILABLE, [source_lat, source_lat, source_lon]);
-        rows = r2;
-      } else if (e?.code === 'ER_BAD_FIELD_ERROR' && (msg.includes('latitude') || msg.includes('longitude'))) {
-        return res.status(500).json({ success: false, message: 'Ride request requires User.latitude and User.longitude columns. Please run DB migrations.' });
-      } else {
-        throw e;
+    // 1) Get all available drivers with location
+    const drivers = await prisma.user.findMany({
+      where: {
+        userType: { in: ['driver', 'both'] },
+        latitude: { not: null },
+        longitude: { not: null },
+        isAvailable: true
+      },
+      select: {
+        userId: true,
+        latitude: true,
+        longitude: true,
+        isAvailable: true
       }
-    }
-    const nearestDrivers = rows || [];
+    });
 
-    // Filter drivers to only include those with vehicles that can accommodate the required number of people
+    // 2) Calculate distances and filter drivers within 10km
+    const driversWithDistance = drivers
+      .map(driver => ({
+        driver_id: driver.userId,
+        latitude: Number(driver.latitude),
+        longitude: Number(driver.longitude),
+        distance_km: haversineDistance(
+          Number(source_lat),
+          Number(source_lon),
+          Number(driver.latitude),
+          Number(driver.longitude)
+        )
+      }))
+      .filter(d => d.distance_km <= 10)
+      .sort((a, b) => a.distance_km - b.distance_km)
+      .slice(0, 5);
+
+    // 3) Filter drivers to only include those with vehicles that can accommodate the required number of people
     let eligibleDrivers = [];
-    if (nearestDrivers.length > 0) {
+    if (driversWithDistance.length > 0) {
       try {
-        // Check which drivers have vehicles with sufficient capacity
-        const driverIds = nearestDrivers.map(d => d.driver_id);
-        const placeholders = driverIds.map(() => '?').join(',');
-        // Vehicle capacity includes driver, so we need capacity > numPeople (e.g., 5-seater = 1 driver + 4 passengers)
-        const [vehicleRows] = await promisePool.query(
-          `SELECT DISTINCT user_id, MAX(capacity) as max_capacity 
-           FROM vehicles 
-           WHERE user_id IN (${placeholders}) 
-           GROUP BY user_id 
-           HAVING max_capacity > ?`,
-          [...driverIds, numPeople]
-        );
-        const eligibleDriverIds = new Set(vehicleRows.map(v => v.user_id));
-        eligibleDrivers = nearestDrivers.filter(d => eligibleDriverIds.has(d.driver_id));
+        const driverIds = driversWithDistance.map(d => d.driver_id);
+        
+        // Get vehicles for these drivers
+        const vehicles = await prisma.vehicle.findMany({
+          where: {
+            userId: { in: driverIds }
+          },
+          select: {
+            userId: true,
+            capacity: true
+          }
+        });
+
+        // Group by user_id and get max capacity
+        const driverMaxCapacity = {};
+        vehicles.forEach(v => {
+          if (!driverMaxCapacity[v.userId] || driverMaxCapacity[v.userId] < v.capacity) {
+            driverMaxCapacity[v.userId] = v.capacity;
+          }
+        });
+
+        // Filter drivers with sufficient capacity (capacity > numPeople, since driver takes one seat)
+        eligibleDrivers = driversWithDistance.filter(d => {
+          const maxCapacity = driverMaxCapacity[d.driver_id] || 0;
+          return maxCapacity > numPeople;
+        });
       } catch (vehicleError) {
-        // If vehicles table doesn't exist or query fails, include all drivers (fallback)
-        if (vehicleError.code !== 'ER_NO_SUCH_TABLE') {
-          console.error('Error filtering drivers by vehicle capacity:', vehicleError);
-        }
-        eligibleDrivers = nearestDrivers;
+        // If vehicles query fails, include all drivers (fallback)
+        console.error('Error filtering drivers by vehicle capacity:', vehicleError);
+        eligibleDrivers = driversWithDistance;
       }
     }
 
     // Create a unique request id
     const request_id = `rr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // 2) Store active ride request in memory with destination and date/time
+    // 4) Store active ride request in memory with destination and date/time
     addActiveRide(request_id, {
       passenger_id,
       source_lat,
@@ -129,7 +118,7 @@ export const requestRide = async (req, res, next) => {
       notified_driver_ids: eligibleDrivers.map(d => d.driver_id),
     });
 
-    // 3) Emit new_ride_request to the eligible drivers (only those online)
+    // 5) Emit new_ride_request to the eligible drivers (only those online)
     const io = getIO();
     const payload = {
       request_id,
@@ -154,5 +143,3 @@ export const requestRide = async (req, res, next) => {
     next(err);
   }
 };
-
-

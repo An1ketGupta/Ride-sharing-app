@@ -3,8 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { testConnection } from './config/db.js';
-import { promisePool } from './config/db.js';
+import { testConnection, prisma } from './config/db.js';
 import { setIO, registerDriverSocket, registerUserSocket, unregisterSocket, getActiveRide, markRideAccepted, getSocketIdForDriver, getSocketIdForUser } from './utils/socketRegistry.js';
 import requestRoutes from './routes/requestRoutes.js';
 import adminRoutes from './routes/admin.js';
@@ -98,13 +97,10 @@ app.use((err, req, res, next) => {
 
 // Socket.IO events and demo broadcaster
 io.on('connection', (socket) => {
-    console.log('🔌 Client connected:', socket.id);
-
     // Driver registers their driver_id to receive targeted events
     socket.on('driver_register', ({ driver_id }) => {
         if (driver_id) {
             registerDriverSocket(Number(driver_id), socket.id);
-            console.log(`👤 Driver ${driver_id} registered socket ${socket.id}`);
         }
     });
 
@@ -112,7 +108,6 @@ io.on('connection', (socket) => {
     socket.on('user_register', ({ user_id }) => {
         if (user_id) {
             registerUserSocket(Number(user_id), socket.id);
-            console.log(`👤 User ${user_id} registered socket ${socket.id}`);
         }
     });
 
@@ -131,15 +126,18 @@ io.on('connection', (socket) => {
 
         // Persist latest driver location for proximity matching
         // This should always happen, regardless of ride_id, so location is available for API queries
-        promisePool.query(
-            'UPDATE users SET latitude = ?, longitude = ?, is_available = 1 WHERE user_id = ? AND user_type IN ("driver","both")',
-            [latNum, lonNum, id]
-        ).then(([result]) => {
-            if (result && result.affectedRows === 0) {
-                console.warn(`⚠️ Driver location update affected 0 rows for driver ${id} - user might not be a driver or columns might be missing`);
-            } else if (process.env.NODE_ENV === 'development') {
-                console.log(`✅ Driver location persisted for driver ${id}:`, { lat: latNum, lon: lonNum });
+        prisma.user.updateMany({
+            where: {
+                userId: id,
+                userType: { in: ['driver', 'both'] }
+            },
+            data: {
+                latitude: latNum,
+                longitude: lonNum,
+                isAvailable: true
             }
+        }).then((result) => {
+            // Location persisted silently
         }).catch((err) => {
             console.error(`❌ Failed to persist driver location for driver ${id}:`, err.message);
             // Don't throw - continue with socket broadcast even if DB update fails
@@ -149,22 +147,43 @@ io.on('connection', (socket) => {
         if (rideId && Number.isFinite(rideId)) {
             try {
                 // Get ride details including destination coordinates
-                const [rides] = await promisePool.query(
-                    `SELECT r.*, b.passenger_id, b.booking_id
-                     FROM rides r
-                     JOIN bookings b ON r.ride_id = b.ride_id
-                     WHERE r.ride_id = ? 
-                     AND r.driver_id = ?
-                     AND r.status = 'ongoing'
-                     AND b.booking_status IN ('confirmed', 'in_progress')
-                     AND b.booking_status NOT IN ('canceled_by_driver', 'canceled_by_passenger')`,
-                    [rideId, id]
-                );
+                const ride = await prisma.ride.findFirst({
+                    where: {
+                        rideId: rideId,
+                        driverId: id,
+                        status: 'ongoing',
+                        bookings: {
+                            some: {
+                                bookingStatus: { in: ['confirmed', 'in_progress'] },
+                                NOT: {
+                                    bookingStatus: { in: ['canceled_by_driver', 'canceled_by_passenger'] }
+                                }
+                            }
+                        }
+                    },
+                    include: {
+                        bookings: {
+                            where: {
+                                bookingStatus: { in: ['confirmed', 'in_progress'] },
+                                NOT: {
+                                    bookingStatus: { in: ['canceled_by_driver', 'canceled_by_passenger'] }
+                                }
+                            },
+                            select: {
+                                passengerId: true,
+                                bookingId: true
+                            }
+                        }
+                    }
+                });
+                
+                const rides = ride ? [{
+                    ...ride,
+                    passenger_id: ride.bookings[0]?.passengerId,
+                    booking_id: ride.bookings[0]?.bookingId
+                }] : [];
 
                 if (rides.length === 0) {
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log(`⚠️ No ongoing bookings found for ride ${rideId}`);
-                    }
                     return;
                 }
 
@@ -183,22 +202,20 @@ io.on('connection', (socket) => {
                 // Method 2: If not found, try to get from ride waypoints (last waypoint as destination)
                 if (!destLat || !destLon) {
                     try {
-                        const [waypoints] = await promisePool.query(
-                            `SELECT lat, lon FROM ride_waypoint 
-                             WHERE ride_id = ? 
-                             ORDER BY order_index DESC, waypoint_id DESC 
-                             LIMIT 1`,
-                            [rideId]
-                        );
-                        if (waypoints.length > 0) {
-                            destLat = Number(waypoints[0].lat);
-                            destLon = Number(waypoints[0].lon);
+                        const waypoint = await prisma.rideWaypoint.findFirst({
+                            where: { rideId: rideId },
+                            orderBy: [
+                                { orderIndex: 'desc' },
+                                { waypointId: 'desc' }
+                            ],
+                            select: { lat: true, lon: true }
+                        });
+                        if (waypoint) {
+                            destLat = Number(waypoint.lat);
+                            destLon = Number(waypoint.lon);
                         }
                     } catch (waypointError) {
                         // Table might not exist, continue
-                        if (process.env.NODE_ENV === 'development') {
-                            console.log('Waypoints not available for route calculation');
-                        }
                     }
                 }
 
@@ -220,10 +237,6 @@ io.on('connection', (socket) => {
                             global.routeFetchCache = new Map();
                         }
                         global.routeFetchCache.set(routeCacheKey, Date.now());
-                        
-                        if (process.env.NODE_ENV === 'development' && routeData) {
-                            console.log(`🗺️ Route fetched for ride ${rideId}: ${routeData.coordinates?.length || 0} coordinates`);
-                        }
                     } catch (routeError) {
                         console.error('❌ Error fetching route:', routeError.message);
                         // Continue without route data - don't block location updates
@@ -253,33 +266,18 @@ io.on('connection', (socket) => {
                     } : null
                 };
 
-                if (process.env.NODE_ENV === 'development') {
-                    if (positionPayload.route) {
-                        console.log(`🗺️ Sending route to passengers: ${positionPayload.route.coordinates.length} coordinates`);
-                    } else {
-                        console.log(`⚠️ No route data to send (routeData:`, routeData, ')');
-                    }
-                }
-
                 passengerMap.forEach((ride, passengerId) => {
                     const passengerSocketId = getSocketIdForUser(Number(passengerId));
                     if (passengerSocketId) {
                         io.to(passengerSocketId).emit('driver:position', positionPayload);
                     }
                 });
-
-                if (process.env.NODE_ENV === 'development') {
-                    console.log(`📍 Location broadcasted to ${passengerMap.size} passenger(s) for ongoing ride ${rideId}${routeData ? ' with route' : ''}`);
-                }
             } catch (err) {
                 console.error('Error querying passengers for ride:', err);
                 // Don't broadcast on error - location should only be shared for confirmed ongoing rides
             }
         } else {
             // Location is still persisted to DB even without ride_id, but not broadcast via socket
-            if (process.env.NODE_ENV === 'development') {
-                console.log(`📍 Driver location update received without ride_id - persisted to DB but not broadcasting`);
-            }
         }
     });
 
@@ -292,7 +290,6 @@ io.on('connection', (socket) => {
             if (!ride.notified_driver_ids.includes(Number(driver_id))) return; // not eligible
 
             const numPeople = Number(ride.number_of_people) || 1;
-            console.log(`🔍 Validating ride acceptance: driver_id=${driver_id}, vehicle_id=${vehicle_id}, numPeople=${numPeople}`);
 
             // Validate vehicle capacity BEFORE accepting
             let vehicleCapacity = 0;
@@ -302,28 +299,30 @@ io.on('connection', (socket) => {
             try {
                 if (vehicle_id) {
                     // Check if the selected vehicle has sufficient capacity
-                    const [vehicleRows] = await promisePool.query(
-                        'SELECT vehicle_id, capacity FROM vehicles WHERE vehicle_id = ? AND user_id = ?',
-                        [vehicle_id, driver_id]
-                    );
-                    console.log(`🔍 Vehicle query result:`, vehicleRows);
+                    const vehicle = await prisma.vehicle.findFirst({
+                        where: {
+                            vehicleId: parseInt(vehicle_id),
+                            userId: parseInt(driver_id)
+                        },
+                        select: {
+                            vehicleId: true,
+                            capacity: true
+                        }
+                    });
                     
-                    if (vehicleRows.length > 0) {
-                        vehicleCapacity = Number(vehicleRows[0].capacity) || 0;
+                    if (vehicle) {
+                        vehicleCapacity = Number(vehicle.capacity) || 0;
                         // Vehicle capacity includes driver, so we need capacity > numPeople (e.g., 5-seater = 1 driver + 4 passengers)
                         const requiredCapacity = numPeople + 1; // +1 for driver
                         const availablePassengers = Math.max(0, vehicleCapacity - 1); // capacity - 1 for driver
-                        console.log(`🔍 Vehicle capacity: ${vehicleCapacity}, Required passengers: ${numPeople}, Required total capacity: ${requiredCapacity}, Available passengers: ${availablePassengers}`);
                         
                         // Strict validation: vehicle capacity must be greater than number of passengers
                         // This ensures we have at least (numPeople + 1) seats total (1 driver + numPeople passengers)
                         if (vehicleCapacity > numPeople && availablePassengers >= numPeople) {
                             selectedVehicleId = Number(vehicle_id);
                             hasValidVehicle = true;
-                            console.log(`✅ Vehicle capacity sufficient: ${vehicleCapacity}-seater can accommodate ${numPeople} passengers (driver + ${availablePassengers} passenger seats)`);
                         } else {
                             // Selected vehicle doesn't have enough capacity
-                            console.log(`❌ Vehicle capacity insufficient: ${vehicleCapacity}-seater can only fit ${availablePassengers} passengers, but ${numPeople} are required`);
                             const driverSocketId = getSocketIdForDriver(Number(driver_id));
                             if (driverSocketId && io) {
                                 io.to(driverSocketId).emit('ride_accept_error', {
@@ -335,7 +334,6 @@ io.on('connection', (socket) => {
                         }
                     } else {
                         // Invalid vehicle ID
-                        console.log(`❌ Vehicle not found: vehicle_id=${vehicle_id}, driver_id=${driver_id}`);
                         const driverSocketId = getSocketIdForDriver(Number(driver_id));
                         if (driverSocketId && io) {
                             io.to(driverSocketId).emit('ride_accept_error', {
@@ -348,24 +346,28 @@ io.on('connection', (socket) => {
                 } else {
                     // No vehicle selected - check if driver has any vehicle with sufficient capacity
                     // Vehicle capacity includes driver, so we need capacity > numPeople
-                    console.log(`🔍 No vehicle selected, checking for any suitable vehicle...`);
-                    const [allVehicles] = await promisePool.query(
-                        'SELECT vehicle_id, capacity FROM vehicles WHERE user_id = ? AND capacity > ? ORDER BY capacity ASC LIMIT 1',
-                        [driver_id, numPeople]
-                    );
-                    console.log(`🔍 Suitable vehicles found:`, allVehicles);
+                    const allVehicles = await prisma.vehicle.findMany({
+                        where: {
+                            userId: parseInt(driver_id),
+                            capacity: { gt: numPeople }
+                        },
+                        orderBy: { capacity: 'asc' },
+                        take: 1,
+                        select: {
+                            vehicleId: true,
+                            capacity: true
+                        }
+                    });
                     
                     if (allVehicles.length > 0) {
                         vehicleCapacity = Number(allVehicles[0].capacity) || 0;
                         const availablePassengers = Math.max(0, vehicleCapacity - 1);
                         // Double-check that the auto-selected vehicle can actually accommodate the passengers
                         if (vehicleCapacity > numPeople && availablePassengers >= numPeople) {
-                            selectedVehicleId = Number(allVehicles[0].vehicle_id);
+                            selectedVehicleId = Number(allVehicles[0].vehicleId);
                             hasValidVehicle = true;
-                            console.log(`✅ Auto-selected vehicle: vehicle_id=${selectedVehicleId}, capacity=${vehicleCapacity} (can fit ${availablePassengers} passengers)`);
                         } else {
                             // Auto-selected vehicle doesn't have enough capacity (shouldn't happen due to SQL query, but safety check)
-                            console.log(`❌ Auto-selected vehicle insufficient: ${vehicleCapacity}-seater can only fit ${availablePassengers} passengers, but ${numPeople} are required`);
                             const driverSocketId = getSocketIdForDriver(Number(driver_id));
                             if (driverSocketId && io) {
                                 io.to(driverSocketId).emit('ride_accept_error', {
@@ -377,7 +379,6 @@ io.on('connection', (socket) => {
                         }
                     } else {
                         // Driver has no vehicle with sufficient capacity
-                        console.log(`❌ No suitable vehicles found for driver ${driver_id}, required capacity: > ${numPeople}`);
                         const driverSocketId = getSocketIdForDriver(Number(driver_id));
                         if (driverSocketId && io) {
                             io.to(driverSocketId).emit('ride_accept_error', {
@@ -389,17 +390,15 @@ io.on('connection', (socket) => {
                     }
                 }
             } catch (vehicleError) {
-                // If vehicles table doesn't exist, check if default capacity is sufficient
-                if (vehicleError.code === 'ER_NO_SUCH_TABLE') {
+                // If vehicles query fails, check if default capacity is sufficient
+                if (vehicleError.code === 'P2025' || vehicleError.message?.includes('Record to update not found')) {
                     vehicleCapacity = 4; // default fallback
                     const availablePassengers = vehicleCapacity - 1; // 3 passengers max for 4-seater
                     // Validate that default capacity can accommodate the requested passengers
                     if (vehicleCapacity > numPeople && availablePassengers >= numPeople) {
                         hasValidVehicle = true;
-                        console.log(`⚠️ Vehicles table not found, using default capacity: ${vehicleCapacity} (can fit ${availablePassengers} passengers)`);
                     } else {
                         // Default capacity insufficient
-                        console.log(`❌ Default capacity insufficient: ${vehicleCapacity}-seater can only fit ${availablePassengers} passengers, but ${numPeople} are required`);
                         const driverSocketId = getSocketIdForDriver(Number(driver_id));
                         if (driverSocketId && io) {
                             io.to(driverSocketId).emit('ride_accept_error', {
@@ -424,7 +423,6 @@ io.on('connection', (socket) => {
 
             // Final validation check before accepting the ride
             if (!hasValidVehicle || !selectedVehicleId) {
-                console.log(`❌ Final validation failed: hasValidVehicle=${hasValidVehicle}, selectedVehicleId=${selectedVehicleId}`);
                 const driverSocketId = getSocketIdForDriver(Number(driver_id));
                 if (driverSocketId && io) {
                     io.to(driverSocketId).emit('ride_accept_error', {
@@ -438,7 +436,6 @@ io.on('connection', (socket) => {
             // Double-check capacity one more time before proceeding
             const finalAvailablePassengers = Math.max(0, vehicleCapacity - 1);
             if (vehicleCapacity <= numPeople || finalAvailablePassengers < numPeople) {
-                console.log(`❌ Final capacity check failed: vehicleCapacity=${vehicleCapacity}, numPeople=${numPeople}, availablePassengers=${finalAvailablePassengers}`);
                 const driverSocketId = getSocketIdForDriver(Number(driver_id));
                 if (driverSocketId && io) {
                     io.to(driverSocketId).emit('ride_accept_error', {
@@ -453,7 +450,10 @@ io.on('connection', (socket) => {
             markRideAccepted(request_id);
 
             // Update DB: set driver unavailable (using users table with is_available column)
-            await promisePool.execute('UPDATE users SET is_available = 0 WHERE user_id = ?', [driver_id]);
+            await prisma.user.update({
+                where: { userId: parseInt(driver_id) },
+                data: { isAvailable: false }
+            });
 
             // Create ride and booking in database
             try {
@@ -473,64 +473,44 @@ io.on('connection', (socket) => {
 
                 // Create ride with status 'scheduled' - ride remains scheduled until driver manually starts it
                 // The ride will NOT be automatically set to 'ongoing' - driver must manually change status when they start the ride
-                let rideResult;
-                try {
-                    [rideResult] = await promisePool.query(
-                        `INSERT INTO rides (driver_id, vehicle_id, source, destination, date, time, total_seats, available_seats, fare_per_km, distance_km, status)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')`,
-                        [
-                            driver_id,
-                            selectedVehicleId,
-                            `Pickup: ${ride.source_lat}, ${ride.source_lon}`,
-                            ride.destination || `Destination: ${ride.destination_lat}, ${ride.destination_lon}`,
-                            ride.date || new Date().toISOString().split('T')[0],
-                            ride.time || new Date().toTimeString().split(' ')[0].substring(0, 5),
-                            totalSeats,
-                            availableSeats,
-                            fare_per_km,
-                            distance_km
-                        ]
-                    );
-                } catch (e) {
-                    // If vehicle_id column doesn't exist, try without it
-                    if (e && (e.code === 'ER_BAD_FIELD_ERROR' || e.errno === 1054)) {
-                        console.warn('vehicle_id column not found, inserting ride without vehicle_id');
-                        // Still create ride with status 'scheduled' - not 'ongoing'
-                        [rideResult] = await promisePool.query(
-                            `INSERT INTO rides (driver_id, source, destination, date, time, total_seats, available_seats, fare_per_km, distance_km, status)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')`,
-                            [
-                                driver_id,
-                                `Pickup: ${ride.source_lat}, ${ride.source_lon}`,
-                                ride.destination || `Destination: ${ride.destination_lat}, ${ride.destination_lon}`,
-                                ride.date || new Date().toISOString().split('T')[0],
-                                ride.time || new Date().toTimeString().split(' ')[0].substring(0, 5),
-                                totalSeats,
-                                availableSeats,
-                                fare_per_km,
-                                distance_km
-                            ]
-                        );
-                    } else {
-                        throw e;
+                const rideDate = ride.date ? new Date(ride.date) : new Date();
+                const rideTime = ride.time || new Date().toTimeString().split(' ')[0].substring(0, 5);
+                
+                const rideResult = await prisma.ride.create({
+                    data: {
+                        driverId: parseInt(driver_id),
+                        vehicleId: selectedVehicleId,
+                        source: `Pickup: ${ride.source_lat}, ${ride.source_lon}`,
+                        destination: ride.destination || `Destination: ${ride.destination_lat}, ${ride.destination_lon}`,
+                        date: rideDate,
+                        time: rideTime,
+                        totalSeats: totalSeats,
+                        availableSeats: availableSeats,
+                        farePerKm: fare_per_km,
+                        distanceKm: distance_km,
+                        status: 'scheduled'
                     }
-                }
+                });
 
-                const ride_id = rideResult.insertId;
+                const ride_id = rideResult.rideId;
 
                 // Create booking for passenger with correct number of seats - Fixed 10rs per seat per km
                 const estimatedAmount = 10 * distance_km * numPeople;
-                const [bookingResult] = await promisePool.query(
-                    `INSERT INTO bookings (ride_id, passenger_id, seats_booked, amount, booking_status)
-                     VALUES (?, ?, ?, ?, 'confirmed')`,
-                    [ride_id, ride.passenger_id, numPeople, estimatedAmount]
-                );
+                const bookingResult = await prisma.booking.create({
+                    data: {
+                        rideId: ride_id,
+                        passengerId: parseInt(ride.passenger_id),
+                        seatsBooked: numPeople,
+                        amount: estimatedAmount,
+                        bookingStatus: 'confirmed'
+                    }
+                });
 
                 // Note: available_seats already accounts for the booking in the INSERT above
 
                 const assignment = {
                     request_id,
-                    booking_id: bookingResult.insertId,
+                    booking_id: bookingResult.bookingId,
                     ride_id: ride_id,
                     passenger_id: ride.passenger_id,
                     pickup: { lat: Number(ride.source_lat), lon: Number(ride.source_lon) },
@@ -550,7 +530,7 @@ io.on('connection', (socket) => {
                 io.emit(`ride_assigned_passenger_${ride.passenger_id}`, assignment);
 
                 // Send DB-backed notification to passenger
-                await sendNotification(ride.passenger_id, `Your driver has accepted the ride! Booking ID: ${bookingResult.insertId}`);
+                await sendNotification(ride.passenger_id, `Your driver has accepted the ride! Booking ID: ${bookingResult.bookingId}`);
 
                 // Notify other drivers that this ride request is no longer available
                 const otherDrivers = ride.notified_driver_ids.filter(id => Number(id) !== Number(driver_id));
@@ -564,7 +544,6 @@ io.on('connection', (socket) => {
                     }
                 });
 
-                console.log(`✅ Ride created: ride_id=${ride_id}, booking_id=${bookingResult.insertId}`);
             } catch (dbError) {
                 console.error('Failed to create ride/booking:', dbError);
                 // Still notify driver but log error
@@ -591,8 +570,6 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            console.log(`Driver ${driver_id} rejected ride request ${request_id}`);
-            
             // Optionally notify passenger that a driver rejected (if you want to track this)
             // For now, we'll just log it and let other drivers still have a chance to accept
         } catch (e) {
@@ -605,15 +582,19 @@ io.on('connection', (socket) => {
         try {
             if (!booking_id || !text || !from_user_id) return;
             // Find driver for this booking and confirm sender is authorized
-            const [rows] = await promisePool.query(
-                `SELECT b.passenger_id, r.driver_id
-                 FROM bookings b
-                 JOIN rides r ON b.ride_id = r.ride_id
-                 WHERE b.booking_id = ?`,
-                [Number(booking_id)]
-            );
-            if (!rows || rows.length === 0) return;
-            const { passenger_id, driver_id } = rows[0];
+            const booking = await prisma.booking.findUnique({
+                where: { bookingId: parseInt(booking_id) },
+                include: {
+                    ride: {
+                        select: {
+                            driverId: true
+                        }
+                    }
+                }
+            });
+            if (!booking) return;
+            const passenger_id = booking.passengerId;
+            const driver_id = booking.ride.driverId;
             
             // Allow both passenger and driver to send messages
             const isPassenger = Number(passenger_id) === Number(from_user_id);
@@ -633,58 +614,35 @@ io.on('connection', (socket) => {
             // Save message to database - ensure it's saved before proceeding
             let messageId = null;
             try {
-                // First, ensure table exists
-                try {
-                    await promisePool.query('SELECT 1 FROM booking_messages LIMIT 1');
-                } catch (tableCheckError) {
-                    if (tableCheckError?.code === 'ER_NO_SUCH_TABLE') {
-                        console.log('Creating booking_messages table...');
-                        await promisePool.query(`
-                            CREATE TABLE IF NOT EXISTS booking_messages (
-                                message_id INT PRIMARY KEY AUTO_INCREMENT,
-                                booking_id INT NOT NULL,
-                                from_user_id INT NOT NULL,
-                                message_text TEXT NOT NULL,
-                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE,
-                                FOREIGN KEY (from_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                                INDEX idx_booking_id (booking_id),
-                                INDEX idx_from_user_id (from_user_id),
-                                INDEX idx_created_at (created_at)
-                            )
-                        `);
-                        console.log('✅ booking_messages table created');
-                    }
-                }
-
                 // Verify booking exists before inserting message
-                const [bookingCheck] = await promisePool.query(
-                    `SELECT booking_id FROM bookings WHERE booking_id = ?`,
-                    [Number(booking_id)]
-                );
+                const bookingCheck = await prisma.booking.findUnique({
+                    where: { bookingId: parseInt(booking_id) },
+                    select: { bookingId: true }
+                });
                 
-                if (bookingCheck.length === 0) {
+                if (!bookingCheck) {
                     throw new Error(`Booking ${booking_id} does not exist`);
                 }
 
                 // Verify user exists
-                const [userCheck] = await promisePool.query(
-                    `SELECT user_id FROM users WHERE user_id = ?`,
-                    [Number(from_user_id)]
-                );
+                const userCheck = await prisma.user.findUnique({
+                    where: { userId: parseInt(from_user_id) },
+                    select: { userId: true }
+                });
                 
-                if (userCheck.length === 0) {
+                if (!userCheck) {
                     throw new Error(`User ${from_user_id} does not exist`);
                 }
 
-                // Now insert the message - let Prisma set the timestamp automatically
-                const [insertResult] = await promisePool.query(
-                    `INSERT INTO booking_messages (booking_id, from_user_id, message_text)
-                     VALUES (?, ?, ?)`,
-                    [Number(booking_id), Number(from_user_id), String(text)]
-                );
-                messageId = insertResult.insertId;
-                console.log(`✅ Message saved to database with ID: ${messageId}`);
+                // Now insert the message - Prisma will set the timestamp automatically
+                const insertResult = await prisma.bookingMessage.create({
+                    data: {
+                        bookingId: parseInt(booking_id),
+                        fromUserId: parseInt(from_user_id),
+                        messageText: String(text)
+                    }
+                });
+                messageId = insertResult.messageId;
             } catch (dbError) {
                 console.error('❌ Failed to save message to database:', dbError);
                 console.error('Error code:', dbError.code);
@@ -715,11 +673,11 @@ io.on('connection', (socket) => {
             // Get the actual timestamp from the database
             let dbTimestamp;
             try {
-                const [messageRow] = await promisePool.query(
-                    `SELECT created_at FROM booking_messages WHERE message_id = ?`,
-                    [messageId]
-                );
-                dbTimestamp = messageRow[0]?.created_at ? new Date(messageRow[0].created_at).toISOString() : new Date().toISOString();
+                const messageRow = await prisma.bookingMessage.findUnique({
+                    where: { messageId: messageId },
+                    select: { createdAt: true }
+                });
+                dbTimestamp = messageRow?.createdAt ? new Date(messageRow.createdAt).toISOString() : new Date().toISOString();
             } catch (e) {
                 dbTimestamp = new Date().toISOString();
             }
@@ -783,7 +741,6 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         unregisterSocket(socket.id);
-        console.log('❌ Client disconnected:', socket.id);
     });
 });
 

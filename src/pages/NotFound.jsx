@@ -6,27 +6,21 @@ const NotFound = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0 -z-10">
-                <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full blur-3xl opacity-20 bg-[radial-gradient(circle,#6366f1_0%,transparent_70%)] animate-pulse-soft float-1" />
-                <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full blur-3xl opacity-20 bg-[radial-gradient(circle,#06b6d4_0%,transparent_70%)] animate-pulse-soft float-2" />
-            </div>
-
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#000000] relative overflow-hidden">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
                 className="text-center max-w-2xl"
             >
                 {/* 404 Number */}
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
+                    transition={{ delay: 0.1, duration: 0.25, ease: 'easeOut' }}
                     className="mb-8"
                 >
-                    <h1 className="text-9xl sm:text-[200px] font-extrabold gradient-text-vibrant leading-none mb-4">
+                    <h1 className="text-9xl sm:text-[200px] font-extrabold text-white leading-none mb-4">
                         404
                     </h1>
                 </motion.div>
@@ -35,13 +29,13 @@ const NotFound = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.2, duration: 0.25, ease: 'easeOut' }}
                     className="space-y-4 mb-10"
                 >
-                    <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
                         Page Not Found
                     </h2>
-                    <p className="text-lg text-muted-foreground max-w-md mx-auto">
+                    <p className="text-lg text-white/60 max-w-md mx-auto">
                         Oops! The page you're looking for doesn't exist. It might have been moved or deleted.
                     </p>
                 </motion.div>
@@ -50,37 +44,34 @@ const NotFound = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.3, duration: 0.25, ease: 'easeOut' }}
                     className="flex flex-wrap items-center justify-center gap-4"
                 >
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => navigate(-1)}
-                        className="px-6 py-3 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/15 font-semibold rounded-xl transition-all flex items-center gap-2 shadow-soft"
+                        className="px-6 py-3 bg-[#1A1A1A] border border-[#1F1F1F] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         Go Back
                     </motion.button>
                     
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => navigate('/')}
-                        className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-glow-lg hover:shadow-glow transition-all flex items-center gap-2 relative overflow-hidden group"
+                        className="px-6 py-3 bg-[#0EA5E9] text-white font-bold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2"
                     >
-                        <span className="relative z-10 flex items-center gap-2">
-                            <Home className="w-5 h-5" />
-                            Back to Home
-                        </span>
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <Home className="w-5 h-5" />
+                        Back to Home
                     </motion.button>
 
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => navigate('/search')}
-                        className="px-6 py-3 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/15 font-semibold rounded-xl transition-all flex items-center gap-2 shadow-soft"
+                        className="px-6 py-3 bg-[#1A1A1A] border border-[#1F1F1F] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
                     >
                         <Search className="w-5 h-5" />
                         Search Rides
@@ -91,12 +82,12 @@ const NotFound = () => {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.4, duration: 0.25, ease: 'easeOut' }}
                     className="mt-16"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-thick border border-white/20">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                        <span className="text-sm font-medium text-muted-foreground">Lost in the ride</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111] border border-[#1A1A1A]">
+                        <div className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse"></div>
+                        <span className="text-sm font-medium text-white/60">Lost in the ride</span>
                     </div>
                 </motion.div>
             </motion.div>

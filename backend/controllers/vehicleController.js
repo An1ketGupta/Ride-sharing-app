@@ -1,4 +1,4 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 
 // Get vehicles for a driver (defaults to current user)
@@ -8,9 +8,23 @@ export const getVehicles = async (req, res) => {
         if (!Number.isFinite(driver_id)) {
             return errorResponse(res, 400, 'driver_id is required');
         }
-        const [rows] = await promisePool.query(`SELECT * FROM vehicles WHERE user_id = ? ORDER BY created_at DESC`, [driver_id]);
-        return successResponse(res, 200, 'OK', rows);
+        const vehicles = await prisma.vehicle.findMany({
+            where: { userId: driver_id },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        return successResponse(res, 200, 'OK', vehicles.map(v => ({
+            vehicle_id: v.vehicleId,
+            user_id: v.userId,
+            model: v.model,
+            license_plate: v.licensePlate,
+            capacity: v.capacity,
+            color: v.color,
+            vehicle_image_url: v.vehicleImageUrl,
+            created_at: v.createdAt
+        })));
     } catch (error) {
+        console.error('Get vehicles error:', error);
         return errorResponse(res, 500, 'Failed to fetch vehicles');
     }
 };
@@ -32,19 +46,25 @@ export const createVehicle = async (req, res) => {
         }
         // Enforce unique license_plate per schema
         try {
-            const [r] = await promisePool.query(
-                `INSERT INTO vehicles (user_id, model, license_plate, capacity, color, vehicle_image_url)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [driver_id, String(model), String(license_plate), capacityNum, color || null, vehicle_image_url || null]
-            );
-            return successResponse(res, 201, 'Vehicle created', { vehicle_id: r.insertId });
+            const vehicle = await prisma.vehicle.create({
+                data: {
+                    userId: driver_id,
+                    model: String(model),
+                    licensePlate: String(license_plate),
+                    capacity: capacityNum,
+                    color: color || null,
+                    vehicleImageUrl: vehicle_image_url || null
+                }
+            });
+            return successResponse(res, 201, 'Vehicle created', { vehicle_id: vehicle.vehicleId });
         } catch (e) {
-            if (String(e?.message || '').toLowerCase().includes('duplicate')) {
+            if (e.code === 'P2002' || String(e?.message || '').toLowerCase().includes('duplicate') || String(e?.message || '').toLowerCase().includes('unique')) {
                 return errorResponse(res, 400, 'License plate already exists');
             }
             throw e;
         }
     } catch (error) {
+        console.error('Create vehicle error:', error);
         return errorResponse(res, 500, 'Failed to create vehicle');
     }
 };
@@ -54,10 +74,14 @@ export const updateVehicleImage = async (req, res) => {
     try {
         const { id } = req.params; // vehicle_id
         const { vehicle_image_url } = req.body || {};
-        await promisePool.query(`UPDATE vehicles SET vehicle_image_url = ? WHERE vehicle_id = ?`, [vehicle_image_url, id]);
+        await prisma.vehicle.update({
+            where: { vehicleId: parseInt(id) },
+            data: { vehicleImageUrl: vehicle_image_url || null }
+        });
         return successResponse(res, 200, 'Updated');
     } catch (error) {
-        return errorResponse(res, 500, 'Failed to UPDATE vehicles image');
+        console.error('Update vehicle image error:', error);
+        return errorResponse(res, 500, 'Failed to update vehicle image');
     }
 };
 
@@ -77,33 +101,39 @@ export const deleteVehicle = async (req, res) => {
         }
 
         // Check if vehicle exists and belongs to the current user
-        const [vehicles] = await promisePool.query(
-            `SELECT vehicle_id, user_id FROM vehicles WHERE vehicle_id = ?`,
-            [vehicle_id]
-        );
+        const vehicle = await prisma.vehicle.findUnique({
+            where: { vehicleId: vehicle_id },
+            select: {
+                vehicleId: true,
+                userId: true
+            }
+        });
 
-        if (vehicles.length === 0) {
+        if (!vehicle) {
             return errorResponse(res, 404, 'Vehicle not found');
         }
 
-        const vehicle_user_id = Number(vehicles[0].user_id);
-        if (vehicle_user_id !== driver_id) {
-            console.error(`Authorization failed: vehicle user_id=${vehicle_user_id}, driver_id=${driver_id}`);
+        if (Number(vehicle.userId) !== driver_id) {
+            console.error(`Authorization failed: vehicle user_id=${vehicle.userId}, driver_id=${driver_id}`);
             return errorResponse(res, 403, 'Not authorized to delete this vehicle');
         }
 
         // Check if vehicle is used in any active rides
-        const [activeRides] = await promisePool.query(
-            `SELECT COUNT(*) as count FROM rides WHERE vehicle_id = ? AND status IN ('scheduled', 'ongoing')`,
-            [vehicle_id]
-        );
+        const activeRidesCount = await prisma.ride.count({
+            where: {
+                vehicleId: vehicle_id,
+                status: { in: ['scheduled', 'ongoing'] }
+            }
+        });
 
-        if (activeRides[0]?.count > 0) {
+        if (activeRidesCount > 0) {
             return errorResponse(res, 400, 'Cannot delete vehicle with active rides');
         }
 
         // Delete the vehicle
-        await promisePool.query(`DELETE FROM vehicles WHERE vehicle_id = ?`, [vehicle_id]);
+        await prisma.vehicle.delete({
+            where: { vehicleId: vehicle_id }
+        });
         
         return successResponse(res, 200, 'Vehicle deleted successfully');
     } catch (error) {
@@ -111,5 +141,3 @@ export const deleteVehicle = async (req, res) => {
         return errorResponse(res, 500, 'Failed to delete vehicle');
     }
 };
-
-

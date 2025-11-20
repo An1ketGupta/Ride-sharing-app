@@ -4,8 +4,9 @@ import { userExtras } from '../services/userExtras';
 import { bookingService } from '../services/bookingService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/Toast';
+import { Button } from '../components/ui/Button';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Phone, MapPin, Shield, User, Save } from 'lucide-react';
+import { AlertTriangle, Phone, MapPin, Shield, User, Save, PhoneCall, Navigation, Info } from 'lucide-react';
 
 const EmergencySOS = () => {
     const [emergencyContact, setEmergencyContact] = useState({ name: '', phone: '' });
@@ -132,193 +133,255 @@ const EmergencySOS = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
-            <div className="max-w-4xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
-                        <Shield className="w-10 h-10 text-red-600" />
-                        Emergency SOS
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">Your safety is our priority</p>
-                </motion.div>
+        <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-6xl mx-auto page-transition">
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="mb-8 sm:mb-10 md:mb-12"
+            >
+                <div className="flex items-center gap-4 mb-3">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br from-red-600 to-orange-600 flex items-center justify-center shadow-lg">
+                        <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-2">
+                            Emergency SOS
+                        </h1>
+                        <p className="text-white/60 text-lg sm:text-xl">Your safety is our priority</p>
+                    </div>
+                </div>
+            </motion.div>
 
-                {/* Emergency Contact Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
-                >
-                    <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <User className="w-5 h-5 text-blue-600" />
-                        Emergency Contact
-                    </h2>
-                    <form onSubmit={handleSaveEmergencyContact} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Contact Name</label>
-                            <input
-                                type="text"
-                                value={emergencyContact.name}
-                                onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
-                                placeholder="e.g., John Doe"
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Phone Number</label>
-                            <input
-                                type="tel"
-                                value={emergencyContact.phone}
-                                onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
-                                placeholder="+91 98765 43210"
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                            <Save className="w-4 h-4" />
-                            Save Emergency Contact
-                        </button>
-                    </form>
-                </motion.div>
-
-                {/* SOS Alert Section - Only show if passenger has active ride */}
-                {checkingRide ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                {/* Left Column - Emergency Contact & Safety Tips */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Emergency Contact Section */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
+                        transition={{ delay: 0.1, duration: 0.25 }}
+                        className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1A1A1A] hover:border-[#0EA5E9]/30 transition-all duration-200"
                     >
-                        <div className="text-center py-8">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mb-4"></div>
-                            <p className="text-gray-600 dark:text-gray-400">Checking for active rides...</p>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/20 flex items-center justify-center">
+                                <User className="w-5 h-5 text-[#0EA5E9]" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white">Emergency Contact</h2>
                         </div>
+                        <form onSubmit={handleSaveEmergencyContact} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-white/80">Contact Name</label>
+                                <input
+                                    type="text"
+                                    value={emergencyContact.name}
+                                    onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
+                                    placeholder="e.g., John Doe"
+                                    className="w-full px-4 py-3 rounded-xl border border-[#1A1A1A] bg-[#0A0A0A] text-white placeholder:text-white/40 focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-white/80">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={emergencyContact.phone}
+                                    onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
+                                    placeholder="+91 98765 43210"
+                                    className="w-full px-4 py-3 rounded-xl border border-[#1A1A1A] bg-[#0A0A0A] text-white placeholder:text-white/40 focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none transition-all"
+                                />
+                            </div>
+                            <Button
+                                type="submit"
+                                disabled={loading}
+                                variant="primary"
+                                className="w-full"
+                            >
+                                <Save className="w-4 h-4" />
+                                Save Contact
+                            </Button>
+                        </form>
                     </motion.div>
-                ) : activeRide ? (
+
+                    {/* Safety Tips */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="p-6 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl shadow-lg border-2 border-red-200 dark:border-red-800"
+                        transition={{ delay: 0.2, duration: 0.25 }}
+                        className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1A1A1A]"
                     >
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-red-600 dark:text-red-400">
-                            <AlertTriangle className="w-6 h-6" />
-                            Raise SOS Alert
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Use this feature only in case of emergency during an active ride. This will:
-                        </p>
-                        <ul className="text-sm text-gray-600 dark:text-gray-400 mb-6 space-y-2">
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-500">•</span>
-                                <span>Notify your emergency contact with your current location</span>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-lg bg-[#0EA5E9]/20 flex items-center justify-center">
+                                <Info className="w-5 h-5 text-[#0EA5E9]" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">Safety Tips</h3>
+                        </div>
+                        <ul className="space-y-3 text-white/70 text-sm">
+                            <li className="flex items-start gap-3">
+                                <span className="text-[#0EA5E9] mt-1">•</span>
+                                <span>Always share your trip details with friends or family</span>
                             </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-500">•</span>
-                                <span>Alert the driver and platform administrators</span>
+                            <li className="flex items-start gap-3">
+                                <span className="text-[#0EA5E9] mt-1">•</span>
+                                <span>Verify driver details before starting the ride</span>
                             </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-500">•</span>
-                                <span>Share your live location with authorities</span>
+                            <li className="flex items-start gap-3">
+                                <span className="text-[#0EA5E9] mt-1">•</span>
+                                <span>Keep your emergency contact updated</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-[#0EA5E9] mt-1">•</span>
+                                <span>Trust your instincts - if something feels wrong, take action</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-[#0EA5E9] mt-1">•</span>
+                                <span>For immediate danger, call emergency services: <strong className="text-white">112</strong></span>
                             </li>
                         </ul>
+                    </motion.div>
+                </div>
 
-                        {activeRide && (
-                            <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg text-sm">
-                                <p className="text-gray-700 dark:text-gray-300 font-semibold mb-1">Active Ride:</p>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    {activeRide.pickup_location || activeRide.source} → {activeRide.dropoff_location || activeRide.destination}
-                                </p>
-                                {activeRide.booking_id && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Booking ID: {activeRide.booking_id}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {currentLocation && (
-                            <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg flex items-center gap-2 text-sm">
-                                <MapPin className="w-4 h-4 text-green-600" />
-                                <span className="text-gray-600 dark:text-gray-400">
-                                    Current Location: {currentLocation.lat.toFixed(4)}, {currentLocation.lon.toFixed(4)}
-                                </span>
-                            </div>
-                        )}
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-2">Additional Details (Optional)</label>
-                            <textarea
-                                value={sosDetails}
-                                onChange={(e) => setSosDetails(e.target.value)}
-                                placeholder="Describe the emergency situation..."
-                                rows={3}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-red-500 outline-none"
-                            />
-                        </div>
-
-                        <button
-                            onClick={() => handleRaiseSOS(activeRide.booking_id || activeRide.ride_id)}
-                            disabled={loading || !currentLocation}
-                            className="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                {/* Right Column - SOS Alert Section */}
+                <div className="lg:col-span-2">
+                    {checkingRide ? (
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1, duration: 0.25 }}
+                            className="bg-[#111111] rounded-xl p-8 sm:p-12 border border-[#1A1A1A]"
                         >
-                            <AlertTriangle className="w-6 h-6" />
-                            RAISE SOS ALERT
-                        </button>
+                            <div className="text-center py-12">
+                                <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-[#0EA5E9] border-t-transparent mb-4"></div>
+                                <p className="text-white/60 text-lg">Checking for active rides...</p>
+                            </div>
+                        </motion.div>
+                    ) : activeRide ? (
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1, duration: 0.25 }}
+                            className="bg-gradient-to-br from-red-950/30 via-red-900/20 to-orange-950/30 rounded-xl p-6 sm:p-8 border-2 border-red-500/30 relative overflow-hidden"
+                        >
+                            {/* Animated background pulse */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-orange-600/10 animate-pulse"></div>
+                            
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 rounded-xl bg-red-600/20 flex items-center justify-center">
+                                        <AlertTriangle className="w-6 h-6 text-red-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white mb-1">Raise SOS Alert</h2>
+                                        <p className="text-white/60 text-sm">Use only in case of emergency</p>
+                                    </div>
+                                </div>
 
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 text-center">
-                            For immediate help, call emergency services: 112
-                        </p>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg border-2 border-gray-200 dark:border-gray-700"
-                    >
-                        <div className="text-center py-8">
-                            <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <h2 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">
-                                No Active Ride
-                            </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                The SOS emergency feature is only available when you are in an active ride.
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-500">
-                                Once you book a ride and it's confirmed or in progress, you'll be able to use this feature.
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
-                                For immediate emergencies, please call emergency services: <strong>112</strong>
-                            </p>
-                        </div>
-                    </motion.div>
-                )}
+                                <div className="mb-6 p-4 bg-black/40 rounded-xl border border-red-500/20">
+                                    <p className="text-white/80 text-sm mb-3 font-medium">This will:</p>
+                                    <ul className="space-y-2 text-white/70 text-sm">
+                                        <li className="flex items-start gap-2">
+                                            <PhoneCall className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                            <span>Notify your emergency contact with your current location</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Shield className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                            <span>Alert the driver and platform administrators</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Navigation className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                            <span>Share your live location with authorities</span>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                {/* Safety Tips */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-6 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
-                >
-                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                        <Shield className="w-5 h-5" />
-                        Safety Tips
-                    </h3>
-                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                        <li>• Always share your trip details with friends or family</li>
-                        <li>• Verify driver details before starting the ride</li>
-                        <li>• Keep your emergency contact updated</li>
-                        <li>• Trust your instincts - if something feels wrong, take action</li>
-                        <li>• For immediate danger, call local emergency services: 112</li>
-                    </ul>
-                </motion.div>
+                                {/* Active Ride Info */}
+                                <div className="mb-4 p-4 bg-black/40 rounded-xl border border-[#1A1A1A]">
+                                    <p className="text-white/80 text-sm font-medium mb-2">Active Ride</p>
+                                    <p className="text-white text-base mb-1">
+                                        {activeRide.pickup_location || activeRide.source} → {activeRide.dropoff_location || activeRide.destination}
+                                    </p>
+                                    {activeRide.booking_id && (
+                                        <p className="text-xs text-white/50 mt-1">Booking ID: {activeRide.booking_id}</p>
+                                    )}
+                                </div>
+
+                                {/* Current Location */}
+                                {currentLocation ? (
+                                    <div className="mb-4 p-4 bg-black/40 rounded-xl border border-[#1A1A1A] flex items-center gap-3">
+                                        <MapPin className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-white/80 text-sm font-medium">Current Location</p>
+                                            <p className="text-white/60 text-xs">
+                                                {currentLocation.lat.toFixed(4)}, {currentLocation.lon.toFixed(4)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="mb-4 p-4 bg-black/40 rounded-xl border border-yellow-500/30 flex items-center gap-3">
+                                        <MapPin className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                                        <p className="text-yellow-500/80 text-sm">Getting location...</p>
+                                    </div>
+                                )}
+
+                                {/* Additional Details */}
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium mb-2 text-white/80">Additional Details (Optional)</label>
+                                    <textarea
+                                        value={sosDetails}
+                                        onChange={(e) => setSosDetails(e.target.value)}
+                                        placeholder="Describe the emergency situation..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 rounded-xl border border-[#1A1A1A] bg-black/40 text-white placeholder:text-white/40 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 outline-none transition-all resize-none"
+                                    />
+                                </div>
+
+                                {/* SOS Button */}
+                                <motion.button
+                                    onClick={() => handleRaiseSOS(activeRide.booking_id || activeRide.ride_id)}
+                                    disabled={loading || !currentLocation}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full px-8 py-5 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-bold text-lg sm:text-xl hover:shadow-[0_8px_24px_rgba(239,68,68,0.4)] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-orange-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <AlertTriangle className="w-6 h-6 relative z-10 animate-pulse" />
+                                    <span className="relative z-10">RAISE SOS ALERT</span>
+                                </motion.button>
+
+                                <p className="text-xs text-white/50 mt-4 text-center">
+                                    For immediate help, call emergency services: <strong className="text-white">112</strong>
+                                </p>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1, duration: 0.25 }}
+                            className="bg-[#111111] rounded-xl p-8 sm:p-12 border border-[#1A1A1A]"
+                        >
+                            <div className="text-center py-8">
+                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#1A1A1A] flex items-center justify-center">
+                                    <Shield className="w-10 h-10 text-white/40" />
+                                </div>
+                                <h2 className="text-2xl font-bold mb-3 text-white">
+                                    No Active Ride
+                                </h2>
+                                <p className="text-white/60 mb-6 max-w-md mx-auto">
+                                    The SOS emergency feature is only available when you are in an active ride.
+                                </p>
+                                <p className="text-white/50 text-sm mb-4">
+                                    Once you book a ride and it's confirmed or in progress, you'll be able to use this feature.
+                                </p>
+                                <div className="mt-8 p-4 bg-[#0A0A0A] rounded-xl border border-[#1A1A1A] inline-block">
+                                    <p className="text-white/80 text-sm">
+                                        For immediate emergencies, call: <strong className="text-[#0EA5E9] text-lg">112</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
             </div>
         </div>
     );

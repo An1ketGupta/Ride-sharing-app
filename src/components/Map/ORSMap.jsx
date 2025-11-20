@@ -20,8 +20,6 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const containerStyle = { width: '100%', height: '260px', borderRadius: '16px' };
-
 export default function ORSMap({ driver, passenger }) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
@@ -63,10 +61,6 @@ export default function ORSMap({ driver, passenger }) {
 
         mapInstanceRef.current = map;
 
-        if (import.meta.env.DEV) {
-            console.log('🗺️ ORS Map initialized at:', center);
-        }
-
         return () => {
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
@@ -101,27 +95,29 @@ export default function ORSMap({ driver, passenger }) {
             driverCircleRef.current = null;
         }
 
-        // Create custom green icon for driver
+        // Create premium driver marker with Uber-style design
         const driverIcon = L.divIcon({
             className: 'driver-marker',
             html: `
                 <div style="
-                    width: 28px;
-                    height: 28px;
-                    background-color: #10b981;
-                    border: 4px solid white;
+                    width: 32px;
+                    height: 32px;
+                    background-color: #0EA5E9;
+                    border: 3px solid #000000;
                     border-radius: 50%;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4), 0 0 0 2px rgba(14, 165, 233, 0.2);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-weight: bold;
-                    color: white;
-                    font-size: 14px;
+                    font-weight: 700;
+                    color: #FFFFFF;
+                    font-size: 12px;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    letter-spacing: -0.5px;
                 ">D</div>
             `,
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
         });
 
         // Add driver marker
@@ -131,24 +127,20 @@ export default function ORSMap({ driver, passenger }) {
 
         driverMarkerRef.current = driverMarker;
 
-        // Add circle around driver location
+        // Add premium circle around driver location
         const driverCircle = L.circle(driverPos, {
             radius: 100,
-            fillColor: '#10b981',
-            fillOpacity: 0.15,
-            color: '#10b981',
-            weight: 3,
-            opacity: 0.6
+            fillColor: '#0EA5E9',
+            fillOpacity: 0.12,
+            color: '#0EA5E9',
+            weight: 2,
+            opacity: 0.5
         }).addTo(mapInstanceRef.current);
 
         driverCircleRef.current = driverCircle;
 
         // Center map on driver location
         mapInstanceRef.current.setView(driverPos, 16);
-
-        if (import.meta.env.DEV) {
-            console.log('📍 Driver location updated on ORS map:', driverPos);
-        }
 
         return () => {
             if (driverMarkerRef.current) {
@@ -179,27 +171,29 @@ export default function ORSMap({ driver, passenger }) {
             mapInstanceRef.current.removeLayer(passengerMarkerRef.current);
         }
 
-        // Create custom blue icon for passenger
+        // Create premium passenger marker with Uber-style design
         const passengerIcon = L.divIcon({
             className: 'passenger-marker',
             html: `
                 <div style="
-                    width: 24px;
-                    height: 24px;
-                    background-color: #3b82f6;
-                    border: 3px solid white;
+                    width: 28px;
+                    height: 28px;
+                    background-color: #FFFFFF;
+                    border: 3px solid #000000;
                     border-radius: 50%;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.2);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-weight: bold;
-                    color: white;
-                    font-size: 12px;
+                    font-weight: 700;
+                    color: #000000;
+                    font-size: 11px;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    letter-spacing: -0.5px;
                 ">P</div>
             `,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
         });
 
         // Add passenger marker
@@ -214,20 +208,21 @@ export default function ORSMap({ driver, passenger }) {
             mapInstanceRef.current.removeLayer(passengerCircleRef.current);
         }
 
-        // Add circle around passenger location
+        // Add premium circle around passenger location
         const passengerCircle = L.circle(passengerPos, {
             radius: 50,
-            fillColor: '#3b82f6',
-            fillOpacity: 0.15,
-            color: '#3b82f6',
+            fillColor: '#FFFFFF',
+            fillOpacity: 0.1,
+            color: '#FFFFFF',
             weight: 2,
-            opacity: 0.5
+            opacity: 0.4
         }).addTo(mapInstanceRef.current);
 
         passengerCircleRef.current = passengerCircle;
 
         // Fit bounds to show both driver and passenger if both are available
         if (driver?.lat && driver?.lon) {
+            const driverPos = [Number(driver.lat), Number(driver.lon)];
             const bounds = L.latLngBounds([driverPos, passengerPos]);
             mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
         }
@@ -278,11 +273,11 @@ export default function ORSMap({ driver, passenger }) {
             }).filter(coord => coord !== null);
 
             if (routeCoords.length > 0) {
-                // Create polyline for the route
+                // Create premium polyline for the route with Uber-style accent
                 const routePolyline = L.polyline(routeCoords, {
-                    color: '#6366f1',
-                    weight: 5,
-                    opacity: 0.8,
+                    color: '#0EA5E9',
+                    weight: 4,
+                    opacity: 0.9,
                     smoothFactor: 1
                 }).addTo(mapInstanceRef.current);
 
@@ -291,13 +286,9 @@ export default function ORSMap({ driver, passenger }) {
                 // Fit bounds to show entire route
                 const bounds = L.latLngBounds(routeCoords);
                 mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
-
-                if (import.meta.env.DEV) {
-                    console.log('🗺️ ORS route displayed on map:', routeCoords.length, 'points');
-                }
             }
         } catch (error) {
-            console.error('Error rendering ORS route:', error);
+            // Error rendering ORS route
         }
 
         return () => {
@@ -309,8 +300,8 @@ export default function ORSMap({ driver, passenger }) {
     }, [driver?.route]);
 
     return (
-        <div style={containerStyle} className="relative overflow-hidden rounded-2xl border border-white/20">
-            <div ref={mapRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
+        <div className="relative w-full h-[260px] overflow-hidden rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+            <div ref={mapRef} className="w-full h-full z-[1]" />
         </div>
     );
 }

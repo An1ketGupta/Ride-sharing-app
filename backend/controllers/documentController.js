@@ -1,16 +1,28 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 
 export const uploadDriverDocument = async (req, res) => {
     try {
         const { id } = req.params; // driver user_id
         const { doc_type, file_url } = req.body || {};
-        await promisePool.query(
-            `INSERT INTO driver_documents (driver_id, doc_type, file_url, status) VALUES (?, ?, ?, 'pending')`,
-            [id, doc_type, file_url]
-        );
-        return successResponse(res, 201, 'Document uploaded');
+        const document = await prisma.driverDocument.create({
+            data: {
+                driverId: parseInt(id),
+                docType: doc_type,
+                fileUrl: file_url,
+                status: 'pending'
+            }
+        });
+        return successResponse(res, 201, 'Document uploaded', {
+            document_id: document.documentId,
+            driver_id: document.driverId,
+            doc_type: document.docType,
+            file_url: document.fileUrl,
+            status: document.status,
+            created_at: document.createdAt
+        });
     } catch (error) {
+        console.error('Upload document error:', error);
         return errorResponse(res, 500, 'Failed to upload document');
     }
 };
@@ -18,9 +30,20 @@ export const uploadDriverDocument = async (req, res) => {
 export const getDriverDocuments = async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await promisePool.query(`SELECT * FROM driver_documents WHERE driver_id = ? ORDER BY created_at DESC`, [id]);
-        return successResponse(res, 200, 'Documents', rows);
+        const documents = await prisma.driverDocument.findMany({
+            where: { driverId: parseInt(id) },
+            orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(res, 200, 'Documents', documents.map(d => ({
+            document_id: d.documentId,
+            driver_id: d.driverId,
+            doc_type: d.docType,
+            file_url: d.fileUrl,
+            status: d.status,
+            created_at: d.createdAt
+        })));
     } catch (error) {
+        console.error('Get documents error:', error);
         return errorResponse(res, 500, 'Failed to fetch documents');
     }
 };
@@ -43,34 +66,62 @@ export const updateDriverDocumentStatus = async (req, res) => {
             return errorResponse(res, 400, 'Invalid status value');
         }
         
-        await promisePool.query(`UPDATE driver_documents SET status = ? WHERE document_id = ? AND driver_id = ?`, [status, doc_id, id]);
+        await prisma.driverDocument.update({
+            where: {
+                documentId: parseInt(doc_id),
+                driverId: parseInt(id)
+            },
+            data: { status: status }
+        });
 
         // If all approved, set driver is_available = 1
-        const [docs] = await promisePool.query(`SELECT status FROM driver_documents WHERE driver_id = ?`, [id]);
+        const docs = await prisma.driverDocument.findMany({
+            where: { driverId: parseInt(id) }
+        });
+        
         if (docs.length > 0 && docs.every(d => d.status === 'approved')) {
-            await promisePool.query(`UPDATE users SET is_available = 1 WHERE user_id = ?`, [id]);
+            await prisma.user.update({
+                where: { userId: parseInt(id) },
+                data: { isAvailable: true }
+            });
         }
+        
         return successResponse(res, 200, 'Updated');
     } catch (error) {
+        console.error('Update document error:', error);
         return errorResponse(res, 500, 'Failed to update document');
     }
 };
 
-
 export const listPendingDocuments = async (req, res) => {
     try {
-        const [rows] = await promisePool.query(
-            `SELECT d.document_id, d.driver_id, d.doc_type, d.file_url, d.status, d.created_at,
-                    u.name as driver_name, u.email as driver_email, u.phone as driver_phone
-             FROM driver_documents d
-             JOIN users u ON u.user_id = d.driver_id
-             WHERE d.status = 'pending'
-             ORDER BY d.created_at DESC`
-        );
-        return successResponse(res, 200, 'Pending documents', rows);
+        const documents = await prisma.driverDocument.findMany({
+            where: { status: 'pending' },
+            include: {
+                driver: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        return successResponse(res, 200, 'Pending documents', documents.map(d => ({
+            document_id: d.documentId,
+            driver_id: d.driverId,
+            doc_type: d.docType,
+            file_url: d.fileUrl,
+            status: d.status,
+            created_at: d.createdAt,
+            driver_name: d.driver.name,
+            driver_email: d.driver.email,
+            driver_phone: d.driver.phone
+        })));
     } catch (error) {
+        console.error('List pending documents error:', error);
         return errorResponse(res, 500, 'Failed to fetch pending documents');
     }
 };
-
-

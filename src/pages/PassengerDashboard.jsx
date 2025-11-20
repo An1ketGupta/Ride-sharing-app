@@ -378,40 +378,34 @@ const PassengerDashboard = () => {
     const getStatusColor = (status) => {
         const normalized = (status || '').toLowerCase();
         const colors = {
-            pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-            confirmed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            in_progress: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300',
-            completed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-            cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            canceled_by_driver: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            canceled_by_passenger: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+            pending: 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30',
+            confirmed: 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30',
+            in_progress: 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30',
+            completed: 'bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30',
+            cancelled: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30',
+            canceled_by_driver: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30',
+            canceled_by_passenger: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30'
         };
-        return colors[normalized] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
+        return colors[normalized] || 'bg-[#1A1A1A] text-white/60 border-[#1A1A1A]';
     };
 
     return (
-        <div className="min-h-screen px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto page-transition">
-            {/* Enhanced Background */}
-            <div className="fixed inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl opacity-50" />
-            </div>
-            
+        <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-7xl mx-auto page-transition">
             {/* Header */}
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 sm:mb-8 md:mb-10 relative z-10"
+                transition={{ duration: 0.25 }}
+                className="mb-8 sm:mb-10 md:mb-12"
             >
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2 sm:mb-3 md:mb-4 gradient-text">My Bookings</h1>
-                <p className="text-muted-foreground text-base sm:text-lg md:text-xl">Manage your bookings and track payment history</p>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-3 text-white">My Bookings</h1>
+                <p className="text-white/60 text-lg sm:text-xl">Manage your bookings and track payment history</p>
             </motion.div>
 
             {/* Safety Check Alert */}
             <SafetyCheck />
-            {/* Enhanced Summary cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5 mb-6 sm:mb-8 md:mb-10 relative z-10">
+            {/* Premium Summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10 md:mb-12">
                 {(() => {
                     const normalize = (s) => (s || '').toLowerCase();
                     const upcoming = bookings.filter((b) => {
@@ -429,34 +423,31 @@ const PassengerDashboard = () => {
                     return (
                         <>
                             <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="glass-thick rounded-3xl p-6 border-2 border-white/30 hover:border-primary/50 hover:shadow-glow-lg hover:scale-105 transition-all duration-300 card-hover relative overflow-hidden group"
+                                transition={{ delay: 0.1, duration: 0.25 }}
+                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-                                <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2 relative z-10 font-semibold">Upcoming bookings</div>
-                                <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold gradient-text relative z-10">{upcoming}</div>
+                                <div className="text-sm text-white/60 mb-2 font-semibold">Upcoming bookings</div>
+                                <div className="text-3xl sm:text-4xl font-bold text-white">{upcoming}</div>
                             </motion.div>
                             <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="glass-thick rounded-3xl p-6 border-2 border-white/30 hover:border-amber-500/50 hover:shadow-glow-lg hover:scale-105 transition-all duration-300 card-hover relative overflow-hidden group"
+                                transition={{ delay: 0.15, duration: 0.25 }}
+                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#f59e0b]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
-                                <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2 relative z-10 font-semibold">Pending payments</div>
-                                <div className={`text-2xl sm:text-3xl md:text-4xl font-extrabold ${pendingPayments>0 ? 'text-amber-600' : 'gradient-text'} relative z-10`}>{pendingPayments}</div>
+                                <div className="text-sm text-white/60 mb-2 font-semibold">Pending payments</div>
+                                <div className={`text-3xl sm:text-4xl font-bold ${pendingPayments>0 ? 'text-[#f59e0b]' : 'text-white'}`}>{pendingPayments}</div>
                             </motion.div>
                             <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="glass-thick rounded-3xl p-6 border-2 border-white/30 hover:border-emerald-500/50 hover:shadow-glow-lg hover:scale-105 transition-all duration-300 card-hover relative overflow-hidden group"
+                                transition={{ delay: 0.2, duration: 0.25 }}
+                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#10b981]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
-                                <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2 relative z-10 font-semibold">Completed trips</div>
-                                <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-emerald-600 relative z-10">{completed}</div>
+                                <div className="text-sm text-white/60 mb-2 font-semibold">Completed trips</div>
+                                <div className="text-3xl sm:text-4xl font-bold text-[#10b981]">{completed}</div>
                             </motion.div>
                         </>
                     );
@@ -465,42 +456,28 @@ const PassengerDashboard = () => {
 
             {/* Emergency contact moved to Profile page (Complete Profile) */}
 
-            {/* Enhanced Tabs */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8 md:mb-10 p-2 glass-thick rounded-2xl sm:rounded-3xl border-2 border-white/30 w-full sm:w-fit shadow-glow-lg relative z-10">
+            {/* Premium Tabs */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-8 sm:mb-10 md:mb-12 p-1 bg-[#111111] rounded-xl border border-[#1A1A1A] w-full sm:w-fit">
                 <motion.button 
                     onClick={() => setActiveTab('bookings')}
-                    whileTap={{ scale: 0.97 }}
-                    className={`px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-xl font-bold transition-all relative text-sm sm:text-base ${
+                    whileTap={{ scale: 0.98 }}
+                    className={`px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base ${
                         activeTab === 'bookings'
-                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
                     }`}
                 >
-                    {activeTab === 'bookings' && (
-                        <motion.div 
-                            layoutId="activeTab"
-                            className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl"
-                            style={{ zIndex: -1 }}
-                        />
-                    )}
                     My Bookings
                 </motion.button>
                 <motion.button 
                     onClick={() => setActiveTab('payments')}
-                    whileTap={{ scale: 0.97 }}
-                    className={`px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-xl font-bold transition-all relative text-sm sm:text-base ${
+                    whileTap={{ scale: 0.98 }}
+                    className={`px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base ${
                         activeTab === 'payments'
-                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
                     }`}
                 >
-                    {activeTab === 'payments' && (
-                        <motion.div 
-                            layoutId="activeTab"
-                            className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl"
-                            style={{ zIndex: -1 }}
-                        />
-                    )}
                     Payment History
                 </motion.button>
             </div>
@@ -512,28 +489,29 @@ const PassengerDashboard = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
                         onClick={() => setViewBooking(null)}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 8 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-lg w-full shadow-glow border border-white/20 max-h-[90vh] overflow-y-auto"
+                            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-[#111111] rounded-xl p-6 sm:p-8 max-w-lg w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)] max-h-[90vh] overflow-y-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                        <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3">
+                        <div className="flex items-start justify-between mb-6 gap-3">
                             <div className="flex-1 min-w-0">
-                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Booking #{viewBooking.booking_id}</div>
-                                <h3 className="text-lg sm:text-xl md:text-2xl font-bold break-words">{viewBooking.source} → {viewBooking.destination}</h3>
-                                <div className="text-xs sm:text-sm text-muted-foreground mt-1">{new Date(viewBooking.date).toLocaleDateString()} at {viewBooking.time}</div>
+                                <div className="text-xs sm:text-sm text-white/60 mb-1">Booking #{viewBooking.booking_id}</div>
+                                <h3 className="text-xl sm:text-2xl font-bold text-white break-words">{viewBooking.source} → {viewBooking.destination}</h3>
+                                <div className="text-xs sm:text-sm text-white/60 mt-1">{new Date(viewBooking.date).toLocaleDateString()} at {viewBooking.time}</div>
                             </div>
-                            <button onClick={() => setViewBooking(null)} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-xl transition-colors flex-shrink-0"><X className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                            <button onClick={() => setViewBooking(null)} className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200 flex-shrink-0"><X className="w-5 h-5 text-white/60 hover:text-white" /></button>
                         </div>
 
                         {/* Vehicle Image */}
                         {viewBooking.vehicle_image_url && (
-                            <div className="mb-4 overflow-hidden rounded-xl border border-white/20">
+                            <div className="mb-4 overflow-hidden rounded-xl border border-[#1A1A1A]">
                                 <img 
                                     src={viewBooking.vehicle_image_url} 
                                     alt="Vehicle" 
@@ -550,15 +528,15 @@ const PassengerDashboard = () => {
                                    bookingStatus === 'confirmed' || 
                                    bookingStatus === 'in_progress';
                         })() && (
-                            <div className="mb-4 p-3 rounded-xl border border-white/20 bg-white/50 dark:bg-white/5 flex items-center justify-between">
+                            <div className="mb-4 p-4 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 flex items-center justify-between">
                                 <div className="text-sm">
-                                    <div className="font-semibold">Driver live location</div>
-                                    <div className="text-muted-foreground text-xs">Lat {Number(livePos.lat).toFixed(5)}, Lon {Number(livePos.lon).toFixed(5)}</div>
+                                    <div className="font-semibold text-white">Driver live location</div>
+                                    <div className="text-white/60 text-xs">Lat {Number(livePos.lat).toFixed(5)}, Lon {Number(livePos.lon).toFixed(5)}</div>
                                 </div>
                                 {Number.isFinite(liveEta) && (
                                     <div className="text-right">
-                                        <div className="text-xs text-muted-foreground">ETA to you</div>
-                                        <div className="text-lg font-bold">{liveEta} min</div>
+                                        <div className="text-xs text-white/60">ETA to you</div>
+                                        <div className="text-lg font-bold text-[#0EA5E9]">{liveEta} min</div>
                                     </div>
                                 )}
                             </div>
@@ -606,7 +584,7 @@ const PassengerDashboard = () => {
                                                 })()}
                                             />
                                             {liveEta != null && (
-                                                <div className="mt-2 text-sm text-center text-muted-foreground">
+                                                <div className="mt-2 text-sm text-center text-white/60">
                                                     Estimated arrival: {Math.round(liveEta)} minutes
                                                 </div>
                                             )}
@@ -615,11 +593,11 @@ const PassengerDashboard = () => {
                                 } else {
                                     // Show loading state while fetching driver location
                                     return (
-                                        <div className="mb-5 p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 flex items-start gap-3">
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 flex-shrink-0 mt-0.5"></div>
+                                        <div className="mb-5 p-4 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 flex items-start gap-3">
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#0EA5E9] flex-shrink-0 mt-0.5"></div>
                                             <div className="text-sm">
-                                                <div className="font-semibold text-blue-700 dark:text-blue-300">Waiting for driver location...</div>
-                                                <div className="text-muted-foreground text-xs mt-1">
+                                                <div className="font-semibold text-[#0EA5E9]">Waiting for driver location...</div>
+                                                <div className="text-white/60 text-xs mt-1">
                                                     The driver's location will appear here once they start sharing their location.
                                                     {viewBooking?.driver_id && (
                                                         <div className="mt-1">Driver ID: {viewBooking.driver_id}</div>
@@ -636,39 +614,39 @@ const PassengerDashboard = () => {
 
                         <div className="grid sm:grid-cols-2 gap-3 mb-4 text-sm">
                             <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 text-primary" />
-                                <span className="font-medium">{viewBooking.driver_name}</span>
+                                <User className="w-4 h-4 text-[#0EA5E9]" />
+                                <span className="font-semibold text-white">{viewBooking.driver_name}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-emerald-600" />
-                                <span className="font-bold text-emerald-600">₹{viewBooking.amount}</span>
+                                <DollarSign className="w-4 h-4 text-[#10b981]" />
+                                <span className="font-bold text-[#10b981]">₹{viewBooking.amount}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-secondary" />
-                                <span>{new Date(viewBooking.date).toLocaleDateString()}</span>
+                                <Calendar className="w-4 h-4 text-[#0EA5E9]" />
+                                <span className="text-white">{new Date(viewBooking.date).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-primary" />
-                                <span>{viewBooking.time}</span>
+                                <Clock className="w-4 h-4 text-[#0EA5E9]" />
+                                <span className="text-white">{viewBooking.time}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">Seats</span>
-                                <span className="font-semibold">{viewBooking.seats_booked}</span>
+                                <span className="text-white/60">Seats</span>
+                                <span className="font-semibold text-white">{viewBooking.seats_booked}</span>
                             </div>
                             {viewBooking.payment_status && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground">Payment</span>
-                                    <span className={`font-semibold ${viewBooking.payment_status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>{viewBooking.payment_status}</span>
+                                    <span className="text-white/60">Payment</span>
+                                    <span className={`font-semibold ${viewBooking.payment_status === 'completed' ? 'text-[#10b981]' : 'text-[#f59e0b]'}`}>{viewBooking.payment_status}</span>
                                 </div>
                             )}
                         </div>
 
                         {viewBooking.notes && (
-                            <div className="flex items-start gap-2 p-3 rounded-xl bg-white/60 dark:bg-white/10 border border-white/20 mb-4">
-                                <MessageSquare className="w-4 h-4 text-primary mt-0.5" />
+                            <div className="flex items-start gap-2 p-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] mb-4">
+                                <MessageSquare className="w-4 h-4 text-[#0EA5E9] mt-0.5" />
                                 <div>
-                                    <div className="text-xs text-muted-foreground">Passenger note</div>
-                                    <div className="text-sm font-medium">{viewBooking.notes}</div>
+                                    <div className="text-xs text-white/60">Passenger note</div>
+                                    <div className="text-sm font-medium text-white">{viewBooking.notes}</div>
                                 </div>
                             </div>
                         )}
@@ -676,42 +654,42 @@ const PassengerDashboard = () => {
                         <div className="flex flex-wrap gap-2 mb-4">
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'pending'; })() && (
                                 <>
-                                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handleConfirmBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleConfirmBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#0EA5E9] text-white font-semibold rounded-lg hover:bg-[#0EA5E9] hover:brightness-110 transition-all duration-200 flex items-center gap-2">
                                         <CheckCircle className="w-4 h-4" />
                                         Confirm
                                     </motion.button>
-                                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-white font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
                                         <XCircle className="w-4 h-4" />
                                         Cancel
                                     </motion.button>
                                 </>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'confirmed' && !viewBooking.payment_status; })() && (
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handlePayment(viewBooking); setViewBooking(null); }} className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg hover:brightness-110 transition-all flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handlePayment(viewBooking); setViewBooking(null); }} className="px-4 py-2.5 bg-[#0EA5E9] text-white font-semibold rounded-lg hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2">
                                     <CreditCard className="w-4 h-4" />
                                     Pay Now
                                 </motion.button>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'confirmed'; })() && (
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-white font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
                                     <XCircle className="w-4 h-4" />
                                     Cancel
                                 </motion.button>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return (bookingStatus === 'confirmed' || viewBooking.ride_status === 'ongoing' || bookingStatus === 'in_progress'); })() && (
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={async () => { try { const getGeo = () => new Promise((resolve) => { if (!navigator.geolocation) return resolve({ lat: null, lon: null }); navigator.geolocation.getCurrentPosition((pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }), () => resolve({ lat: null, lon: null }), { enableHighAccuracy: true, timeout: 5000 }); }); const { lat, lon } = await getGeo(); await sosService.raise(viewBooking.booking_id, { user_id: viewBooking.passenger_id, details: 'Emergency', passenger_lat: lat, passenger_lon: lon }); toast.success('SOS sent to admin'); } catch { toast.error('Failed to send SOS'); } }} className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={async () => { try { const getGeo = () => new Promise((resolve) => { if (!navigator.geolocation) return resolve({ lat: null, lon: null }); navigator.geolocation.getCurrentPosition((pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }), () => resolve({ lat: null, lon: null }), { enableHighAccuracy: true, timeout: 5000 }); }); const { lat, lon } = await getGeo(); await sosService.raise(viewBooking.booking_id, { user_id: viewBooking.passenger_id, details: 'Emergency', passenger_lat: lat, passenger_lon: lon }); toast.success('SOS sent to admin'); } catch { toast.error('Failed to send SOS'); } }} className="px-4 py-2.5 bg-[#f59e0b] text-white font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
                                     <ShieldAlert className="w-4 h-4" />
                                     SOS
                                 </motion.button>
                             )}
                             {viewBooking.ride_status === 'completed' && (
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handleAddFeedback(viewBooking.ride_id); setViewBooking(null); }} className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleAddFeedback(viewBooking.ride_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#f59e0b] text-white font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
                                     <Star className="w-4 h-4" />
                                     Feedback
                                 </motion.button>
                             )}
                             {viewBooking.ride_status === 'completed' && viewBooking.payment_method === 'cash' && viewBooking.payment_status === 'pending' && viewBooking.payment_id && (
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { handleCompleteCashPayment(viewBooking.payment_id); }} className="px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCompleteCashPayment(viewBooking.payment_id); }} className="px-4 py-2.5 bg-[#10b981] text-white font-semibold rounded-lg hover:bg-[#059669] transition-all duration-200 flex items-center gap-2">
                                     <Banknote className="w-4 h-4" />
                                     Mark Cash Paid
                                 </motion.button>
@@ -725,18 +703,18 @@ const PassengerDashboard = () => {
                                 value={msgByBookingId[viewBooking.booking_id] || ''}
                                 onChange={(e) => setMsgByBookingId((prev) => ({ ...prev, [viewBooking.booking_id]: e.target.value }))}
                                 placeholder="Message your driver (e.g., I'm at the blue gate)"
-                                className="flex-1 px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                                className="flex-1 px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
                             />
                             <button
                                 onClick={() => { sendMessage(viewBooking.booking_id); }}
                                 disabled={!((msgByBookingId[viewBooking.booking_id] || '').trim())}
-                                className="px-5 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-5 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 <MessageSquare className="w-4 h-4" />
                                 Send
                             </button>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">Sends a real-time message to your driver.</div>
+                        <div className="text-xs text-white/60 mt-1">Sends a real-time message to your driver.</div>
                     </motion.div>
                 </motion.div>
             )}
@@ -746,14 +724,14 @@ const PassengerDashboard = () => {
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-4">
-                            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                            <p className="text-muted-foreground">Loading...</p>
+                            <div className="w-12 h-12 border-4 border-[#0EA5E9]/30 border-t-[#0EA5E9] rounded-full animate-spin" />
+                            <p className="text-white/60">Loading...</p>
                         </div>
                     </div>
                 ) : error ? (
-                    <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-destructive">{error}</p>
+                    <div className="p-4 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-[#ef4444]">{error}</p>
                     </div>
                 ) : (
                     <>
@@ -761,14 +739,15 @@ const PassengerDashboard = () => {
                             <div className="space-y-6">
                                 {bookings.length === 0 ? (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        initial={{ opacity: 0, scale: 0.98 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="glass rounded-2xl p-12 text-center border border-border"
+                                        transition={{ duration: 0.25 }}
+                                        className="bg-[#111111] rounded-xl p-12 text-center border border-[#1A1A1A]"
                                     >
-                                        <Receipt className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2">No bookings yet</h3>
-                                        <p className="text-muted-foreground">
-                                            <a href="/search" className="text-primary hover:underline font-semibold">Search for rides</a> to get started
+                                        <Receipt className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-white">No bookings yet</h3>
+                                        <p className="text-white/60">
+                                            <a href="/search" className="text-[#0EA5E9] hover:underline font-semibold">Search for rides</a> to get started
                                         </p>
                                     </motion.div>
                                 ) : (
@@ -788,21 +767,17 @@ const PassengerDashboard = () => {
                                         const renderCard = (booking, index) => (
                                             <motion.div
                                                 key={booking.booking_id}
-                                                initial={{ opacity: 0, y: 20 }}
+                                                initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                whileHover={{ y: -4, scale: 1.01 }}
-                                                className="glass-thick rounded-3xl p-6 sm:p-8 border-2 border-white/30 hover:shadow-glow-xl hover:border-primary/40 transition-all duration-300 group relative overflow-hidden card-hover"
+                                                transition={{ delay: index * 0.05, duration: 0.25 }}
+                                                whileHover={{ y: -2 }}
+                                                className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1A1A1A] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                                             >
-                                                {/* Enhanced gradient overlay on hover */}
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                
-                                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                                     <div className="flex-1 space-y-4">
                                                         {/* Vehicle Image Thumbnail */}
                                                         {booking.vehicle_image_url && (
-                                                            <div className="overflow-hidden rounded-xl border border-white/20 w-full max-w-xs">
+                                                            <div className="overflow-hidden rounded-xl border border-[#1A1A1A] w-full max-w-xs">
                                                                 <img 
                                                                     src={booking.vehicle_image_url} 
                                                                     alt="Vehicle" 
@@ -815,66 +790,66 @@ const PassengerDashboard = () => {
                         onClick={() => setViewBooking(booking)}
                     >
                                                             {/* Driver avatar */}
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 text-white flex items-center justify-center font-bold shadow-soft">
+                                                            <div className="w-10 h-10 rounded-full bg-[#0EA5E9] text-white flex items-center justify-center font-bold">
                                                                 {(booking.driver_name || '?').toString().trim().charAt(0).toUpperCase()}
                                                             </div>
-                                                            <div className="text-2xl font-bold gradient-text">{booking.source}</div>
-                                                            <div className="text-primary text-xl">→</div>
-                                                            <div className="text-2xl font-bold gradient-text">{booking.destination}</div>
+                                                            <div className="text-2xl font-bold text-white">{booking.source}</div>
+                                                            <div className="text-[#0EA5E9] text-xl">→</div>
+                                                            <div className="text-2xl font-bold text-white">{booking.destination}</div>
                                                             {/* Status chip */}
                                                             {(() => { const bookingStatus = booking.booking_status || booking.status; return (
-                                                                <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wide border ${getStatusColor(bookingStatus)} border-white/20`}> 
+                                                                <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(bookingStatus)}`}> 
                                                                     {bookingStatus}
                                                                 </span>
                                                             ); })()}
                                                             {/* Booking id chip */}
-                                                            <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white/50 dark:bg-white/10 border border-white/20 text-muted-foreground">
+                                                            <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[#0A0A0A] border border-[#1A1A1A] text-white/60">
                                                                 #{booking.booking_id}
                                                             </span>
                                                         </div>
                                                 
                                                         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                                            <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-secondary/10 group-hover/item:bg-secondary/20 transition-colors">
-                                                                    <Calendar className="w-4 h-4 text-secondary" />
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                    <Calendar className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{new Date(booking.date).toLocaleDateString()}</span>
+                                                                <span className="font-semibold text-white">{new Date(booking.date).toLocaleDateString()}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-primary/10 group-hover/item:bg-primary/20 transition-colors">
-                                                                    <Clock className="w-4 h-4 text-primary" />
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                    <Clock className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{booking.time}</span>
+                                                                <span className="font-semibold text-white">{booking.time}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-primary/10 group-hover/item:bg-primary/20 transition-colors">
-                                                                    <User className="w-4 h-4 text-primary" />
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                    <User className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{booking.driver_name}</span>
+                                                                <span className="font-semibold text-white">{booking.driver_name}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-emerald-500/10 group-hover/item:bg-emerald-500/20 transition-colors">
-                                                                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <div className="p-2 rounded-lg bg-[#10b981]/10">
+                                                                    <DollarSign className="w-4 h-4 text-[#10b981]" />
                                                                 </div>
-                                                                <span className="font-bold text-emerald-600">₹{booking.amount}</span>
+                                                                <span className="font-bold text-[#10b981]">₹{booking.amount}</span>
                                                             </div>
                                                         </div>
                                                         {/* Optional notes */}
                                                         {booking.notes && (
-                                                            <div className="flex items-start gap-2 mt-2 p-3 rounded-xl bg-white/60 dark:bg-white/10 border border-white/20">
-                                                                <MessageSquare className="w-4 h-4 text-primary mt-0.5" />
+                                                            <div className="flex items-start gap-2 mt-2 p-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                                                <MessageSquare className="w-4 h-4 text-[#0EA5E9] mt-0.5" />
                                                                 <div>
-                                                                    <div className="text-xs text-muted-foreground">Passenger note</div>
-                                                                    <div className="text-sm font-medium">{booking.notes}</div>
+                                                                    <div className="text-xs text-white/60">Passenger note</div>
+                                                                    <div className="text-sm font-medium text-white">{booking.notes}</div>
                                                                 </div>
                                                             </div>
                                                         )}
 
                                                         {/* Vehicle Information */}
                                                         {booking.vehicle_model && (
-                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 w-fit border border-white/20">
-                                                                <Car className="w-4 h-4 text-primary" />
-                                                                <span className="text-sm font-medium">
+                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A0A0A] w-fit border border-[#1A1A1A]">
+                                                                <Car className="w-4 h-4 text-[#0EA5E9]" />
+                                                                <span className="text-sm font-medium text-white">
                                                                     {booking.vehicle_model}
                                                                     {booking.vehicle_color && ` • ${booking.vehicle_color}`}
                                                                     {booking.license_plate && ` • ${booking.license_plate}`}
@@ -883,12 +858,12 @@ const PassengerDashboard = () => {
                                                         )}
 
                                                         <div className="mt-3 flex items-center gap-4 text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Seats: <span className="font-semibold text-foreground">{booking.seats_booked}</span>
+                                                            <span className="text-white/60">
+                                                                Seats: <span className="font-semibold text-white">{booking.seats_booked}</span>
                                                             </span>
                                                     {booking.payment_status && (
-                                                                <span className="text-muted-foreground">
-                                                                    Payment: <span className={`font-semibold ${booking.payment_status === 'completed' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                                                <span className="text-white/60">
+                                                                    Payment: <span className={`font-semibold ${booking.payment_status === 'completed' ? 'text-[#10b981]' : 'text-[#f59e0b]'}`}>
                                                                         {booking.payment_status}
                                                                     </span>
                                                                 </span>
@@ -903,24 +878,24 @@ const PassengerDashboard = () => {
                                         return (
                                             <>
                                                 <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <h3 className="text-lg font-bold">Upcoming ({upcoming.length})</h3>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xl font-bold text-white">Upcoming ({upcoming.length})</h3>
                                                     </div>
                                                     {upcoming.length === 0 ? (
-                                                        <div className="p-6 text-sm text-muted-foreground border border-white/20 rounded-xl">No upcoming bookings</div>
+                                                        <div className="p-6 text-sm text-white/60 border border-[#1A1A1A] rounded-xl bg-[#111111]">No upcoming bookings</div>
                                                     ) : (
                                                         <div className="grid gap-5">
                                                             {upcoming.map((b, i) => renderCard(b, i))}
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-2" />
+                                                <div className="h-px bg-[#1A1A1A] my-6" />
                                                 <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <h3 className="text-lg font-bold">Completed ({completed.length})</h3>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-xl font-bold text-white">Completed ({completed.length})</h3>
                                                     </div>
                                                     {completed.length === 0 ? (
-                                                        <div className="p-6 text-sm text-muted-foreground border border-white/20 rounded-xl">No completed rides yet</div>
+                                                        <div className="p-6 text-sm text-white/60 border border-[#1A1A1A] rounded-xl bg-[#111111]">No completed rides yet</div>
                                                     ) : (
                                                         <div className="grid gap-5">
                                                             {completed.map((b, i) => renderCard(b, i))}
@@ -938,30 +913,31 @@ const PassengerDashboard = () => {
                             <div className="space-y-4">
                                 {payments.length === 0 ? (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        initial={{ opacity: 0, scale: 0.98 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="glass rounded-2xl p-12 text-center border border-border"
+                                        transition={{ duration: 0.25 }}
+                                        className="bg-[#111111] rounded-xl p-12 text-center border border-[#1A1A1A]"
                                     >
-                                        <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2">No payments yet</h3>
-                                        <p className="text-muted-foreground">Your payment history will appear here</p>
+                                        <CreditCard className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-white">No payments yet</h3>
+                                        <p className="text-white/60">Your payment history will appear here</p>
                                     </motion.div>
                                 ) : (
                                     <div className="grid gap-4">
                                         {payments.map((payment, index) => (
                                             <motion.div
                                                 key={payment.payment_id}
-                                                initial={{ opacity: 0, y: 20 }}
+                                                initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="glass rounded-2xl p-6 border-l-4 border-l-emerald-600 border-y border-r border-white/20 hover:shadow-soft transition-all"
+                                                transition={{ delay: index * 0.05, duration: 0.25 }}
+                                                className="bg-[#111111] rounded-xl p-6 border-l-4 border-l-[#10b981] border-y border-r border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all duration-200"
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1">
-                                                        <h4 className="font-semibold text-lg mb-1">
+                                                        <h4 className="font-semibold text-lg mb-1 text-white">
                                                             {payment.source} → {payment.destination}
                                                         </h4>
-                                                        <div className="grid sm:grid-cols-2 gap-2 mt-3 text-sm text-muted-foreground">
+                                                        <div className="grid sm:grid-cols-2 gap-2 mt-3 text-sm text-white/60">
                                                             <div className="flex items-center gap-2">
                                                                 <Calendar className="w-4 h-4" />
                                                                 {new Date(payment.date).toLocaleDateString()}
@@ -977,8 +953,8 @@ const PassengerDashboard = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                                                     payment.payment_status === 'completed' 
-                                                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                                                                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                                        ? 'bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/30'
+                                                                        : 'bg-[#f59e0b]/20 text-[#f59e0b] border border-[#f59e0b]/30'
                                                                 }`}>
                                                                     {payment.payment_status}
                                                                 </span>
@@ -986,7 +962,7 @@ const PassengerDashboard = () => {
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                                        <div className="text-3xl font-extrabold text-[#10b981]">
                                                             ₹{payment.amount}
                                                         </div>
                                                 </div>
@@ -1008,48 +984,49 @@ const PassengerDashboard = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
                         onClick={() => setSelectedBooking(null)}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 8 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="glass rounded-3xl p-8 max-w-md w-full shadow-glow border border-white/20"
+                            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-[#111111] rounded-xl p-8 max-w-md w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold">Make Payment</h3>
+                                <h3 className="text-2xl font-bold text-white">Make Payment</h3>
                                 <button
                                     onClick={() => setSelectedBooking(null)}
-                                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                                    className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
 
                             <div className="space-y-4 mb-6">
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-2 border-primary/20">
-                                    <span className="font-semibold">Total Amount</span>
-                                    <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30">
+                                    <span className="font-semibold text-white">Total Amount</span>
+                                    <span className="text-2xl font-bold text-[#0EA5E9]">
                                         ₹{selectedBooking.amount}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/50 dark:bg-white/5">
-                                    <MapPin className="w-5 h-5 text-primary" />
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                    <MapPin className="w-5 h-5 text-[#0EA5E9]" />
                                     <div>
-                                        <div className="text-sm text-muted-foreground">Route</div>
-                                        <div className="font-semibold">{selectedBooking.source} → {selectedBooking.destination}</div>
+                                        <div className="text-sm text-white/60">Route</div>
+                                        <div className="font-semibold text-white">{selectedBooking.source} → {selectedBooking.destination}</div>
                                     </div>
                         </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Payment Method</label>
+                                    <label className="text-sm font-semibold text-white">Payment Method</label>
                                     <select
                                         value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
-                                        className="w-full px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none cursor-pointer"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none appearance-none cursor-pointer text-white"
                                     >
                                         <option value="upi">💳 UPI</option>
                                         <option value="card">💰 Card</option>
@@ -1064,7 +1041,7 @@ const PassengerDashboard = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setSelectedBooking(null)}
-                                    className="flex-1 py-3 bg-white/10 hover:bg-white/20 font-semibold rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
                                 >
                                     Cancel
                                 </motion.button>
@@ -1072,7 +1049,7 @@ const PassengerDashboard = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={confirmPayment}
-                                    className="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Confirm Payment
@@ -1090,33 +1067,34 @@ const PassengerDashboard = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
                         onClick={() => setFeedbackForm({ ride_id: null, rating: 5, comments: '' })}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 8 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="glass rounded-3xl p-8 max-w-md w-full shadow-glow border border-white/20"
+                            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-[#111111] rounded-xl p-8 max-w-md w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold">Add Feedback</h3>
+                                <h3 className="text-2xl font-bold text-white">Add Feedback</h3>
                                 <button
                                     onClick={() => setFeedbackForm({ ride_id: null, rating: 5, comments: '' })}
-                                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                                    className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
 
                             <form onSubmit={submitFeedback} className="space-y-5">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Rating</label>
+                                    <label className="text-sm font-semibold text-white">Rating</label>
                                 <select 
                                     value={feedbackForm.rating}
                                     onChange={(e) => setFeedbackForm({...feedbackForm, rating: parseInt(e.target.value)})}
-                                        className="w-full px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none cursor-pointer"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none appearance-none cursor-pointer text-white"
                                     >
                                         <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
                                         <option value="4">⭐⭐⭐⭐ Good</option>
@@ -1127,13 +1105,13 @@ const PassengerDashboard = () => {
                             </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold">Comments</label>
+                                    <label className="text-sm font-semibold text-white">Comments</label>
                                 <textarea
                                     value={feedbackForm.comments}
                                     onChange={(e) => setFeedbackForm({...feedbackForm, comments: e.target.value})}
                                     rows="4"
                                     placeholder="Share your experience..."
-                                        className="w-full px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-none"
+                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none resize-none text-white placeholder:text-white/40"
                                 />
                             </div>
 
@@ -1143,7 +1121,7 @@ const PassengerDashboard = () => {
                                         whileTap={{ scale: 0.98 }}
                                     type="button" 
                                     onClick={() => setFeedbackForm({ ride_id: null, rating: 5, comments: '' })}
-                                        className="flex-1 py-3 bg-white/10 hover:bg-white/20 font-semibold rounded-xl transition-all"
+                                        className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
                                 >
                                     Cancel
                                     </motion.button>
@@ -1151,7 +1129,7 @@ const PassengerDashboard = () => {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
-                                        className="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
                                     >
                                         <MessageSquare className="w-4 h-4" />
                                     Submit Feedback

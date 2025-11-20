@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Plus, MapPin, Calendar, Clock, Users, DollarSign, 
     TrendingUp, Star, MessageSquare, Play, CheckCircle, 
-    XCircle, AlertCircle, Car, Route, Save, Calculator, Loader, Navigation
+    XCircle, AlertCircle, Car, Route, Save, Calculator, Loader, Navigation, X
 } from 'lucide-react';
 import io from 'socket.io-client';
 import LiveRideMap from '../components/Map/LiveRideMap';
@@ -452,12 +452,12 @@ const DriverDashboard = () => {
     };
     const getStatusColor = (status) => {
         const colors = {
-            scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            ongoing: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-            completed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-            cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+            scheduled: 'bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9]',
+            ongoing: 'bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b]',
+            completed: 'bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981]',
+            cancelled: 'bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444]'
         };
-        return colors[status] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
+        return colors[status] || 'bg-[#1A1A1A] border border-[#1F1F1F] text-white/60';
     };
 
 
@@ -1034,28 +1034,29 @@ const DriverDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-7xl mx-auto">
             {/* Active Ride Request Alert */}
             {activeRideRequest && (
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 rounded-2xl border-2 border-blue-500/30 bg-blue-500/10 backdrop-blur-xl"
+                    transition={{ duration: 0.25 }}
+                    className="mb-6 p-6 rounded-xl border-2 border-[#0EA5E9]/30 bg-[#0EA5E9]/10"
                 >
                         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex-1 w-full">
-                            <div className="font-bold text-blue-700 dark:text-blue-300 mb-2 sm:mb-3 text-base sm:text-lg">🚨 New Ride Request!</div>
-                            <div className="text-xs sm:text-sm space-y-2">
+                            <div className="font-bold text-[#0EA5E9] mb-3 text-lg sm:text-xl">🚨 New Ride Request!</div>
+                            <div className="text-sm space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-foreground">Passenger ID:</span>
-                                    <span className="text-muted-foreground">{activeRideRequest.passenger_id}</span>
+                                    <span className="font-semibold text-white">Passenger ID:</span>
+                                    <span className="text-white/60">{activeRideRequest.passenger_id}</span>
                                 </div>
                                 {activeRideRequest.pickup && (
                                     <div className="flex items-start gap-2">
-                                        <MapPin className="w-4 h-4 mt-0.5 text-primary" />
+                                        <MapPin className="w-4 h-4 mt-0.5 text-[#0EA5E9]" />
                                         <div>
-                                            <span className="font-semibold text-foreground">Pickup Location:</span>
-                                            <div className="text-muted-foreground">
+                                            <span className="font-semibold text-white">Pickup Location:</span>
+                                            <div className="text-white/60">
                                                 {activeRideRequest.pickup.lat?.toFixed(6)}, {activeRideRequest.pickup.lon?.toFixed(6)}
                                             </div>
                                         </div>
@@ -1063,32 +1064,32 @@ const DriverDashboard = () => {
                                 )}
                                 {activeRideRequest.destination && (
                                     <div className="flex items-start gap-2">
-                                        <MapPin className="w-4 h-4 mt-0.5 text-secondary" />
+                                        <MapPin className="w-4 h-4 mt-0.5 text-[#0EA5E9]" />
                                         <div>
-                                            <span className="font-semibold text-foreground">Destination:</span>
-                                            <div className="text-muted-foreground">{activeRideRequest.destination}</div>
+                                            <span className="font-semibold text-white">Destination:</span>
+                                            <div className="text-white/60">{activeRideRequest.destination}</div>
                                         </div>
                                     </div>
                                 )}
                                 {activeRideRequest.destination_lat && activeRideRequest.destination_lon && (
-                                    <div className="text-xs text-muted-foreground ml-6">
+                                    <div className="text-xs text-white/40 ml-6">
                                         Coordinates: {activeRideRequest.destination_lat?.toFixed(6)}, {activeRideRequest.destination_lon?.toFixed(6)}
                                     </div>
                                 )}
                                 {(activeRideRequest.date || activeRideRequest.time) && (
                                     <div className="flex items-start gap-2">
-                                        <Calendar className="w-4 h-4 mt-0.5 text-primary" />
+                                        <Calendar className="w-4 h-4 mt-0.5 text-[#0EA5E9]" />
                                         <div className="flex gap-4">
                                             {activeRideRequest.date && (
                                                 <div>
-                                                    <span className="font-semibold text-foreground">Date: </span>
-                                                    <span className="text-muted-foreground">{new Date(activeRideRequest.date).toLocaleDateString()}</span>
+                                                    <span className="font-semibold text-white">Date: </span>
+                                                    <span className="text-white/60">{new Date(activeRideRequest.date).toLocaleDateString()}</span>
                                                 </div>
                                             )}
                                             {activeRideRequest.time && (
                                                 <div>
-                                                    <span className="font-semibold text-foreground">Time: </span>
-                                                    <span className="text-muted-foreground">{activeRideRequest.time}</span>
+                                                    <span className="font-semibold text-white">Time: </span>
+                                                    <span className="text-white/60">{activeRideRequest.time}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -1096,10 +1097,10 @@ const DriverDashboard = () => {
                                 )}
                                 {activeRideRequest.number_of_people && (
                                     <div className="flex items-start gap-2">
-                                        <Users className="w-4 h-4 mt-0.5 text-primary" />
+                                        <Users className="w-4 h-4 mt-0.5 text-[#0EA5E9]" />
                                         <div>
-                                            <span className="font-semibold text-foreground">Number of People: </span>
-                                            <span className="text-muted-foreground">{activeRideRequest.number_of_people} {activeRideRequest.number_of_people === 1 ? 'person' : 'people'}</span>
+                                            <span className="font-semibold text-white">Number of People: </span>
+                                            <span className="text-white/60">{activeRideRequest.number_of_people} {activeRideRequest.number_of_people === 1 ? 'person' : 'people'}</span>
                                         </div>
                                     </div>
                                 )}
@@ -1115,12 +1116,12 @@ const DriverDashboard = () => {
                                 if (vehicles.length > 0) {
                                     return (
                                         <div className="w-full mb-2">
-                                            <label className="block text-xs font-semibold mb-1 text-foreground">Select Vehicle (min {numPeople + 1} seats for {numPeople} passengers + driver):</label>
+                                            <label className="block text-xs font-semibold mb-1 text-white">Select Vehicle (min {numPeople + 1} seats for {numPeople} passengers + driver):</label>
                                             {availableVehicles.length > 0 ? (
                                                 <select
                                                     value={selectedVehicleForRequest}
                                                     onChange={(e) => setSelectedVehicleForRequest(e.target.value)}
-                                                    className="w-full px-3 py-2 bg-white/50 dark:bg-white/5 border-2 border-border rounded-lg focus:border-primary outline-none text-sm"
+                                                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none text-sm text-white"
                                                 >
                                                     <option value="">-- Select Vehicle --</option>
                                                     {availableVehicles.map((vehicle) => (
@@ -1130,8 +1131,8 @@ const DriverDashboard = () => {
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg">
-                                                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                <div className="px-3 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-xl">
+                                                    <p className="text-xs text-[#f59e0b]">
                                                         No vehicles available with capacity for {numPeople} {numPeople === 1 ? 'person' : 'people'}
                                                     </p>
                                                 </div>
@@ -1150,14 +1151,14 @@ const DriverDashboard = () => {
                                         const availableVehicles = vehicles.filter(v => (Number(v.capacity) || 0) > numPeople);
                                         return availableVehicles.length > 0 && !selectedVehicleForRequest;
                                     })()}
-                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-2 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-2 bg-[#10b981] text-white font-semibold rounded-xl hover:bg-[#10b981] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                                 >
                                     <CheckCircle className="w-4 h-4" />
                                     Accept
                                 </button>
                                 <button
                                     onClick={handleRejectRideRequest}
-                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-2 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                                    className="flex-1 px-4 sm:px-6 py-2.5 sm:py-2 bg-[#ef4444] text-white font-semibold rounded-xl hover:bg-[#ef4444] hover:brightness-110 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
                                 >
                                     <XCircle className="w-4 h-4" />
                                     Reject
@@ -1171,26 +1172,27 @@ const DriverDashboard = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8"
+                transition={{ duration: 0.25 }}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
             >
                 <div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-2 sm:mb-3 gradient-text">Driver Dashboard</h1>
-                    <p className="text-muted-foreground text-base sm:text-lg">Manage your rides and track performance</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3 text-white">Driver Dashboard</h1>
+                    <p className="text-white/60 text-base sm:text-lg">Manage your rides and track performance</p>
                 </div>
                 {/* Location sharing status indicator and Go Online button */}
                 {(user?.user_type === 'driver' || user?.user_type === 'both') && (
                     <div className="flex items-center gap-3">
                         {(activeRideId || rides.some(r => (r.status || '').toLowerCase() === 'ongoing') || isOnline) ? (
-                            <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10">
+                            <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border border-[#10b981]/30 bg-[#10b981]/10">
                                 {myLivePos ? (
                                     <>
-                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Sharing location</span>
+                                        <div className="w-2 h-2 bg-[#10b981] rounded-full animate-pulse"></div>
+                                        <span className="text-[#10b981] font-semibold">Sharing location</span>
                                     </>
                                 ) : (
                                     <>
-                                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                                        <span className="text-amber-600 dark:text-amber-400 font-medium">Requesting location...</span>
+                                        <div className="w-2 h-2 bg-[#f59e0b] rounded-full animate-pulse"></div>
+                                        <span className="text-[#f59e0b] font-semibold">Requesting location...</span>
                                     </>
                                 )}
                             </div>
@@ -1200,10 +1202,10 @@ const DriverDashboard = () => {
                             whileTap={{ scale: 0.95 }}
                             onClick={handleToggleOnline}
                             disabled={activeRideId != null || rides.some(r => (r.status || '').toLowerCase() === 'ongoing')}
-                            className={`px-6 py-2.5 font-semibold rounded-xl transition-all flex items-center gap-2 ${
+                            className={`px-6 py-2.5 font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 ${
                                 isOnline || activeRideId != null || rides.some(r => (r.status || '').toLowerCase() === 'ongoing')
-                                    ? 'bg-red-500 hover:bg-red-600 text-white border-2 border-red-600 disabled:opacity-50 disabled:cursor-not-allowed'
-                                    : 'bg-emerald-500 hover:bg-emerald-600 text-white border-2 border-emerald-600 shadow-lg'
+                                    ? 'bg-[#ef4444] hover:bg-[#ef4444] hover:brightness-110 text-white border border-[#ef4444] disabled:opacity-50 disabled:cursor-not-allowed'
+                                    : 'bg-[#10b981] hover:bg-[#10b981] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(16,185,129,0.3)] text-white border border-[#10b981]'
                             }`}
                         >
                             {(isOnline || activeRideId != null || rides.some(r => (r.status || '').toLowerCase() === 'ongoing')) ? (
@@ -1224,23 +1226,20 @@ const DriverDashboard = () => {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleToggleCreateForm}
-                    className="w-full sm:w-auto px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-3.5 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-glow-lg hover:shadow-glow transition-all flex items-center justify-center gap-2 group relative overflow-hidden text-sm sm:text-base"
+                    className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-3.5 bg-[#0EA5E9] text-white font-bold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                    <span className="relative z-10 flex items-center gap-2">
-                        <Plus className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${showCreateForm ? 'rotate-45' : 'rotate-0'}`} />
-                        <span className="hidden sm:inline">{showCreateForm ? 'Cancel' : 'Create New Ride'}</span>
-                        <span className="sm:hidden">{showCreateForm ? 'Cancel' : 'New Ride'}</span>
-                    </span>
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    <Plus className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${showCreateForm ? 'rotate-45' : 'rotate-0'}`} />
+                    <span className="hidden sm:inline">{showCreateForm ? 'Cancel' : 'Create New Ride'}</span>
+                    <span className="sm:hidden">{showCreateForm ? 'Cancel' : 'New Ride'}</span>
                 </motion.button>
             </motion.div>
 
             {/* Quick stats + Live Map */}
-            <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div className="lg:col-span-2 p-3 sm:p-4 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+                <div className="lg:col-span-2 p-4 rounded-xl border border-[#1A1A1A] bg-[#111111]">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3">
-                        <div className="font-semibold text-sm sm:text-base">Live Location</div>
-                        <div className="text-xs text-muted-foreground break-all sm:break-normal">{myLivePos ? `${myLivePos.lat.toFixed(5)}, ${myLivePos.lon.toFixed(5)}` : 'Share location to enable'}</div>
+                        <div className="font-semibold text-sm sm:text-base text-white">Live Location</div>
+                        <div className="text-xs text-white/40 break-all sm:break-normal">{myLivePos ? `${myLivePos.lat.toFixed(5)}, ${myLivePos.lon.toFixed(5)}` : 'Share location to enable'}</div>
                     </div>
                     <LiveRideMap driver={myLivePos ? { lat: myLivePos.lat, lon: myLivePos.lon } : null} />
                 </div>
@@ -1251,17 +1250,17 @@ const DriverDashboard = () => {
                         const revenue = rides.reduce((sum, r) => sum + Number(r.total_revenue || 0), 0);
                         return (
                             <>
-                                <div className="p-3 sm:p-4 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
-                                    <div className="text-xs text-muted-foreground">Total Rides</div>
-                                    <div className="text-xl sm:text-2xl font-extrabold">{total}</div>
+                                <div className="p-4 rounded-xl border border-[#1A1A1A] bg-[#111111]">
+                                    <div className="text-xs text-white/60 mb-1">Total Rides</div>
+                                    <div className="text-2xl font-bold text-white">{total}</div>
                                 </div>
-                                <div className="p-3 sm:p-4 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
-                                    <div className="text-xs text-muted-foreground">Completed</div>
-                                    <div className="text-xl sm:text-2xl font-extrabold">{completed}</div>
+                                <div className="p-4 rounded-xl border border-[#1A1A1A] bg-[#111111]">
+                                    <div className="text-xs text-white/60 mb-1">Completed</div>
+                                    <div className="text-2xl font-bold text-white">{completed}</div>
                                 </div>
-                                <div className="p-3 sm:p-4 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
-                                    <div className="text-xs text-muted-foreground">Total Revenue</div>
-                                    <div className="text-xl sm:text-2xl font-extrabold text-emerald-600">₹{revenue.toFixed(2)}</div>
+                                <div className="p-4 rounded-xl border border-[#1A1A1A] bg-[#111111]">
+                                    <div className="text-xs text-white/60 mb-1">Total Revenue</div>
+                                    <div className="text-2xl font-bold text-[#10b981]">₹{revenue.toFixed(2)}</div>
                                 </div>
                             </>
                         );
@@ -1276,57 +1275,59 @@ const DriverDashboard = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto"
                         onClick={() => setShowCreateForm(false)}
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.97, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.97, y: 10 }}
-                            className="glass-thick rounded-3xl w-full max-w-2xl max-h-[90vh] border border-white/20 shadow-glow flex flex-col my-auto"
+                            transition={{ duration: 0.25 }}
+                            className="rounded-xl w-full max-w-2xl max-h-[90vh] border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)] flex flex-col my-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-white/10 flex items-start justify-between gap-4 flex-shrink-0">
+                            <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-[#1A1A1A] flex items-start justify-between gap-4 flex-shrink-0">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-primary/10">
-                                        <Car className="w-5 h-5 text-primary" />
+                                    <div className="p-2 rounded-xl bg-[#0EA5E9]/10">
+                                        <Car className="w-5 h-5 text-[#0EA5E9]" />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-extrabold gradient-text">Create New Ride</h3>
-                                        <p className="text-xs text-muted-foreground">Fill the details below and publish your ride</p>
+                                        <h3 className="text-2xl font-bold text-white">Create New Ride</h3>
+                                        <p className="text-xs text-white/60">Fill the details below and publish your ride</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowCreateForm(false)}
-                                    className="p-2 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+                                    className="p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors duration-200 flex-shrink-0"
                                     aria-label="Close"
                                 >
-                                    ✕
+                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
 
                             <div className="px-6 sm:px-8 py-6 sm:py-8 overflow-y-auto flex-1 min-h-0">
                                 {error && (
-                                    <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                                        <p className="text-sm text-destructive">{error}</p>
+                                    <div className="mb-6 p-4 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+                                        <p className="text-sm text-[#ef4444]">{error}</p>
                                     </div>
                                 )}
 
                                 <form onSubmit={handleCreateRide} className="space-y-4">
                                     <div className="grid md:grid-cols-2 gap-5">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Source <span className="text-red-500">*</span></label>
+                                            <label className="text-sm font-semibold text-white">Source <span className="text-[#ef4444]">*</span></label>
                                             <div className="relative">
-                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                                 <input
                                                     type="text"
                                                     name="source"
                                                     value={formData.source}
                                                     onChange={handleChange}
                                                     placeholder="Pickup location"
-                                                    className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none ${
-                                                        formErrors.source ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                    className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40 ${
+                                                        formErrors.source ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                     }`}
                                                 />
                                                 <div className="mt-2 flex flex-wrap gap-2">
@@ -1335,14 +1336,18 @@ const DriverDashboard = () => {
                                                             type="button"
                                                             key={`source-${city}`}
                                                             onClick={() => handleQuickSelect('source', city)}
-                                                            className={`px-3 py-1 rounded-full text-xs border transition-colors ${formData.source === city ? 'bg-primary text-white border-primary' : 'bg-white/50 dark:bg-white/5 border-border hover:border-primary/60'}`}
+                                                            className={`px-3 py-1 rounded-lg text-xs border transition-all duration-200 ${
+                                                                formData.source === city 
+                                                                    ? 'bg-[#0EA5E9] text-white border-[#0EA5E9]' 
+                                                                    : 'bg-[#0A0A0A] border-[#1A1A1A] text-white/60 hover:border-[#0EA5E9]/50 hover:text-white'
+                                                            }`}
                                                         >
                                                             {city}
                                                         </button>
                                                     ))}
                                                 </div>
                                                 {formErrors.source && (
-                                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#ef4444] mt-1 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3" />
                                                         {formErrors.source}
                                                     </p>
@@ -1351,17 +1356,17 @@ const DriverDashboard = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Destination <span className="text-red-500">*</span></label>
+                                            <label className="text-sm font-semibold text-white">Destination <span className="text-[#ef4444]">*</span></label>
                                             <div className="relative">
-                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary" />
+                                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                                 <input
                                                     type="text"
                                                     name="destination"
                                                     value={formData.destination}
                                                     onChange={handleChange}
                                                     placeholder="Drop-off location"
-                                                    className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none ${
-                                                        formErrors.destination ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                    className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40 ${
+                                                        formErrors.destination ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                     }`}
                                                 />
                                                 <div className="mt-2 flex flex-wrap gap-2">
@@ -1370,14 +1375,18 @@ const DriverDashboard = () => {
                                                             type="button"
                                                             key={`destination-${city}`}
                                                             onClick={() => handleQuickSelect('destination', city)}
-                                                            className={`px-3 py-1 rounded-full text-xs border transition-colors ${formData.destination === city ? 'bg-secondary text-white border-secondary' : 'bg-white/50 dark:bg-white/5 border-border hover:border-secondary/60'}`}
+                                                            className={`px-3 py-1 rounded-lg text-xs border transition-all duration-200 ${
+                                                                formData.destination === city 
+                                                                    ? 'bg-[#0EA5E9] text-white border-[#0EA5E9]' 
+                                                                    : 'bg-[#0A0A0A] border-[#1A1A1A] text-white/60 hover:border-[#0EA5E9]/50 hover:text-white'
+                                                            }`}
                                                         >
                                                             {city}
                                                         </button>
                                                     ))}
                                                 </div>
                                                 {formErrors.destination && (
-                                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#ef4444] mt-1 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3" />
                                                         {formErrors.destination}
                                                     </p>
@@ -1387,19 +1396,19 @@ const DriverDashboard = () => {
                                     </div>
 
                                     {/* Distance Calculator */}
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30">
                                         <div className="flex items-center gap-3">
-                                            <Calculator className="w-5 h-5 text-primary" />
+                                            <Calculator className="w-5 h-5 text-[#0EA5E9]" />
                                             <div>
-                                                <p className="text-sm font-semibold">Distance Calculator</p>
-                                                <p className="text-xs text-muted-foreground">Auto-calculates when both locations are entered</p>
+                                                <p className="text-sm font-semibold text-white">Distance Calculator</p>
+                                                <p className="text-xs text-white/60">Auto-calculates when both locations are entered</p>
                                             </div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleCalculateDistance()}
                                             disabled={isCalculatingDistance || !formData.source.trim() || !formData.destination.trim()}
-                                            className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap text-sm"
+                                            className="px-4 py-2 bg-[#0EA5E9] text-white rounded-xl font-semibold hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap text-sm"
                                         >
                                             {isCalculatingDistance ? (
                                                 <>
@@ -1417,21 +1426,21 @@ const DriverDashboard = () => {
 
                                     <div className="grid md:grid-cols-2 gap-5">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Date <span className="text-red-500">*</span></label>
+                                            <label className="text-sm font-semibold text-white">Date <span className="text-[#ef4444]">*</span></label>
                                             <div className="relative">
-                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                                 <input
                                                     type="date"
                                                     name="date"
                                                     value={formData.date}
                                                     onChange={handleChange}
                                                     min={getMinDate()}
-                                                    className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none ${
-                                                        formErrors.date ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                    className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white ${
+                                                        formErrors.date ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                     }`}
                                                 />
                                                 {formErrors.date && (
-                                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#ef4444] mt-1 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3" />
                                                         {formErrors.date}
                                                     </p>
@@ -1440,20 +1449,20 @@ const DriverDashboard = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Time <span className="text-red-500">*</span></label>
+                                            <label className="text-sm font-semibold text-white">Time <span className="text-[#ef4444]">*</span></label>
                                             <div className="relative">
-                                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                                 <input
                                                     type="time"
                                                     name="time"
                                                     value={formData.time}
                                                     onChange={handleChange}
-                                                    className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none ${
-                                                        formErrors.time ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                    className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white ${
+                                                        formErrors.time ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                     }`}
                                                 />
                                                 {formErrors.time && (
-                                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#ef4444] mt-1 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3" />
                                                         {formErrors.time}
                                                     </p>
@@ -1464,9 +1473,9 @@ const DriverDashboard = () => {
 
                                     <div className="grid md:grid-cols-2 gap-5">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Distance (KM) <span className="text-red-500">*</span></label>
+                                            <label className="text-sm font-semibold text-white">Distance (KM) <span className="text-[#ef4444]">*</span></label>
                                             <div className="relative">
-                                                <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                                <TrendingUp className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                                                 <input
                                                     type="number"
                                                     name="distance_km"
@@ -1475,12 +1484,12 @@ const DriverDashboard = () => {
                                                     step="0.01"
                                                     min="0"
                                                     placeholder="25"
-                                                    className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none ${
-                                                        formErrors.distance_km ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                    className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40 ${
+                                                        formErrors.distance_km ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                     }`}
                                                 />
                                                 {formErrors.distance_km && (
-                                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                                    <p className="text-xs text-[#ef4444] mt-1 flex items-center gap-1">
                                                         <AlertCircle className="w-3 h-3" />
                                                         {formErrors.distance_km}
                                                     </p>
@@ -1491,32 +1500,32 @@ const DriverDashboard = () => {
 
                                     {/* Fare Estimation - Fixed 10rs per seat per km */}
                                     {getSelectedVehicleCapacity() > 0 && parseFloat(formData.distance_km) > 0 && (
-                                        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                                        <div className="p-4 rounded-xl bg-[#10b981]/10 border border-[#10b981]/30">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                                                    <DollarSign className="w-5 h-5 text-[#10b981]" />
                                                     <div>
-                                                        <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Estimated Total Fare</p>
-                                                        <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                                                        <p className="text-sm font-semibold text-white">Estimated Total Fare</p>
+                                                        <p className="text-xs text-white/60">
                                                             ₹10/km × {formData.distance_km} km × {getSelectedVehicleCapacity()} seats
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">₹{getEstimatedFare()}</p>
+                                                <p className="text-2xl font-bold text-[#10b981]">₹{getEstimatedFare()}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold">Select Vehicle <span className="text-red-500">*</span></label>
+                                        <label className="text-sm font-semibold text-white">Select Vehicle <span className="text-[#ef4444]">*</span></label>
                                         <div className="relative">
-                                            <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                                            <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 z-10" />
                                             <select
                                                 name="vehicle_id"
                                                 value={formData.vehicle_id}
                                                 onChange={handleChange}
-                                                className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-white/5 border-2 rounded-xl focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none cursor-pointer ${
-                                                    formErrors.vehicle_id ? 'border-red-500 focus:border-red-500' : 'border-border focus:border-primary'
+                                                className={`w-full pl-11 pr-4 py-3 bg-[#0A0A0A] border rounded-xl focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none appearance-none cursor-pointer text-white ${
+                                                    formErrors.vehicle_id ? 'border-[#ef4444] focus:border-[#ef4444]' : 'border-[#1A1A1A] focus:border-[#0EA5E9]'
                                                 }`}
                                             >
                                                 <option value="">Select a vehicle</option>
@@ -1528,23 +1537,23 @@ const DriverDashboard = () => {
                                             </select>
                                         </div>
                                         {formErrors.vehicle_id && (
-                                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                            <p className="text-xs text-[#ef4444] flex items-center gap-1">
                                                 <AlertCircle className="w-3 h-3" />
                                                 {formErrors.vehicle_id}
                                             </p>
                                         )}
                                         {vehicles.length === 0 && (
-                                            <p className="text-xs text-muted-foreground">
-                                                No vehicles added yet. <a href="/vehicles" className="text-primary hover:underline">Add a vehicle</a>
+                                            <p className="text-xs text-white/60">
+                                                No vehicles added yet. <a href="/vehicles" className="text-[#0EA5E9] hover:underline">Add a vehicle</a>
                                             </p>
                                         )}
                                     </div>
 
                                     {/* Waypoints Section */}
-                                    <div className="border-t border-white/20 pt-4">
+                                    <div className="border-t border-[#1A1A1A] pt-4">
                                         <div className="flex items-center justify-between mb-3">
-                                            <label className="text-sm font-semibold flex items-center gap-2">
-                                                <Route className="w-4 h-4" />
+                                            <label className="text-sm font-semibold flex items-center gap-2 text-white">
+                                                <Route className="w-4 h-4 text-[#0EA5E9]" />
                                                 Waypoints (Optional)
                                             </label>
                                         </div>
@@ -1554,17 +1563,17 @@ const DriverDashboard = () => {
                                                 placeholder="Waypoint name"
                                                 value={newWaypoint.name}
                                                 onChange={(e) => setNewWaypoint({ ...newWaypoint, name: e.target.value })}
-                                                className="col-span-1 px-3 py-2 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary outline-none text-sm"
+                                                className="col-span-1 px-3 py-2 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none text-sm text-white placeholder:text-white/40"
                                             />
                                             <div className="col-span-2 relative flex gap-2">
                                                 <div className="flex-1 relative">
-                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0EA5E9]" />
                                                     <input
                                                         type="text"
                                                         placeholder="Enter address"
                                                         value={newWaypoint.address}
                                                         onChange={(e) => setNewWaypoint({ ...newWaypoint, address: e.target.value })}
-                                                        className="w-full pl-10 pr-4 py-2 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary outline-none text-sm"
+                                                        className="w-full pl-10 pr-4 py-2 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none text-sm text-white placeholder:text-white/40"
                                                     />
                                                 </div>
                                                 <button
@@ -1585,7 +1594,7 @@ const DriverDashboard = () => {
                                                             toast.error('Geolocation is not supported');
                                                         }
                                                     }}
-                                                    className="px-3 py-2 bg-primary text-white rounded-xl hover:brightness-110 transition-colors flex items-center justify-center"
+                                                    className="px-3 py-2 bg-[#0EA5E9] text-white rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center"
                                                     title="Use current location"
                                                 >
                                                     <Navigation className="w-4 h-4" />
@@ -1609,7 +1618,7 @@ const DriverDashboard = () => {
                                                     // Will be added after ride creation
                                                     setWaypoints([...waypoints, tempWaypoint]);
                                                 }}
-                                                className="col-span-1 px-3 py-2 bg-primary/10 text-primary rounded-xl font-semibold hover:bg-primary/20 transition-colors flex items-center justify-center gap-1 text-sm"
+                                                className="col-span-1 px-3 py-2 bg-[#0EA5E9]/10 text-[#0EA5E9] rounded-xl font-semibold hover:bg-[#0EA5E9]/20 transition-all duration-200 flex items-center justify-center gap-1 text-sm"
                                             >
                                                 <Plus className="w-4 h-4" />
                                                 Add
@@ -1618,12 +1627,12 @@ const DriverDashboard = () => {
                                         {waypoints.length > 0 && (
                                             <div className="space-y-1 max-h-24 overflow-y-auto">
                                                 {waypoints.map((wp, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white/30 dark:bg-white/5 text-sm">
-                                                        <span>{wp.name || `Waypoint ${idx + 1}`}</span>
+                                                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-sm">
+                                                        <span className="text-white">{wp.name || `Waypoint ${idx + 1}`}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => setWaypoints(waypoints.filter((_, i) => i !== idx))}
-                                                            className="text-red-500 hover:text-red-700"
+                                                            className="text-[#ef4444] hover:text-[#ef4444] hover:brightness-110 transition-colors"
                                                         >
                                                             <XCircle className="w-4 h-4" />
                                                         </button>
@@ -1631,12 +1640,12 @@ const DriverDashboard = () => {
                                                 ))}
                                             </div>
                                         )}
-                                        <p className="text-xs text-muted-foreground mt-2">
+                                        <p className="text-xs text-white/40 mt-2">
                                             Note: Waypoints will be added after ride creation
                                         </p>
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#1A1A1A]">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -1646,7 +1655,7 @@ const DriverDashboard = () => {
                                                 setError('');
                                             }}
                                             disabled={isSubmitting}
-                                            className="px-4 py-2 rounded-lg border border-border hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-4 py-2 rounded-xl border border-[#1A1A1A] bg-[#0A0A0A] hover:bg-[#1A1A1A] text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Cancel
                                         </button>
@@ -1655,7 +1664,7 @@ const DriverDashboard = () => {
                                             whileTap={!isSubmitting ? { scale: 0.98 } : {}}
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="px-5 py-2.5 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className="px-5 py-2.5 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -1676,20 +1685,20 @@ const DriverDashboard = () => {
 
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-8 p-2 glass-thick rounded-2xl border border-white/20 w-fit shadow-soft">
+            <div className="flex gap-2 mb-8 p-2 rounded-xl border border-[#1A1A1A] bg-[#111111] w-fit">
                 <motion.button
                     onClick={() => setActiveTab('rides')}
                     whileTap={{ scale: 0.97 }}
-                    className={`px-8 py-3 rounded-xl font-bold transition-all relative ${
+                    className={`px-8 py-3 rounded-xl font-bold transition-all duration-200 relative ${
                         activeTab === 'rides'
-                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
                     }`}
                 >
                     {activeTab === 'rides' && (
                         <motion.div 
                             layoutId="driverActiveTab"
-                            className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl"
+                            className="absolute inset-0 bg-[#0EA5E9] rounded-xl"
                             style={{ zIndex: -1 }}
                         />
                     )}
@@ -1698,16 +1707,16 @@ const DriverDashboard = () => {
                 <motion.button
                     onClick={() => setActiveTab('feedback')}
                     whileTap={{ scale: 0.97 }}
-                    className={`px-8 py-3 rounded-xl font-bold transition-all relative ${
+                    className={`px-8 py-3 rounded-xl font-bold transition-all duration-200 relative ${
                         activeTab === 'feedback'
-                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
+                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
                     }`}
                 >
                     {activeTab === 'feedback' && (
                         <motion.div 
                             layoutId="driverActiveTab"
-                            className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl"
+                            className="absolute inset-0 bg-[#0EA5E9] rounded-xl"
                             style={{ zIndex: -1 }}
                         />
                     )}
@@ -1720,14 +1729,14 @@ const DriverDashboard = () => {
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-4">
-                            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                            <p className="text-muted-foreground">Loading...</p>
+                            <div className="w-12 h-12 border-4 border-[#0EA5E9]/30 border-t-[#0EA5E9] rounded-full animate-spin" />
+                            <p className="text-white/60">Loading...</p>
                         </div>
                     </div>
                 ) : error ? (
-                    <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-destructive">{error}</p>
+                    <div className="p-4 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-[#ef4444]">{error}</p>
                     </div>
                 ) : (
                     <>
@@ -1737,11 +1746,12 @@ const DriverDashboard = () => {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="glass rounded-2xl p-12 text-center border border-border"
+                                        transition={{ duration: 0.25 }}
+                                        className="rounded-xl p-12 text-center border border-[#1A1A1A] bg-[#111111]"
                                     >
-                                        <Car className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2">No rides yet</h3>
-                                        <p className="text-muted-foreground">Create your first ride to get started</p>
+                                        <Car className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-white">No rides yet</h3>
+                                        <p className="text-white/60">Create your first ride to get started</p>
                                     </motion.div>
                                 ) : (
                                     <div className="grid gap-5">
@@ -1750,18 +1760,15 @@ const DriverDashboard = () => {
                                                 key={ride.ride_id}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                whileHover={{ y: -2, scale: 1.005 }}
-                                                className="glass-thick rounded-3xl p-6 sm:p-8 border border-white/20 hover:shadow-glow-lg hover:border-primary/20 transition-all duration-300 group relative overflow-hidden"
+                                                transition={{ delay: index * 0.05, duration: 0.25 }}
+                                                whileHover={{ y: -2 }}
+                                                className="rounded-xl p-6 sm:p-8 border border-[#1A1A1A] bg-[#111111] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200 group relative overflow-hidden"
                                             >
-                                                {/* Gradient overlay on hover */}
-                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
-                                                
                                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
                                                     <div className="flex-1 space-y-4">
                                                         {/* Vehicle Image */}
                                                         {ride.vehicle_image_url && (
-                                                            <div className="overflow-hidden rounded-xl border border-white/20 w-full max-w-xs">
+                                                            <div className="overflow-hidden rounded-xl border border-[#1A1A1A] w-full max-w-xs">
                                                                 <img 
                                                                     src={ride.vehicle_image_url} 
                                                                     alt="Vehicle" 
@@ -1770,9 +1777,9 @@ const DriverDashboard = () => {
                                                             </div>
                                                         )}
                                                         <div className="flex items-center gap-3 flex-wrap">
-                                                            <div className="text-2xl font-bold gradient-text">{ride.source}</div>
-                                                            <div className="text-primary text-xl">→</div>
-                                                            <div className="text-2xl font-bold gradient-text">{ride.destination}</div>
+                                                            <div className="text-2xl font-bold text-white">{ride.source}</div>
+                                                            <div className="text-[#0EA5E9] text-xl">→</div>
+                                                            <div className="text-2xl font-bold text-white">{ride.destination}</div>
                                                             <span className={`ml-auto px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusColor(ride.status)}`}>
                                                                 {ride.status}
                                                             </span>
@@ -1780,9 +1787,9 @@ const DriverDashboard = () => {
 
                                                         {/* Vehicle Information */}
                                                         {ride.vehicle_model && (
-                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 w-fit border border-white/20">
-                                                                <Car className="w-4 h-4 text-primary" />
-                                                                <span className="text-sm font-medium">
+                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] w-fit">
+                                                                <Car className="w-4 h-4 text-[#0EA5E9]" />
+                                                                <span className="text-sm font-medium text-white">
                                                                     {ride.vehicle_model}
                                                                     {ride.vehicle_color && ` • ${ride.vehicle_color}`}
                                                                     {ride.license_plate && ` • ${ride.license_plate}`}
@@ -1792,39 +1799,39 @@ const DriverDashboard = () => {
 
                                                         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                                             <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-secondary/10 group-hover/item:bg-secondary/20 transition-colors">
-                                                                    <Calendar className="w-4 h-4 text-secondary" />
+                                                                <div className="p-2 rounded-lg bg-[#0A0A0A] group-hover/item:bg-[#1A1A1A] transition-colors duration-200">
+                                                                    <Calendar className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{new Date(ride.date).toLocaleDateString()}</span>
+                                                                <span className="font-semibold text-white">{new Date(ride.date).toLocaleDateString()}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-primary/10 group-hover/item:bg-primary/20 transition-colors">
-                                                                    <Clock className="w-4 h-4 text-primary" />
+                                                                <div className="p-2 rounded-lg bg-[#0A0A0A] group-hover/item:bg-[#1A1A1A] transition-colors duration-200">
+                                                                    <Clock className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{ride.time}</span>
+                                                                <span className="font-semibold text-white">{ride.time}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-primary/10 group-hover/item:bg-primary/20 transition-colors">
-                                                                    <Users className="w-4 h-4 text-primary" />
+                                                                <div className="p-2 rounded-lg bg-[#0A0A0A] group-hover/item:bg-[#1A1A1A] transition-colors duration-200">
+                                                                    <Users className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-medium">{(ride.seats_booked_count ?? (ride.total_seats - ride.available_seats))}/{ride.total_seats} seats</span>
+                                                                <span className="font-semibold text-white">{(ride.seats_booked_count ?? (ride.total_seats - ride.available_seats))}/{ride.total_seats} seats</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm group/item">
-                                                                <div className="p-2 rounded-lg bg-emerald-500/10 group-hover/item:bg-emerald-500/20 transition-colors">
-                                                                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                                                                <div className="p-2 rounded-lg bg-[#10b981]/10 group-hover/item:bg-[#10b981]/20 transition-colors duration-200">
+                                                                    <DollarSign className="w-4 h-4 text-[#10b981]" />
                                                                 </div>
-                                                                <span className="font-medium">₹10/km × {ride.distance_km}km</span>
+                                                                <span className="font-semibold text-white">₹10/km × {ride.distance_km}km</span>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center gap-3">
-                                                            <div className="px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                                                                <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">Bookings: </span>
-                                                                <span className="font-bold text-blue-700 dark:text-blue-300">{ride.total_bookings || 0}</span>
+                                                            <div className="px-4 py-2 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30">
+                                                                <span className="text-xs text-[#0EA5E9] font-semibold">Bookings: </span>
+                                                                <span className="font-bold text-white">{ride.total_bookings || 0}</span>
                                                             </div>
-                                                            <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                                                                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Revenue: </span>
-                                                                <span className="font-bold text-emerald-700 dark:text-emerald-300">₹{ride.total_revenue || 0}</span>
+                                                            <div className="px-4 py-2 rounded-xl bg-[#10b981]/10 border border-[#10b981]/30">
+                                                                <span className="text-xs text-[#10b981] font-semibold">Revenue: </span>
+                                                                <span className="font-bold text-white">₹{ride.total_revenue || 0}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1836,7 +1843,7 @@ const DriverDashboard = () => {
                                                                     whileHover={{ scale: 1.05 }}
                                                                     whileTap={{ scale: 0.95 }}
                                                                     onClick={() => handleUpdateStatus(ride.ride_id, 'ongoing')}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                                                    className="px-4 py-2 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2"
                                                                 >
                                                                     <Play className="w-4 h-4" />
                                                                     Start
@@ -1845,7 +1852,7 @@ const DriverDashboard = () => {
                                                                     whileHover={{ scale: 1.05 }}
                                                                     whileTap={{ scale: 0.95 }}
                                                                     onClick={() => handleUpdateStatus(ride.ride_id, 'cancelled')}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                                                                    className="px-4 py-2 bg-[#ef4444] text-white font-semibold rounded-xl hover:bg-[#ef4444] hover:brightness-110 transition-all duration-200 flex items-center gap-2"
                                                                 >
                                                                     <XCircle className="w-4 h-4" />
                                                                     Cancel
@@ -1857,7 +1864,7 @@ const DriverDashboard = () => {
                                                                 whileHover={{ scale: 1.05 }}
                                                                 whileTap={{ scale: 0.95 }}
                                                                 onClick={() => handleUpdateStatus(ride.ride_id, 'completed')}
-                                                                className="px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                                                                className="px-4 py-2 bg-[#10b981] text-white font-semibold rounded-xl hover:bg-[#10b981] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all duration-200 flex items-center gap-2"
                                                             >
                                                                 <CheckCircle className="w-4 h-4" />
                                                                 Complete
@@ -1870,7 +1877,7 @@ const DriverDashboard = () => {
                                                                 setSelectedRideForWaypoints(ride.ride_id);
                                                                 await loadWaypoints(ride.ride_id);
                                                             }}
-                                                            className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                                                            className="px-4 py-2 bg-[#8b5cf6] text-white font-semibold rounded-xl hover:bg-[#8b5cf6] hover:brightness-110 transition-all duration-200 flex items-center gap-2"
                                                         >
                                                             <Route className="w-4 h-4" />
                                                             Waypoints
@@ -1891,21 +1898,22 @@ const DriverDashboard = () => {
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="glass rounded-2xl p-6 border border-white/20 bg-gradient-to-r from-primary/10 to-secondary/10"
+                                        transition={{ duration: 0.25 }}
+                                        className="rounded-xl p-6 border border-[#1A1A1A] bg-[#111111]"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="text-sm text-muted-foreground mb-1">Average Rating</h3>
+                                                <h3 className="text-sm text-white/60 mb-1">Average Rating</h3>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-3xl font-bold">{feedbackStats.averageRating.toFixed(1)}</span>
+                                                    <span className="text-3xl font-bold text-white">{feedbackStats.averageRating.toFixed(1)}</span>
                                                     <div className="flex items-center gap-1">
                                                         {[...Array(5)].map((_, i) => (
                                                             <Star
                                                                 key={i}
                                                                 className={`w-5 h-5 ${
                                                                     i < Math.round(feedbackStats.averageRating)
-                                                                        ? 'fill-amber-500 text-amber-500'
-                                                                        : 'text-gray-300 dark:text-gray-600'
+                                                                        ? 'fill-[#f59e0b] text-[#f59e0b]'
+                                                                        : 'text-white/20'
                                                                 }`}
                                                             />
                                                         ))}
@@ -1913,8 +1921,8 @@ const DriverDashboard = () => {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <h3 className="text-sm text-muted-foreground mb-1">Total Feedback</h3>
-                                                <p className="text-3xl font-bold">{feedbackStats.totalFeedback}</p>
+                                                <h3 className="text-sm text-white/60 mb-1">Total Feedback</h3>
+                                                <p className="text-3xl font-bold text-white">{feedbackStats.totalFeedback}</p>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -1924,11 +1932,12 @@ const DriverDashboard = () => {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="glass rounded-2xl p-12 text-center border border-border"
+                                        transition={{ duration: 0.25 }}
+                                        className="rounded-xl p-12 text-center border border-[#1A1A1A] bg-[#111111]"
                                     >
-                                        <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2">No feedback yet</h3>
-                                        <p className="text-muted-foreground">Complete rides to receive passenger feedback</p>
+                                        <MessageSquare className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-white">No feedback yet</h3>
+                                        <p className="text-white/60">Complete rides to receive passenger feedback</p>
                                     </motion.div>
                                 ) : (
                                     <div className="grid gap-4">
@@ -1937,13 +1946,13 @@ const DriverDashboard = () => {
                                                 key={item.feedback_id}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="glass rounded-2xl p-6 border-l-4 border-l-primary border-y border-r border-white/20 hover:shadow-soft transition-all"
+                                                transition={{ delay: index * 0.05, duration: 0.25 }}
+                                                className="rounded-xl p-6 border-l-4 border-l-[#0EA5E9] border-y border-r border-[#1A1A1A] bg-[#111111] hover:bg-[#1A1A1A] transition-all duration-200"
                                             >
                                                 <div className="flex items-start justify-between gap-4 mb-3">
                                                     <div>
-                                                        <h4 className="font-semibold text-lg">{item.passenger_name}</h4>
-                                                        <p className="text-sm text-muted-foreground">{item.source} → {item.destination}</p>
+                                                        <h4 className="font-semibold text-lg text-white">{item.passenger_name}</h4>
+                                                        <p className="text-sm text-white/60">{item.source} → {item.destination}</p>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         {[...Array(5)].map((_, i) => (
@@ -1951,19 +1960,19 @@ const DriverDashboard = () => {
                                                                 key={i}
                                                                 className={`w-5 h-5 ${
                                                                     i < item.rating
-                                                                        ? 'fill-amber-500 text-amber-500'
-                                                                        : 'text-gray-300 dark:text-gray-600'
+                                                                        ? 'fill-[#f59e0b] text-[#f59e0b]'
+                                                                        : 'text-white/20'
                                                                 }`}
                                                             />
                                                         ))}
                                                     </div>
                                                 </div>
                                                 {item.comments && (
-                                                    <p className="text-sm text-muted-foreground mb-3 p-3 rounded-lg bg-white/50 dark:bg-white/5">
+                                                    <p className="text-sm text-white/60 mb-3 p-3 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A]">
                                                         "{item.comments}"
                                                     </p>
                                                 )}
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className="text-xs text-white/40">
                                                     {new Date(item.created_at).toLocaleDateString()}
                                                 </p>
                                             </motion.div>
@@ -1983,23 +1992,25 @@ const DriverDashboard = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm"
                         onClick={() => setSelectedRideForWaypoints(null)}
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.97, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.97, y: 10 }}
-                            className="glass-thick rounded-3xl w-full max-w-md border border-white/20 shadow-glow"
+                            transition={{ duration: 0.25 }}
+                            className="rounded-xl w-full max-w-md border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="px-6 pt-6 pb-4 border-b border-white/10 flex items-center justify-between">
-                                <h3 className="text-2xl font-extrabold">Manage Waypoints</h3>
+                            <div className="px-6 pt-6 pb-4 border-b border-[#1A1A1A] flex items-center justify-between">
+                                <h3 className="text-2xl font-bold text-white">Manage Waypoints</h3>
                                 <button
                                     onClick={() => setSelectedRideForWaypoints(null)}
-                                    className="p-2 rounded-lg hover:bg-white/10"
+                                    className="p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors duration-200"
                                 >
-                                    <XCircle className="w-5 h-5" />
+                                    <XCircle className="w-5 h-5 text-white/60 hover:text-white" />
                                 </button>
                             </div>
                             <div className="p-6 space-y-4">
@@ -2009,17 +2020,17 @@ const DriverDashboard = () => {
                                         placeholder="Name"
                                         value={newWaypoint.name}
                                         onChange={(e) => setNewWaypoint({ ...newWaypoint, name: e.target.value })}
-                                        className="col-span-1 px-3 py-2 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary outline-none text-sm"
+                                        className="col-span-1 px-3 py-2 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none text-sm text-white placeholder:text-white/40"
                                     />
                                     <div className="col-span-2 relative flex gap-2">
                                         <div className="flex-1 relative">
-                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0EA5E9]" />
                                             <input
                                                 type="text"
                                                 placeholder="Enter address"
                                                 value={newWaypoint.address}
                                                 onChange={(e) => setNewWaypoint({ ...newWaypoint, address: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-2 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary outline-none text-sm"
+                                                className="w-full pl-10 pr-4 py-2 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 outline-none text-sm text-white placeholder:text-white/40"
                                             />
                                         </div>
                                         <button
@@ -2040,7 +2051,7 @@ const DriverDashboard = () => {
                                                     toast.error('Geolocation is not supported');
                                                 }
                                             }}
-                                            className="px-3 py-2 bg-primary text-white rounded-xl hover:brightness-110 transition-colors flex items-center justify-center"
+                                            className="px-3 py-2 bg-[#0EA5E9] text-white rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center"
                                             title="Use current location"
                                         >
                                             <Navigation className="w-4 h-4" />
@@ -2048,7 +2059,7 @@ const DriverDashboard = () => {
                                     </div>
                                     <button
                                         onClick={() => handleAddWaypoint(selectedRideForWaypoints)}
-                                        className="col-span-1 px-3 py-2 bg-primary text-white rounded-xl font-semibold flex items-center justify-center gap-1 text-sm"
+                                        className="col-span-1 px-3 py-2 bg-[#0EA5E9] text-white rounded-xl font-semibold hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-1 text-sm"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Add
@@ -2056,10 +2067,10 @@ const DriverDashboard = () => {
                                 </div>
                                 <div className="space-y-2 max-h-64 overflow-auto">
                                     {waypoints.map((wp) => (
-                                        <div key={wp.waypoint_id || wp.name} className="flex items-center justify-between p-3 rounded-lg bg-white/30 dark:bg-white/5">
+                                        <div key={wp.waypoint_id || wp.name} className="flex items-center justify-between p-3 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A]">
                                             <div>
-                                                <p className="font-semibold text-sm">{wp.name}</p>
-                                                <p className="text-xs text-muted-foreground">{wp.lat}, {wp.lon}</p>
+                                                <p className="font-semibold text-sm text-white">{wp.name}</p>
+                                                <p className="text-xs text-white/40">{wp.lat}, {wp.lon}</p>
                                             </div>
                                             <button
                                                 onClick={async () => {
@@ -2076,7 +2087,7 @@ const DriverDashboard = () => {
                                                         toast.error(err.response?.data?.message || 'Failed to delete waypoint');
                                                     }
                                                 }}
-                                                className="text-red-500 hover:text-red-700"
+                                                className="text-[#ef4444] hover:text-[#ef4444] hover:brightness-110 transition-colors"
                                             >
                                                 <XCircle className="w-4 h-4" />
                                             </button>

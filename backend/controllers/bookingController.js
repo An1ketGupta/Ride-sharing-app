@@ -1,4 +1,4 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 import { getIO, getSocketIdForUser } from '../utils/socketRegistry.js';
 import { sendNotification } from '../utils/notifications.js';
@@ -12,89 +12,127 @@ export const createBooking = async (req, res) => {
         const passenger_id = req.user.id;
 
         // Get ride details
-        const [rides] = await promisePool.query(
-            'SELECT * FROM rides WHERE ride_id = ? AND status = "scheduled"',
-            [ride_id]
-        );
+        const ride = await prisma.ride.findFirst({
+            where: {
+                rideId: parseInt(ride_id),
+                status: 'scheduled'
+            }
+        });
 
-        if (rides.length === 0) {
+        if (!ride) {
             return errorResponse(res, 404, 'Ride not found or not available');
         }
 
-        const ride = rides[0];
-
         // Check if enough seats available
-        if (ride.available_seats < seats_booked) {
-            return errorResponse(res, 400, `Only ${ride.available_seats} seats available`);
+        if (Number(ride.availableSeats) < seats_booked) {
+            return errorResponse(res, 400, `Only ${ride.availableSeats} seats available`);
         }
 
         // Check if user is not the driver
-        if (ride.driver_id === passenger_id) {
+        if (Number(ride.driverId) === Number(passenger_id)) {
             return errorResponse(res, 400, 'Driver cannot book their own ride');
         }
 
         // Calculate amount - Fixed 10rs per seat per km
-        let amount = (10 * ride.distance_km * seats_booked);
+        let amount = (10 * Number(ride.distanceKm) * seats_booked);
         const { promo_code, notes, stops, save_location } = req.body || {};
+        
         // Optional: apply flat/percent promo if present in promo_codes
         if (promo_code) {
             try {
-                const [pcRows] = await promisePool.query(`SELECT * FROM promo_codes WHERE code = ? AND (expiry_date IS NULL OR expiry_date >= CURDATE())`, [promo_code]);
-                const promo = pcRows[0];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const promo = await prisma.promoCode.findFirst({
+                    where: {
+                        code: promo_code,
+                        OR: [
+                            { expiryDate: null },
+                            { expiryDate: { gte: today } }
+                        ]
+                    }
+                });
+                
                 if (promo) {
-                    if (promo.discount_percent) amount = amount * (1 - Number(promo.discount_percent)/100);
-                    if (promo.discount_amount) amount = Math.max(0, amount - Number(promo.discount_amount));
-                    // mark user promo used (idempotent upsert)
-                    await promisePool.query(`INSERT INTO user_promo_codes (user_id, code, is_used) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE is_used = 1`, [passenger_id, promo_code]);
+                    if (promo.discountPercent) {
+                        amount = amount * (1 - Number(promo.discountPercent) / 100);
+                    }
+                    if (promo.discountAmount) {
+                        amount = Math.max(0, amount - Number(promo.discountAmount));
+                    }
+                    // Mark user promo used (upsert)
+                    await prisma.userPromoCode.upsert({
+                        where: {
+                            userId_code: {
+                                userId: parseInt(passenger_id),
+                                code: promo_code
+                            }
+                        },
+                        update: { isUsed: true },
+                        create: {
+                            userId: parseInt(passenger_id),
+                            code: promo_code,
+                            isUsed: true
+                        }
+                    });
                 }
             } catch {}
         }
-        amount = amount.toFixed(2);
+        amount = parseFloat(amount.toFixed(2));
 
-        // Create booking with graceful fallback if "notes" column doesn't exist
-        let result;
-        try {
-            [result] = await promisePool.query(
-                'INSERT INTO bookings (ride_id, passenger_id, seats_booked, amount, booking_status, notes) VALUES (?, ?, ?, ?, "pending", ?)',
-                [ride_id, passenger_id, seats_booked, amount, notes || null]
-            );
-        } catch (e) {
-            // ER_BAD_FIELD_ERROR (1054): unknown column 'notes' -> retry without notes column
-            if (e && (e.code === 'ER_BAD_FIELD_ERROR' || e.errno === 1054)) {
-                [result] = await promisePool.query(
-                    'INSERT INTO bookings (ride_id, passenger_id, seats_booked, amount, booking_status) VALUES (?, ?, ?, ?, "pending")',
-                    [ride_id, passenger_id, seats_booked, amount]
-                );
-            } else {
-                throw e;
+        // Create booking
+        const booking = await prisma.booking.create({
+            data: {
+                rideId: parseInt(ride_id),
+                passengerId: parseInt(passenger_id),
+                seatsBooked: seats_booked,
+                amount: amount,
+                bookingStatus: 'pending',
+                notes: notes || null
+            },
+            include: {
+                ride: {
+                    include: {
+                        driver: {
+                            select: {
+                                name: true,
+                                phone: true
+                            }
+                        },
+                        vehicle: {
+                            select: {
+                                model: true,
+                                color: true,
+                                licensePlate: true,
+                                vehicleImageUrl: true,
+                                capacity: true
+                            }
+                        }
+                    }
+                },
+                payments: {
+                    take: 1,
+                    orderBy: { paymentDate: 'desc' },
+                    select: {
+                        paymentMethod: true,
+                        paymentStatus: true,
+                        paymentId: true
+                    }
+                }
             }
-        }
-
-        // Get created booking with ride details
-        const [newBooking] = await promisePool.query(
-            `SELECT b.*, r.source, r.destination, r.date, r.time,
-                    u.name as driver_name, u.phone as driver_phone,
-                    v.model as vehicle_model, v.color as vehicle_color, v.license_plate,
-                    v.vehicle_image_url, v.capacity as vehicle_capacity,
-                    p.payment_method, p.payment_status, p.payment_id
-             FROM bookings b
-             JOIN rides r ON b.ride_id = r.ride_id
-             JOIN users u ON r.driver_id = u.user_id
-             LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-             LEFT JOIN payments p ON b.booking_id = p.booking_id
-             WHERE b.booking_id = ?`,
-            [result.insertId]
-        );
-
-        const booking = newBooking[0];
+        });
 
         // Optionally save user's location (e.g., Home/Work)
         try {
             if (save_location && save_location.name && typeof save_location.lat === 'number' && typeof save_location.lon === 'number') {
-                await promisePool.query(
-                    `INSERT INTO saved_locations (user_id, name, lat, lon) VALUES (?, ?, ?, ?)`,
-                    [passenger_id, String(save_location.name).slice(0,50), save_location.lat, save_location.lon]
-                );
+                await prisma.savedLocation.create({
+                    data: {
+                        userId: parseInt(passenger_id),
+                        name: String(save_location.name).slice(0, 50),
+                        lat: save_location.lat,
+                        lon: save_location.lon
+                    }
+                });
             }
         } catch (e) {
             // Non-fatal: do not block booking on saved-location failure
@@ -104,27 +142,27 @@ export const createBooking = async (req, res) => {
         // Notify the driver about the new booking via socket
         try {
             const io = getIO();
-            const driverSocketId = getSocketIdForUser(Number(ride.driver_id));
+            const driverSocketId = getSocketIdForUser(Number(ride.driverId));
             
             if (io && driverSocketId) {
                 io.to(driverSocketId).emit('new_booking', {
-                    booking_id: booking.booking_id,
-                    ride_id: booking.ride_id,
-                    passenger_id: booking.passenger_id,
-                    seats_booked: booking.seats_booked,
+                    booking_id: booking.bookingId,
+                    ride_id: booking.rideId,
+                    passenger_id: booking.passengerId,
+                    seats_booked: booking.seatsBooked,
                     amount: booking.amount,
-                    source: booking.source,
-                    destination: booking.destination,
-                    date: booking.date,
-                    time: booking.time,
-                    status: booking.status
+                    source: booking.ride.source,
+                    destination: booking.ride.destination,
+                    date: booking.ride.date,
+                    time: booking.ride.time,
+                    status: booking.ride.status
                 });
-                console.log(`📩 Sent booking notification to driver ${ride.driver_id}`);
+                console.log(`📩 Sent booking notification to driver ${ride.driverId}`);
             }
 
             // Send DB notification to driver
             await sendNotification(
-                ride.driver_id,
+                ride.driverId,
                 `New booking request: ${passenger_id} booked ${seats_booked} seat(s) for ${ride.source} → ${ride.destination}`
             );
         } catch (notifError) {
@@ -132,7 +170,33 @@ export const createBooking = async (req, res) => {
             // Don't fail the booking if notification fails
         }
 
-        return successResponse(res, 201, 'Booking created successfully', booking);
+        // Format response
+        const formattedBooking = {
+            booking_id: booking.bookingId,
+            ride_id: booking.rideId,
+            passenger_id: booking.passengerId,
+            seats_booked: booking.seatsBooked,
+            amount: booking.amount,
+            booking_status: booking.bookingStatus,
+            notes: booking.notes,
+            booking_date: booking.bookingDate,
+            source: booking.ride.source,
+            destination: booking.ride.destination,
+            date: booking.ride.date,
+            time: booking.ride.time,
+            driver_name: booking.ride.driver.name,
+            driver_phone: booking.ride.driver.phone,
+            vehicle_model: booking.ride.vehicle?.model || null,
+            vehicle_color: booking.ride.vehicle?.color || null,
+            license_plate: booking.ride.vehicle?.licensePlate || null,
+            vehicle_image_url: booking.ride.vehicle?.vehicleImageUrl || null,
+            vehicle_capacity: booking.ride.vehicle?.capacity || null,
+            payment_method: booking.payments[0]?.paymentMethod || null,
+            payment_status: booking.payments[0]?.paymentStatus || null,
+            payment_id: booking.payments[0]?.paymentId || null
+        };
+
+        return successResponse(res, 201, 'Booking created successfully', formattedBooking);
 
     } catch (error) {
         console.error('Create booking error:', error);
@@ -147,56 +211,138 @@ export const getMyBookings = async (req, res) => {
     try {
         const user_id = req.user.id;
         
-        // Get user type from database
-        const [userRows] = await promisePool.query(
-            'SELECT user_type FROM users WHERE user_id = ?',
-            [user_id]
-        );
-        const user_type = userRows[0]?.user_type || 'passenger';
+        // Get user type
+        const user = await prisma.user.findUnique({
+            where: { userId: parseInt(user_id) },
+            select: { userType: true }
+        });
+        const user_type = user?.userType || 'passenger';
 
         let bookings;
         
         if (user_type === 'driver' || user_type === 'both') {
             // Get bookings for driver's rides
-            [bookings] = await promisePool.query(
-                `SELECT b.*, 
-                        r.source, r.destination, r.date, r.time, r.status as ride_status, r.driver_id,
-                        u.name as passenger_name, u.phone as passenger_phone,
-                        ud.name as driver_name, ud.phone as driver_phone,
-                        v.model as vehicle_model, v.color as vehicle_color, v.license_plate,
-                        v.vehicle_image_url, v.capacity as vehicle_capacity,
-                        p.payment_method, p.payment_status, p.transaction_id, p.payment_id
-                 FROM bookings b
-                 JOIN rides r ON b.ride_id = r.ride_id
-                 JOIN users u ON b.passenger_id = u.user_id
-                 JOIN users ud ON r.driver_id = ud.user_id
-                 LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-                 LEFT JOIN payments p ON b.booking_id = p.booking_id
-                 WHERE r.driver_id = ?
-                 ORDER BY b.booking_date DESC`,
-                [user_id]
-            );
+            bookings = await prisma.booking.findMany({
+                where: {
+                    ride: {
+                        driverId: parseInt(user_id)
+                    }
+                },
+                include: {
+                    ride: {
+                        include: {
+                            vehicle: {
+                                select: {
+                                    model: true,
+                                    color: true,
+                                    licensePlate: true,
+                                    vehicleImageUrl: true,
+                                    capacity: true
+                                }
+                            }
+                        }
+                    },
+                    passenger: {
+                        select: {
+                            name: true,
+                            phone: true
+                        }
+                    },
+                    payments: {
+                        take: 1,
+                        orderBy: { paymentDate: 'desc' },
+                        select: {
+                            paymentMethod: true,
+                            paymentStatus: true,
+                            transactionId: true,
+                            paymentId: true
+                        }
+                    }
+                },
+                orderBy: { bookingDate: 'desc' }
+            });
         } else {
             // Get bookings for passenger
-            [bookings] = await promisePool.query(
-                `SELECT b.*, 
-                        r.source, r.destination, r.date, r.time, r.status as ride_status, r.driver_id,
-                        u.name as driver_name, u.phone as driver_phone,
-                        v.model as vehicle_model, v.color as vehicle_color, v.license_plate,
-                        v.vehicle_image_url, v.capacity as vehicle_capacity,
-                        p.payment_method, p.payment_status, p.transaction_id, p.payment_id
-                 FROM bookings b
-                 JOIN rides r ON b.ride_id = r.ride_id
-                 JOIN users u ON r.driver_id = u.user_id
-                 LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-                 LEFT JOIN payments p ON b.booking_id = p.booking_id
-                 WHERE b.passenger_id = ?
-                 ORDER BY b.booking_date DESC`,
-                [user_id]
-            );
+            bookings = await prisma.booking.findMany({
+                where: {
+                    passengerId: parseInt(user_id)
+                },
+                include: {
+                    ride: {
+                        include: {
+                            driver: {
+                                select: {
+                                    name: true,
+                                    phone: true
+                                }
+                            },
+                            vehicle: {
+                                select: {
+                                    model: true,
+                                    color: true,
+                                    licensePlate: true,
+                                    vehicleImageUrl: true,
+                                    capacity: true
+                                }
+                            }
+                        }
+                    },
+                    payments: {
+                        take: 1,
+                        orderBy: { paymentDate: 'desc' },
+                        select: {
+                            paymentMethod: true,
+                            paymentStatus: true,
+                            transactionId: true,
+                            paymentId: true
+                        }
+                    }
+                },
+                orderBy: { bookingDate: 'desc' }
+            });
         }
 
-        return successResponse(res, 200, 'Bookings retrieved successfully', bookings);
+        // Format bookings
+        const formattedBookings = bookings.map(booking => {
+            const base = {
+                booking_id: booking.bookingId,
+                ride_id: booking.rideId,
+                passenger_id: booking.passengerId,
+                seats_booked: booking.seatsBooked,
+                amount: booking.amount,
+                booking_status: booking.bookingStatus,
+                booking_date: booking.bookingDate,
+                source: booking.ride.source,
+                destination: booking.ride.destination,
+                date: booking.ride.date,
+                time: booking.ride.time,
+                ride_status: booking.ride.status,
+                driver_id: booking.ride.driverId,
+                vehicle_model: booking.ride.vehicle?.model || null,
+                vehicle_color: booking.ride.vehicle?.color || null,
+                license_plate: booking.ride.vehicle?.licensePlate || null,
+                vehicle_image_url: booking.ride.vehicle?.vehicleImageUrl || null,
+                vehicle_capacity: booking.ride.vehicle?.capacity || null,
+                payment_method: booking.payments[0]?.paymentMethod || null,
+                payment_status: booking.payments[0]?.paymentStatus || null,
+                transaction_id: booking.payments[0]?.transactionId || null,
+                payment_id: booking.payments[0]?.paymentId || null
+            };
+
+            if (user_type === 'driver' || user_type === 'both') {
+                base.passenger_name = booking.passenger.name;
+                base.passenger_phone = booking.passenger.phone;
+                base.driver_name = booking.ride.driver?.name || null;
+                base.driver_phone = booking.ride.driver?.phone || null;
+            } else {
+                base.driver_name = booking.ride.driver.name;
+                base.driver_phone = booking.ride.driver.phone;
+            }
+
+            return base;
+        });
+
+        return successResponse(res, 200, 'Bookings retrieved successfully', formattedBookings);
 
     } catch (error) {
         console.error('Get my bookings error:', error);
@@ -212,34 +358,75 @@ export const getBookingById = async (req, res) => {
         const { id } = req.params;
         const user_id = req.user.id;
 
-        const [bookings] = await promisePool.query(
-            `SELECT b.*, 
-                    r.source, r.destination, r.date, r.time, r.driver_id,
-                    u.name as driver_name, u.phone as driver_phone,
-                    v.model as vehicle_model, v.color as vehicle_color, v.license_plate,
-                    v.vehicle_image_url, v.capacity as vehicle_capacity,
-                    p.payment_method, p.payment_status, p.payment_id
-             FROM bookings b
-             JOIN rides r ON b.ride_id = r.ride_id
-             JOIN users u ON r.driver_id = u.user_id
-             LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-             LEFT JOIN payments p ON b.booking_id = p.booking_id
-             WHERE b.booking_id = ?`,
-            [id]
-        );
+        const booking = await prisma.booking.findUnique({
+            where: { bookingId: parseInt(id) },
+            include: {
+                ride: {
+                    include: {
+                        driver: {
+                            select: {
+                                name: true,
+                                phone: true
+                            }
+                        },
+                        vehicle: {
+                            select: {
+                                model: true,
+                                color: true,
+                                licensePlate: true,
+                                vehicleImageUrl: true,
+                                capacity: true
+                            }
+                        }
+                    }
+                },
+                payments: {
+                    take: 1,
+                    orderBy: { paymentDate: 'desc' },
+                    select: {
+                        paymentMethod: true,
+                        paymentStatus: true,
+                        paymentId: true
+                    }
+                }
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-
         // Check if user is authorized (passenger or driver)
-        if (booking.passenger_id !== user_id && booking.driver_id !== user_id) {
+        if (Number(booking.passengerId) !== Number(user_id) && Number(booking.ride.driverId) !== Number(user_id)) {
             return errorResponse(res, 403, 'Unauthorized access');
         }
 
-        return successResponse(res, 200, 'Booking retrieved successfully', booking);
+        const formattedBooking = {
+            booking_id: booking.bookingId,
+            ride_id: booking.rideId,
+            passenger_id: booking.passengerId,
+            seats_booked: booking.seatsBooked,
+            amount: booking.amount,
+            booking_status: booking.bookingStatus,
+            booking_date: booking.bookingDate,
+            source: booking.ride.source,
+            destination: booking.ride.destination,
+            date: booking.ride.date,
+            time: booking.ride.time,
+            driver_id: booking.ride.driverId,
+            driver_name: booking.ride.driver.name,
+            driver_phone: booking.ride.driver.phone,
+            vehicle_model: booking.ride.vehicle?.model || null,
+            vehicle_color: booking.ride.vehicle?.color || null,
+            license_plate: booking.ride.vehicle?.licensePlate || null,
+            vehicle_image_url: booking.ride.vehicle?.vehicleImageUrl || null,
+            vehicle_capacity: booking.ride.vehicle?.capacity || null,
+            payment_method: booking.payments[0]?.paymentMethod || null,
+            payment_status: booking.payments[0]?.paymentStatus || null,
+            payment_id: booking.payments[0]?.paymentId || null
+        };
+
+        return successResponse(res, 200, 'Booking retrieved successfully', formattedBooking);
 
     } catch (error) {
         console.error('Get booking error:', error);
@@ -256,54 +443,50 @@ export const getBookingMessages = async (req, res) => {
         const user_id = req.user.id;
 
         // Verify user has access to this booking (either passenger or driver)
-        const [bookings] = await promisePool.query(
-            `SELECT b.booking_id, b.passenger_id, r.driver_id
-             FROM bookings b
-             JOIN rides r ON b.ride_id = r.ride_id
-             WHERE b.booking_id = ?`,
-            [id]
-        );
+        const booking = await prisma.booking.findUnique({
+            where: { bookingId: parseInt(id) },
+            include: {
+                ride: {
+                    select: {
+                        driverId: true
+                    }
+                }
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-        const isPassenger = Number(booking.passenger_id) === Number(user_id);
-        const isDriver = Number(booking.driver_id) === Number(user_id);
+        const isPassenger = Number(booking.passengerId) === Number(user_id);
+        const isDriver = Number(booking.ride.driverId) === Number(user_id);
 
         if (!isPassenger && !isDriver) {
             return errorResponse(res, 403, 'Unauthorized to view messages for this booking');
         }
 
         // Get messages for this booking
-        let messages;
-        try {
-            [messages] = await promisePool.query(
-                `SELECT message_id, booking_id, from_user_id, message_text as text, created_at as timestamp
-                 FROM booking_messages
-                 WHERE booking_id = ?
-                 ORDER BY created_at ASC`,
-                [id]
-            );
-        } catch (dbError) {
-            // If table doesn't exist, return empty array
-            if (dbError?.code === 'ER_NO_SUCH_TABLE') {
-                messages = [];
-            } else {
-                throw dbError;
+        const messages = await prisma.bookingMessage.findMany({
+            where: { bookingId: parseInt(id) },
+            orderBy: { createdAt: 'asc' },
+            select: {
+                messageId: true,
+                bookingId: true,
+                fromUserId: true,
+                messageText: true,
+                createdAt: true
             }
-        }
+        });
 
         // Add metadata for frontend
-        const messagesWithMetadata = (messages || []).map(msg => ({
-            message_id: msg.message_id,
-            booking_id: msg.booking_id,
-            text: msg.text,
-            from_user_id: msg.from_user_id,
-            timestamp: msg.timestamp,
-            is_from_me: Number(msg.from_user_id) === Number(user_id),
-            is_from_driver: Number(msg.from_user_id) === Number(booking.driver_id)
+        const messagesWithMetadata = messages.map(msg => ({
+            message_id: msg.messageId,
+            booking_id: msg.bookingId,
+            text: msg.messageText,
+            from_user_id: msg.fromUserId,
+            timestamp: msg.createdAt,
+            is_from_me: Number(msg.fromUserId) === Number(user_id),
+            is_from_driver: Number(msg.fromUserId) === Number(booking.ride.driverId)
         }));
 
         return successResponse(res, 200, 'Messages retrieved successfully', messagesWithMetadata);
@@ -323,27 +506,32 @@ export const getDriverLocation = async (req, res) => {
         const user_id = req.user.id;
 
         // Get booking with ride details
-        const [bookings] = await promisePool.query(
-            `SELECT b.*, r.ride_id, r.driver_id, r.status as ride_status, r.source, r.destination
-             FROM bookings b
-             JOIN rides r ON b.ride_id = r.ride_id
-             WHERE b.booking_id = ?`,
-            [id]
-        );
+        const booking = await prisma.booking.findUnique({
+            where: { bookingId: parseInt(id) },
+            include: {
+                ride: {
+                    select: {
+                        rideId: true,
+                        driverId: true,
+                        status: true,
+                        source: true,
+                        destination: true
+                    }
+                }
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-
         // Check if user is authorized (passenger)
-        if (booking.passenger_id !== user_id) {
+        if (Number(booking.passengerId) !== Number(user_id)) {
             return errorResponse(res, 403, 'Unauthorized access');
         }
 
         // Check if ride is actively ongoing (only share location during active ride)
-        const rideStatus = (booking.ride_status || '').toLowerCase();
+        const rideStatus = (booking.ride.status || '').toLowerCase();
         
         // Only share location when ride is actively ongoing
         if (rideStatus !== 'ongoing') {
@@ -351,19 +539,25 @@ export const getDriverLocation = async (req, res) => {
         }
 
         // Get driver's current location from users table
-        const [drivers] = await promisePool.query(
-            `SELECT user_id, latitude, longitude, name as driver_name
-             FROM users
-             WHERE user_id = ? AND (latitude IS NOT NULL AND longitude IS NOT NULL)`,
-            [booking.driver_id]
-        );
+        const driver = await prisma.user.findFirst({
+            where: {
+                userId: booking.ride.driverId,
+                latitude: { not: null },
+                longitude: { not: null }
+            },
+            select: {
+                userId: true,
+                latitude: true,
+                longitude: true,
+                name: true
+            }
+        });
 
-        if (drivers.length === 0) {
+        if (!driver) {
             // Return a response indicating location is not available yet, but don't error
-            // This allows the frontend to keep polling or wait for socket updates
             return successResponse(res, 200, 'Driver location not available yet - waiting for driver to share location', {
-                driver_id: booking.driver_id,
-                ride_id: booking.ride_id,
+                driver_id: booking.ride.driverId,
+                ride_id: booking.ride.rideId,
                 lat: null,
                 lon: null,
                 ts: null,
@@ -371,14 +565,12 @@ export const getDriverLocation = async (req, res) => {
             });
         }
 
-        const driver = drivers[0];
-
         return successResponse(res, 200, 'Driver location retrieved successfully', {
-            driver_id: driver.user_id,
-            driver_name: driver.driver_name,
+            driver_id: driver.userId,
+            driver_name: driver.name,
             lat: Number(driver.latitude),
             lon: Number(driver.longitude),
-            ride_id: booking.ride_id,
+            ride_id: booking.ride.rideId,
             ts: Date.now()
         });
 
@@ -397,61 +589,49 @@ export const confirmBooking = async (req, res) => {
         const user_id = req.user.id;
 
         // Get booking details
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [id, user_id]
-        );
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(id),
+                passengerId: parseInt(user_id)
+            },
+            include: {
+                ride: true
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-
-        if (booking.booking_status === 'confirmed') {
+        if (booking.bookingStatus === 'confirmed') {
             return errorResponse(res, 400, 'Booking already confirmed');
         }
 
-        // Get ride details
-        const [rides] = await promisePool.query(
-            'SELECT * FROM rides WHERE ride_id = ?',
-            [booking.ride_id]
-        );
-
-        const ride = rides[0];
-
         // Check if enough seats available
-        if (ride.available_seats < booking.seats_booked) {
+        if (Number(booking.ride.availableSeats) < booking.seatsBooked) {
             return errorResponse(res, 400, 'Not enough seats available');
         }
 
         // UPDATE bookings and ride in a transaction
-        const connection = await promisePool.getConnection();
-        await connection.beginTransaction();
-
-        try {
+        await prisma.$transaction(async (tx) => {
             // UPDATE bookings status
-            await connection.query(
-                'UPDATE bookings SET booking_status = "confirmed" WHERE booking_id = ?',
-                [id]
-            );
+            await tx.booking.update({
+                where: { bookingId: parseInt(id) },
+                data: { bookingStatus: 'confirmed' }
+            });
 
             // Update available seats
-            await connection.query(
-                'UPDATE rides SET available_seats = available_seats - ? WHERE ride_id = ?',
-                [booking.seats_booked, booking.ride_id]
-            );
+            await tx.ride.update({
+                where: { rideId: booking.rideId },
+                data: {
+                    availableSeats: {
+                        decrement: booking.seatsBooked
+                    }
+                }
+            });
+        });
 
-            await connection.commit();
-            connection.release();
-
-            return successResponse(res, 200, 'Booking confirmed successfully');
-
-        } catch (error) {
-            await connection.rollback();
-            connection.release();
-            throw error;
-        }
+        return successResponse(res, 200, 'Booking confirmed successfully');
 
     } catch (error) {
         console.error('Confirm booking error:', error);
@@ -469,39 +649,46 @@ export const cancelBooking = async (req, res) => {
         const user_id = req.user.id;
 
         // Get booking joined with ride to determine driver and ride status
-        const [rows] = await promisePool.query(
-            `SELECT b.*, r.driver_id, r.status as ride_status
-             FROM bookings b
-             JOIN rides r ON b.ride_id = r.ride_id
-             WHERE b.booking_id = ?`,
-            [id]
-        );
+        const booking = await prisma.booking.findUnique({
+            where: { bookingId: parseInt(id) },
+            include: {
+                ride: {
+                    select: {
+                        driverId: true,
+                        status: true
+                    }
+                },
+                payments: {
+                    where: {
+                        paymentStatus: 'completed'
+                    },
+                    take: 1
+                }
+            }
+        });
 
-        if (!rows.length) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = rows[0];
-
         // Determine actor role
-        const isPassenger = Number(booking.passenger_id) === Number(user_id);
-        const isDriver = Number(booking.driver_id) === Number(user_id);
+        const isPassenger = Number(booking.passengerId) === Number(user_id);
+        const isDriver = Number(booking.ride.driverId) === Number(user_id);
         if (!isPassenger && !isDriver) {
             return errorResponse(res, 403, 'Unauthorized to cancel this booking');
         }
 
-        if (booking.booking_status === 'completed') {
+        if (booking.bookingStatus === 'completed') {
             return errorResponse(res, 400, 'Cannot cancel completed booking');
         }
-        if (booking.booking_status === 'canceled_by_driver' || booking.booking_status === 'canceled_by_passenger') {
+        if (booking.bookingStatus === 'canceled_by_driver' || booking.bookingStatus === 'canceled_by_passenger') {
             return errorResponse(res, 400, 'Booking already cancelled');
         }
 
         // Define when fee applies: passenger cancels after driver is on the way
-        // Heuristic: if booking is confirmed, or ride is ongoing
-        const driverOnTheWay = ['confirmed'].includes(booking.booking_status) || ['ongoing'].includes(booking.ride_status);
+        const driverOnTheWay = ['confirmed'].includes(booking.bookingStatus) || ['ongoing'].includes(booking.ride.status);
 
-        // Fee policy (can be refined via config): 10% of amount, min 20, max 100
+        // Fee policy: 10% of amount, min 20, max 100
         let cancellationFee = 0.0;
         if (isPassenger && driverOnTheWay) {
             const pct = 0.10 * Number(booking.amount);
@@ -510,95 +697,87 @@ export const cancelBooking = async (req, res) => {
 
         // Set cancellation status based on who is cancelling
         const nextStatus = isPassenger ? 'canceled_by_passenger' : 'canceled_by_driver';
-        const shouldRestoreSeats = ['confirmed'].includes(booking.booking_status);
+        const shouldRestoreSeats = ['confirmed'].includes(booking.bookingStatus);
 
-        const connection = await promisePool.getConnection();
-        await connection.beginTransaction();
-        try {
-            // UPDATE bookings status and fee (fallback if cancellation_fee column is missing)
-            let feeSupported = true;
-            try {
-                await connection.query(
-                    `UPDATE bookings SET booking_status = ?, cancellation_fee = ? WHERE booking_id = ?`,
-                    [nextStatus, cancellationFee, id]
-                );
-            } catch (e) {
-                if (e && (e.code === 'ER_BAD_FIELD_ERROR' || e.errno === 1054)) {
-                    feeSupported = false;
-                    await connection.query(
-                        `UPDATE bookings SET booking_status = ? WHERE booking_id = ?`,
-                        [nextStatus, id]
-                    );
-                } else {
-                    throw e;
+        // Execute transaction
+        await prisma.$transaction(async (tx) => {
+            // UPDATE bookings status and fee
+            await tx.booking.update({
+                where: { bookingId: parseInt(id) },
+                data: {
+                    bookingStatus: nextStatus,
+                    cancellationFee: cancellationFee
                 }
-            }
+            });
 
             // Restore seats if they were reserved by a confirmed booking
             if (shouldRestoreSeats) {
-                await connection.query(
-                    `UPDATE rides SET available_seats = available_seats + ? WHERE ride_id = ?`,
-                    [booking.seats_booked, booking.ride_id]
-                );
+                await tx.ride.update({
+                    where: { rideId: booking.rideId },
+                    data: {
+                        availableSeats: {
+                            increment: booking.seatsBooked
+                        }
+                    }
+                });
             }
 
             // Handle wallet refund if payment was made via wallet
-            const [paymentRows] = await connection.query(
-                `SELECT * FROM payments WHERE booking_id = ? AND payment_status = 'completed'`,
-                [id]
-            );
-            
-            if (paymentRows.length > 0) {
-                const payment = paymentRows[0];
+            const payment = booking.payments[0];
+            if (payment && payment.paymentMethod === 'wallet') {
+                // Calculate refund amount (full amount - cancellation fee)
+                const refundAmount = Number(booking.amount) - cancellationFee;
                 
-                if (payment.payment_method === 'wallet') {
-                    // Calculate refund amount (full amount - cancellation fee)
-                    const refundAmount = Number(booking.amount) - cancellationFee;
+                if (refundAmount > 0) {
+                    // Ensure wallet exists and refund
+                    await tx.wallet.upsert({
+                        where: { userId: booking.passengerId },
+                        update: {
+                            balance: {
+                                increment: refundAmount
+                            }
+                        },
+                        create: {
+                            userId: booking.passengerId,
+                            balance: refundAmount
+                        }
+                    });
                     
-                    if (refundAmount > 0) {
-                        // Ensure wallet exists
-                        await connection.query(
-                            `INSERT INTO wallet (user_id, balance) VALUES (?, 0) ON DUPLICATE KEY UPDATE balance = balance`,
-                            [booking.passenger_id]
-                        );
-                        
-                        // Refund to wallet
-                        await connection.query(
-                            `UPDATE wallet SET balance = balance + ? WHERE user_id = ?`,
-                            [refundAmount, booking.passenger_id]
-                        );
-                        
-                        // Record refund transaction
-                        await connection.query(
-                            `INSERT INTO wallet_transaction (user_id, amount, type) VALUES (?, ?, 'refund')`,
-                            [booking.passenger_id, refundAmount]
-                        );
-                    }
+                    // Record refund transaction
+                    await tx.walletTransaction.create({
+                        data: {
+                            userId: booking.passengerId,
+                            amount: refundAmount,
+                            type: 'refund'
+                        }
+                    });
                 }
             }
             
             // Mark pending payments as failed when booking is cancelled
-            await connection.query(
-                `UPDATE payments SET payment_status = 'failed' WHERE booking_id = ? AND payment_status = 'pending'`,
-                [id]
-            );
+            await tx.payment.updateMany({
+                where: {
+                    bookingId: parseInt(id),
+                    paymentStatus: 'pending'
+                },
+                data: {
+                    paymentStatus: 'failed'
+                }
+            });
             
-            // If passenger owes a cancellation fee, create a pending payment record (only if fee column exists)
-            if (isPassenger && cancellationFee > 0 && feeSupported) {
-                await connection.query(
-                    `INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id)
-                     VALUES (?, ?, 'cash', 'pending', 'CANCEL_FEE')`,
-                    [id, cancellationFee]
-                );
+            // If passenger owes a cancellation fee, create a pending payment record
+            if (isPassenger && cancellationFee > 0) {
+                await tx.payment.create({
+                    data: {
+                        bookingId: parseInt(id),
+                        amount: cancellationFee,
+                        paymentMethod: 'cash',
+                        paymentStatus: 'pending',
+                        transactionId: 'CANCEL_FEE'
+                    }
+                });
             }
-
-            await connection.commit();
-        } catch (e) {
-            await connection.rollback();
-            throw e;
-        } finally {
-            connection.release();
-        }
+        });
 
         return successResponse(res, 200, 'Booking canceled successfully', {
             booking_id: Number(id),
@@ -625,43 +804,43 @@ export const applyWaitTimeCharge = async (req, res) => {
         const extra = Math.max(0, Number(extra_charges));
 
         // Validate booking belongs to a ride owned by this driver
-        const [rows] = await promisePool.query(
-            `SELECT b.booking_id, b.booking_status, r.driver_id
-             FROM bookings b JOIN rides r ON r.ride_id = b.ride_id
-             WHERE b.booking_id = ?`,
-            [id]
-        );
-        if (!rows.length) return errorResponse(res, 404, 'Booking not found');
-        if (Number(rows[0].driver_id) !== Number(driver_id)) return errorResponse(res, 403, 'Unauthorized');
-
-        // UPDATE bookings (graceful if columns missing)
-        try {
-            await promisePool.query(
-                `UPDATE bookings SET wait_minutes = COALESCE(wait_minutes, 0) + ?, extra_charges = COALESCE(extra_charges, 0) + ? WHERE booking_id = ?`,
-                [wm, extra, id]
-            );
-        } catch (e) {
-            // If columns do not exist, attempt to add them once
-            if (e && (e.code === 'ER_BAD_FIELD_ERROR' || e.errno === 1054)) {
-                try {
-                    await promisePool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS wait_minutes INT DEFAULT 0`);
-                } catch {}
-                try {
-                    await promisePool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS extra_charges DECIMAL(10,2) DEFAULT 0`);
-                } catch {}
-                await promisePool.query(
-                    `UPDATE bookings SET wait_minutes = COALESCE(wait_minutes, 0) + ?, extra_charges = COALESCE(extra_charges, 0) + ? WHERE booking_id = ?`,
-                    [wm, extra, id]
-                );
-            } else {
-                throw e;
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(id),
+                ride: {
+                    driverId: parseInt(driver_id)
+                }
+            },
+            select: {
+                bookingId: true,
+                bookingStatus: true,
+                waitMinutes: true,
+                extraCharges: true
             }
-        }
+        });
+        
+        if (!booking) return errorResponse(res, 404, 'Booking not found');
 
-        return successResponse(res, 200, 'Wait-time/extra charges applied', { booking_id: Number(id), wait_minutes: wm, extra_charges: Number(extra.toFixed(2)) });
+        // UPDATE bookings
+        await prisma.booking.update({
+            where: { bookingId: parseInt(id) },
+            data: {
+                waitMinutes: {
+                    increment: wm
+                },
+                extraCharges: {
+                    increment: extra
+                }
+            }
+        });
+
+        return successResponse(res, 200, 'Wait-time/extra charges applied', { 
+            booking_id: Number(id), 
+            wait_minutes: wm, 
+            extra_charges: Number(extra.toFixed(2)) 
+        });
     } catch (error) {
         console.error('applyWaitTimeCharge error:', error);
         return errorResponse(res, 500, 'Failed to apply charges');
     }
 };
-

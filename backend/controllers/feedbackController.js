@@ -1,4 +1,4 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 
 // @desc    Add feedback for a ride
@@ -9,62 +9,79 @@ export const addFeedback = async (req, res) => {
         const { ride_id, rating, comments } = req.body;
         const user_id = req.user.id;
 
-        // Check if ride exists and is completed
-        const [rides] = await promisePool.query(
-            'SELECT * FROM rides WHERE ride_id = ?',
-            [ride_id]
-        );
+        // Check if ride exists
+        const ride = await prisma.ride.findUnique({
+            where: { rideId: parseInt(ride_id) }
+        });
 
-        if (rides.length === 0) {
+        if (!ride) {
             return errorResponse(res, 404, 'Ride not found');
         }
 
         // Check if user has booked this ride
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE ride_id = ? AND passenger_id = ? AND booking_status IN ("confirmed", "completed")',
-            [ride_id, user_id]
-        );
+        const booking = await prisma.booking.findFirst({
+            where: {
+                rideId: parseInt(ride_id),
+                passengerId: parseInt(user_id),
+                bookingStatus: { in: ['confirmed', 'completed'] }
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 403, 'You must have a confirmed booking for this ride to leave feedback');
         }
 
         // Check if feedback already exists
-        const [existingFeedback] = await promisePool.query(
-            'SELECT * FROM feedback WHERE ride_id = ? AND user_id = ?',
-            [ride_id, user_id]
-        );
+        const existingFeedback = await prisma.feedback.findFirst({
+            where: {
+                rideId: parseInt(ride_id),
+                userId: parseInt(user_id)
+            }
+        });
 
-        if (existingFeedback.length > 0) {
+        if (existingFeedback) {
             return errorResponse(res, 400, 'You have already provided feedback for this ride');
         }
 
         // Insert feedback
-        const [result] = await promisePool.query(
-            'INSERT INTO feedback (ride_id, user_id, rating, comments) VALUES (?, ?, ?, ?)',
-            [ride_id, user_id, rating, comments]
-        );
+        const newFeedback = await prisma.feedback.create({
+            data: {
+                rideId: parseInt(ride_id),
+                userId: parseInt(user_id),
+                rating: parseInt(rating),
+                comments: comments || null
+            }
+        });
 
-        // Get created feedback
-        const [newFeedback] = await promisePool.query(
-            'SELECT * FROM feedback WHERE feedback_id = ?',
-            [result.insertId]
-        );
+        // Update driver rating (calculate average)
+        const driverId = ride.driverId;
+        const avgRatingResult = await prisma.feedback.aggregate({
+            where: {
+                ride: {
+                    driverId: driverId
+                }
+            },
+            _avg: {
+                rating: true
+            }
+        });
 
-        // Update driver rating
-        const driver_id = rides[0].driver_id;
-        const [avgRating] = await promisePool.query(
-            `SELECT AVG(f.rating) as avg_rating
-             FROM feedback f
-             JOIN rides r ON f.ride_id = r.ride_id
-             WHERE r.driver_id = ?`,
-            [driver_id]
-        );
+        // Update driver's rating in users table
+        if (avgRatingResult._avg.rating) {
+            await prisma.user.update({
+                where: { userId: driverId },
+                data: { rating: avgRatingResult._avg.rating }
+            });
+        }
 
-        // Note: users table doesn't have rating column in schema
-        // Driver rating can be calculated dynamically from feedback
-
-        return successResponse(res, 201, 'Feedback added successfully', newFeedback[0]);
+        return successResponse(res, 201, 'Feedback added successfully', {
+            feedback_id: newFeedback.feedbackId,
+            ride_id: newFeedback.rideId,
+            user_id: newFeedback.userId,
+            rating: newFeedback.rating,
+            comments: newFeedback.comments,
+            created_at: newFeedback.createdAt
+        });
 
     } catch (error) {
         console.error('Add feedback error:', error);
@@ -79,14 +96,17 @@ export const getFeedbackByRide = async (req, res) => {
     try {
         const { rideId } = req.params;
 
-        const [feedback] = await promisePool.query(
-            `SELECT f.*, u.name as passenger_name
-             FROM feedback f
-             JOIN users u ON f.user_id = u.user_id
-             WHERE f.ride_id = ?
-             ORDER BY f.created_at DESC`,
-            [rideId]
-        );
+        const feedback = await prisma.feedback.findMany({
+            where: { rideId: parseInt(rideId) },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
         // Calculate average rating
         let averageRating = 0;
@@ -96,7 +116,15 @@ export const getFeedbackByRide = async (req, res) => {
         }
 
         return successResponse(res, 200, 'Feedback retrieved successfully', {
-            feedback,
+            feedback: feedback.map(f => ({
+                feedback_id: f.feedbackId,
+                ride_id: f.rideId,
+                user_id: f.userId,
+                passenger_name: f.user.name,
+                rating: f.rating,
+                comments: f.comments,
+                created_at: f.createdAt
+            })),
             averageRating,
             totalFeedback: feedback.length
         });
@@ -114,16 +142,33 @@ export const getFeedbackByUser = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const [feedback] = await promisePool.query(
-            `SELECT f.*, r.source, r.destination, r.date
-             FROM feedback f
-             JOIN rides r ON f.ride_id = r.ride_id
-             WHERE f.user_id = ?
-             ORDER BY f.created_at DESC`,
-            [userId]
-        );
+        const feedback = await prisma.feedback.findMany({
+            where: { userId: parseInt(userId) },
+            include: {
+                ride: {
+                    select: {
+                        source: true,
+                        destination: true,
+                        date: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
-        return successResponse(res, 200, 'User feedback retrieved successfully', feedback);
+        return successResponse(res, 200, 'User feedback retrieved successfully', 
+            feedback.map(f => ({
+                feedback_id: f.feedbackId,
+                ride_id: f.rideId,
+                user_id: f.userId,
+                rating: f.rating,
+                comments: f.comments,
+                created_at: f.createdAt,
+                source: f.ride.source,
+                destination: f.ride.destination,
+                date: f.ride.date
+            }))
+        );
 
     } catch (error) {
         console.error('Get user feedback error:', error);
@@ -138,15 +183,28 @@ export const getMyDriverFeedback = async (req, res) => {
     try {
         const driver_id = req.user.id;
 
-        const [feedback] = await promisePool.query(
-            `SELECT f.*, u.name as passenger_name, r.source, r.destination, r.date
-             FROM feedback f
-             JOIN rides r ON f.ride_id = r.ride_id
-             JOIN users u ON f.user_id = u.user_id
-             WHERE r.driver_id = ?
-             ORDER BY f.created_at DESC`,
-            [driver_id]
-        );
+        const feedback = await prisma.feedback.findMany({
+            where: {
+                ride: {
+                    driverId: parseInt(driver_id)
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                },
+                ride: {
+                    select: {
+                        source: true,
+                        destination: true,
+                        date: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
         // Calculate average rating
         let averageRating = 0;
@@ -156,7 +214,18 @@ export const getMyDriverFeedback = async (req, res) => {
         }
 
         return successResponse(res, 200, 'Driver feedback retrieved successfully', {
-            feedback,
+            feedback: feedback.map(f => ({
+                feedback_id: f.feedbackId,
+                ride_id: f.rideId,
+                user_id: f.userId,
+                passenger_name: f.user.name,
+                rating: f.rating,
+                comments: f.comments,
+                created_at: f.createdAt,
+                source: f.ride.source,
+                destination: f.ride.destination,
+                date: f.ride.date
+            })),
             averageRating,
             totalFeedback: feedback.length
         });
@@ -166,4 +235,3 @@ export const getMyDriverFeedback = async (req, res) => {
         return errorResponse(res, 500, 'Server error');
     }
 };
-

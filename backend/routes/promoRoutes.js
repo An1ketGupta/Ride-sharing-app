@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,13 +9,38 @@ const router = Router();
 // @access  Public (users can see available promo codes)
 router.get('/promo-codes', async (req, res) => {
     try {
-        const [rows] = await promisePool.query(
-            `SELECT code, discount_percent, discount_amount, expiry_date, max_uses 
-             FROM promo_codes 
-             WHERE (expiry_date IS NULL OR expiry_date >= CURDATE())
-             ORDER BY created_at DESC`
-        );
-        res.status(200).json({ success: true, data: rows });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const promoCodes = await prisma.promoCode.findMany({
+            where: {
+                OR: [
+                    { expiryDate: null },
+                    { expiryDate: { gte: today } }
+                ]
+            },
+            select: {
+                code: true,
+                discountPercent: true,
+                discountAmount: true,
+                expiryDate: true,
+                maxUses: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        res.status(200).json({ 
+            success: true, 
+            data: promoCodes.map(p => ({
+                code: p.code,
+                discount_percent: p.discountPercent ? Number(p.discountPercent) : null,
+                discount_amount: p.discountAmount ? Number(p.discountAmount) : null,
+                expiry_date: p.expiryDate,
+                max_uses: p.maxUses,
+                created_at: p.createdAt
+            }))
+        });
     } catch (error) {
         console.error('Error fetching promo codes:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch promo codes' });
@@ -34,25 +59,33 @@ router.post('/promo-codes/validate', protect, async (req, res) => {
         }
 
         // Check if code exists and is valid
-        const [rows] = await promisePool.query(
-            `SELECT * FROM promo_codes 
-             WHERE code = ? AND (expiry_date IS NULL OR expiry_date >= CURDATE())`,
-            [code]
-        );
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const promo = await prisma.promoCode.findFirst({
+            where: {
+                code: code,
+                OR: [
+                    { expiryDate: null },
+                    { expiryDate: { gte: today } }
+                ]
+            }
+        });
 
-        if (rows.length === 0) {
+        if (!promo) {
             return res.status(404).json({ success: false, message: 'Invalid or expired promo code' });
         }
 
-        const promo = rows[0];
-
         // Check if user has already used this promo
-        const [usageRows] = await promisePool.query(
-            `SELECT * FROM user_promo_codes WHERE user_id = ? AND code = ? AND is_used = 1`,
-            [req.user.id, code]
-        );
+        const usage = await prisma.userPromoCode.findFirst({
+            where: {
+                userId: parseInt(req.user.id),
+                code: code,
+                isUsed: true
+            }
+        });
 
-        if (usageRows.length > 0) {
+        if (usage) {
             return res.status(400).json({ success: false, message: 'You have already used this promo code' });
         }
 
@@ -61,8 +94,8 @@ router.post('/promo-codes/validate', protect, async (req, res) => {
             message: 'Promo code is valid',
             data: {
                 code: promo.code,
-                discount_percent: promo.discount_percent,
-                discount_amount: promo.discount_amount
+                discount_percent: promo.discountPercent ? Number(promo.discountPercent) : null,
+                discount_amount: promo.discountAmount ? Number(promo.discountAmount) : null
             }
         });
     } catch (error) {
@@ -89,15 +122,19 @@ router.post('/promo-codes', protect, authorize('admin'), async (req, res) => {
             });
         }
 
-        await promisePool.query(
-            `INSERT INTO promo_codes (code, discount_percent, discount_amount, expiry_date, max_uses) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [code, discount_percent || null, discount_amount || null, expiry_date || null, max_uses || null]
-        );
+        await prisma.promoCode.create({
+            data: {
+                code: code,
+                discountPercent: discount_percent ? parseFloat(discount_percent) : null,
+                discountAmount: discount_amount ? parseFloat(discount_amount) : null,
+                expiryDate: expiry_date ? new Date(expiry_date) : null,
+                maxUses: max_uses ? parseInt(max_uses) : null
+            }
+        });
 
         res.status(201).json({ success: true, message: 'Promo code created successfully' });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 'P2002') {
             return res.status(400).json({ success: false, message: 'Promo code already exists' });
         }
         console.error('Error creating promo code:', error);
@@ -112,13 +149,15 @@ router.delete('/promo-codes/:code', protect, authorize('admin'), async (req, res
     try {
         const { code } = req.params;
 
-        const [result] = await promisePool.query(
-            `DELETE FROM promo_codes WHERE code = ?`,
-            [code]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Promo code not found' });
+        try {
+            await prisma.promoCode.delete({
+                where: { code: code }
+            });
+        } catch (error) {
+            if (error.code === 'P2025') {
+                return res.status(404).json({ success: false, message: 'Promo code not found' });
+            }
+            throw error;
         }
 
         res.status(200).json({ success: true, message: 'Promo code deleted successfully' });

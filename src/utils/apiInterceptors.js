@@ -7,6 +7,10 @@ export const setToastFunction = (toast) => {
     toastFunction = toast;
 };
 
+// Throttle connection error toasts to avoid spamming
+let lastConnectionErrorToast = 0;
+const CONNECTION_ERROR_THROTTLE_MS = 10000; // Show connection error toast max once per 10 seconds
+
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
@@ -25,11 +29,6 @@ api.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Log request in development
-        if (import.meta.env.DEV) {
-            console.log(`🚀 ${config.method.toUpperCase()} ${config.url}`, config.data);
-        }
-
         return config;
     },
     (error) => {
@@ -41,20 +40,22 @@ api.interceptors.request.use(
 // Response Interceptor
 api.interceptors.response.use(
     (response) => {
-        // Log response in development
-        if (import.meta.env.DEV) {
-            console.log(`✅ ${response.config.method.toUpperCase()} ${response.config.url}`, response.data);
-        }
-
         return response;
     },
     (error) => {
         // Handle different error scenarios
         const errorMessage = getErrorMessage(error);
+        const isConnectionError = !error.response && (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED');
 
-        // Show toast notification if available
-        if (toastFunction) {
+        // Throttle connection error toasts to avoid spamming
+        const now = Date.now();
+        const shouldShowToast = !isConnectionError || (now - lastConnectionErrorToast > CONNECTION_ERROR_THROTTLE_MS);
+        
+        if (shouldShowToast && toastFunction) {
             toastFunction.error(errorMessage);
+            if (isConnectionError) {
+                lastConnectionErrorToast = now;
+            }
         }
 
         // Handle unauthorized (401) - redirect to login
@@ -89,11 +90,6 @@ api.interceptors.response.use(
             }
         }
 
-        // Log error in development
-        if (import.meta.env.DEV) {
-            console.error('❌ API Error:', error);
-        }
-
         return Promise.reject(error);
     }
 );
@@ -101,7 +97,11 @@ api.interceptors.response.use(
 // Helper function to extract error message
 const getErrorMessage = (error) => {
     if (!error.response) {
-        // Network error
+        // Network error - check if it's connection refused
+        if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
+            return 'Backend server is not running. Please start the server on port 5000.';
+        }
+        // Other network errors
         return 'Network error. Please check your internet connection';
     }
 

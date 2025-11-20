@@ -1,27 +1,49 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { sendEmail } from './notifications.js';
 
 export const generateReceiptText = async (booking_id) => {
-    const [rows] = await promisePool.query(
-        `SELECT b.*, p.payment_method, p.transaction_id, r.source, r.destination, r.date, r.time, u.name as driver_name
-         FROM bookings b
-         LEFT JOIN payments p ON p.booking_id = b.booking_id
-         JOIN rides r ON r.ride_id = b.ride_id
-         JOIN users u ON u.user_id = r.driver_id
-         WHERE b.booking_id = ?`,
-        [booking_id]
-    );
-    const b = rows?.[0];
-    if (!b) return `Receipt not found for booking ${booking_id}`;
+    const booking = await prisma.booking.findUnique({
+        where: { bookingId: parseInt(booking_id) },
+        include: {
+            payments: {
+                take: 1,
+                orderBy: { paymentDate: 'desc' },
+                select: {
+                    paymentMethod: true,
+                    transactionId: true
+                }
+            },
+            ride: {
+                include: {
+                    driver: {
+                        select: {
+                            name: true
+                        }
+                    }
+                },
+                select: {
+                    source: true,
+                    destination: true,
+                    date: true,
+                    time: true
+                }
+            }
+        }
+    });
+    
+    if (!booking) return `Receipt not found for booking ${booking_id}`;
+    
+    const payment = booking.payments[0] || null;
+    
     return [
-        `Receipt for Booking #${b.booking_id}`,
-        `Route: ${b.source} -> ${b.destination}`,
-        `Date: ${b.date} ${b.time}`,
-        `Driver: ${b.driver_name}`,
-        `Seats: ${b.seats_booked}`,
-        `Amount: ₹${b.amount}`,
-        `Payment: ${b.payment_method || 'N/A'} ${b.transaction_id || ''}`.trim(),
-        `Extras: wait ${b.wait_minutes ?? 0} min, extra ₹${b.extra_charges ?? 0}`
+        `Receipt for Booking #${booking.bookingId}`,
+        `Route: ${booking.ride.source} -> ${booking.ride.destination}`,
+        `Date: ${booking.ride.date} ${booking.ride.time}`,
+        `Driver: ${booking.ride.driver.name}`,
+        `Seats: ${booking.seatsBooked}`,
+        `Amount: ₹${booking.amount}`,
+        `Payment: ${payment?.paymentMethod || 'N/A'} ${payment?.transactionId || ''}`.trim(),
+        `Extras: wait ${booking.waitMinutes ?? 0} min, extra ₹${booking.extraCharges ?? 0}`
     ].join('\n');
 };
 
@@ -30,7 +52,3 @@ export const emailReceipt = async (booking_id, toEmail) => {
     await sendEmail(toEmail, `Receipt for booking #${booking_id}`, text);
     return true;
 };
-
-
-
-

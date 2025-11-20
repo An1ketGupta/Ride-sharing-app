@@ -1,4 +1,4 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 import crypto from 'crypto';
 import { getRazorpay } from '../utils/razorpay.js';
@@ -12,24 +12,23 @@ export const confirmPayment = async (req, res) => {
         const user_id = req.user.id;
 
         // Get booking details
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [booking_id, user_id]
-        );
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(booking_id),
+                passengerId: parseInt(user_id)
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-
         // Check if payment already exists
-        const [existingPayments] = await promisePool.query(
-            'SELECT * FROM payments WHERE booking_id = ?',
-            [booking_id]
-        );
+        const existingPayments = await prisma.payment.findMany({
+            where: { bookingId: parseInt(booking_id) }
+        });
 
-        if (existingPayments.length > 0 && existingPayments[0].payment_status === 'completed') {
+        if (existingPayments.length > 0 && existingPayments[0].paymentStatus === 'completed') {
             return errorResponse(res, 400, 'Payment already completed for this booking');
         }
 
@@ -39,127 +38,126 @@ export const confirmPayment = async (req, res) => {
         // If payment method is wallet, deduct from wallet balance
         if (payment_method === 'wallet') {
             // Get wallet balance
-            const [walletRows] = await promisePool.query(
-                'SELECT balance FROM wallet WHERE user_id = ?',
-                [user_id]
-            );
+            const wallet = await prisma.wallet.findUnique({
+                where: { userId: parseInt(user_id) },
+                select: { balance: true }
+            });
             
-            const walletBalance = walletRows.length > 0 ? Number(walletRows[0].balance) : 0;
+            const walletBalance = wallet ? Number(wallet.balance) : 0;
             
-            if (walletBalance < booking.amount) {
+            if (walletBalance < Number(booking.amount)) {
                 return errorResponse(res, 400, 'Insufficient wallet balance');
             }
             
             // Deduct from wallet and create transaction
-            const conn = await promisePool.getConnection();
-            try {
-                await conn.beginTransaction();
-                
+            await prisma.$transaction(async (tx) => {
                 // Ensure wallet exists
-                await conn.query(
-                    `INSERT INTO wallet (user_id, balance) VALUES (?, 0) ON DUPLICATE KEY UPDATE balance = balance`,
-                    [user_id]
-                );
+                await tx.wallet.upsert({
+                    where: { userId: parseInt(user_id) },
+                    update: {},
+                    create: {
+                        userId: parseInt(user_id),
+                        balance: 0
+                    }
+                });
                 
                 // Deduct amount
-                await conn.query(
-                    `UPDATE wallet SET balance = balance - ? WHERE user_id = ?`,
-                    [booking.amount, user_id]
-                );
+                await tx.wallet.update({
+                    where: { userId: parseInt(user_id) },
+                    data: {
+                        balance: {
+                            decrement: Number(booking.amount)
+                        }
+                    }
+                });
                 
                 // Record transaction
-                await conn.query(
-                    `INSERT INTO wallet_transaction (user_id, amount, type) VALUES (?, ?, 'debit')`,
-                    [user_id, booking.amount]
-                );
-                
-                await conn.commit();
-            } catch (e) {
-                await conn.rollback();
-                throw e;
-            } finally {
-                conn.release();
-            }
+                await tx.walletTransaction.create({
+                    data: {
+                        userId: parseInt(user_id),
+                        amount: Number(booking.amount),
+                        type: 'debit'
+                    }
+                });
+            });
         }
 
-        // Create payment
-        const [result] = await promisePool.query(
-            `INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id)
-             VALUES (?, ?, ?, 'completed', ?)`,
-            [booking_id, booking.amount, payment_method, transaction_id]
-        );
-
-        // Mark booking as confirmed and decrement seats if not already confirmed
-        const connection = await promisePool.getConnection();
-        try {
-            await connection.beginTransaction();
+        // Create payment and update booking in transaction
+        await prisma.$transaction(async (tx) => {
+            // Create payment
+            await tx.payment.create({
+                data: {
+                    bookingId: parseInt(booking_id),
+                    amount: Number(booking.amount),
+                    paymentMethod: payment_method,
+                    paymentStatus: 'completed',
+                    transactionId: transaction_id
+                }
+            });
 
             // Attempt to move booking to confirmed (idempotent)
-            const [updateBooking] = await connection.query(
-                `UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = ? AND booking_status = 'pending'`,
-                [booking_id]
-            );
-
-            if (updateBooking.affectedRows > 0) {
-                // Fetch seats_booked and ride_id to decrement seats
-                const [rows] = await connection.query(
-                    `SELECT ride_id, seats_booked FROM bookings WHERE booking_id = ?`,
-                    [booking_id]
-                );
-                if (rows.length) {
-                    const { ride_id, seats_booked } = rows[0];
-                    await connection.query(
-                        `UPDATE rides SET available_seats = available_seats - ? WHERE ride_id = ?`,
-                        [seats_booked, ride_id]
-                    );
+            const updatedBooking = await tx.booking.updateMany({
+                where: {
+                    bookingId: parseInt(booking_id),
+                    bookingStatus: 'pending'
+                },
+                data: {
+                    bookingStatus: 'confirmed'
                 }
-            }
+            });
 
-            await connection.commit();
-        } catch (e) {
-            await connection.rollback();
-            throw e;
-        } finally {
-            connection.release();
-        }
+            if (updatedBooking.count > 0) {
+                // Decrement seats
+                await tx.ride.update({
+                    where: { rideId: booking.rideId },
+                    data: {
+                        availableSeats: {
+                            decrement: booking.seatsBooked
+                        }
+                    }
+                });
+            }
+        });
 
         // Get created payment
-        const [newPayment] = await promisePool.query(
-            'SELECT * FROM payments WHERE payment_id = ?',
-            [result.insertId]
-        );
+        const newPayment = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(booking_id) },
+            orderBy: { paymentId: 'desc' }
+        });
 
-        // Notify driver that payment was successful (only on successful payment)
+        // Notify driver that payment was successful
         try {
-            const [bookingDetails] = await promisePool.query(
-                `SELECT b.ride_id, r.driver_id, b.passenger_id, b.seats_booked, b.amount
-                 FROM bookings b
-                 JOIN rides r ON b.ride_id = r.ride_id
-                 WHERE b.booking_id = ?`,
-                [booking_id]
-            );
+            const bookingDetails = await prisma.booking.findUnique({
+                where: { bookingId: parseInt(booking_id) },
+                include: {
+                    ride: {
+                        select: {
+                            driverId: true
+                        }
+                    }
+                }
+            });
             
-            if (bookingDetails.length > 0) {
-                const { driver_id, passenger_id, seats_booked, amount } = bookingDetails[0];
+            if (bookingDetails) {
                 const { sendNotification } = await import('../utils/notifications.js');
-                const { getIO } = await import('../utils/socketRegistry.js');
+                const { getIO, getSocketIdForUser } = await import('../utils/socketRegistry.js');
                 
                 // Send notification to driver
                 await sendNotification(
-                    driver_id,
-                    `✅ Payment received: ₹${amount} for ${seats_booked} seat(s) - Booking #${booking_id}`
+                    bookingDetails.ride.driverId,
+                    `✅ Payment received: ₹${bookingDetails.amount} for ${bookingDetails.seatsBooked} seat(s) - Booking #${booking_id}`
                 );
                 
                 // Also emit socket event to driver
                 const io = getIO();
                 if (io) {
-                    const driverSocketId = getSocketIdForUser(driver_id);
+                    const driverSocketId = getSocketIdForUser(bookingDetails.ride.driverId);
                     if (driverSocketId) {
                         io.to(driverSocketId).emit('payment_received', {
                             booking_id: booking_id,
-                            amount: amount,
-                            seats_booked: seats_booked,
-                            passenger_id: passenger_id
+                            amount: bookingDetails.amount,
+                            seats_booked: bookingDetails.seatsBooked,
+                            passenger_id: bookingDetails.passengerId
                         });
                     }
                 }
@@ -169,7 +167,15 @@ export const confirmPayment = async (req, res) => {
             // Don't fail payment if notification fails
         }
 
-        return successResponse(res, 201, 'Payment processed successfully', newPayment[0]);
+        return successResponse(res, 201, 'Payment processed successfully', {
+            payment_id: newPayment.paymentId,
+            booking_id: newPayment.bookingId,
+            amount: newPayment.amount,
+            payment_method: newPayment.paymentMethod,
+            payment_status: newPayment.paymentStatus,
+            transaction_id: newPayment.transactionId,
+            payment_date: newPayment.paymentDate
+        });
 
     } catch (error) {
         console.error('Confirm payment error:', error);
@@ -190,65 +196,86 @@ export const cashInit = async (req, res) => {
         }
 
         // Ensure booking belongs to passenger
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [booking_id, user_id]
-        );
-        if (bookings.length === 0) {
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(booking_id),
+                passengerId: parseInt(user_id)
+            }
+        });
+        
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        const booking = bookings[0];
-
-        // See if a pending/record exists
-        const [existing] = await promisePool.query(
-            'SELECT * FROM payments WHERE booking_id = ? ORDER BY payment_id DESC LIMIT 1',
-            [booking_id]
-        );
-        if (existing.length && existing[0].payment_status === 'pending') {
-            return successResponse(res, 200, 'Cash payment already initialized', existing[0]);
+        // See if a pending payment exists
+        const existing = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(booking_id) },
+            orderBy: { paymentId: 'desc' }
+        });
+        
+        if (existing && existing.paymentStatus === 'pending') {
+            return successResponse(res, 200, 'Cash payment already initialized', {
+                payment_id: existing.paymentId,
+                booking_id: existing.bookingId,
+                amount: existing.amount,
+                payment_method: existing.paymentMethod,
+                payment_status: existing.paymentStatus,
+                transaction_id: existing.transactionId,
+                payment_date: existing.paymentDate
+            });
         }
 
-        // Create a pending payment row for cash
-        const [result] = await promisePool.query(
-            `INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id)
-             VALUES (?, ?, 'cash', 'pending', NULL)`,
-            [booking_id, booking.amount]
-        );
-
-        // Immediately confirm booking and decrement seats to reflect reserved seats
-        const connection = await promisePool.getConnection();
-        try {
-            await connection.beginTransaction();
+        // Create payment and update booking in transaction
+        await prisma.$transaction(async (tx) => {
+            // Create a pending payment row for cash
+            await tx.payment.create({
+                data: {
+                    bookingId: parseInt(booking_id),
+                    amount: Number(booking.amount),
+                    paymentMethod: 'cash',
+                    paymentStatus: 'pending',
+                    transactionId: null
+                }
+            });
 
             // UPDATE bookings to confirmed if currently pending (idempotent)
-            const [upd] = await connection.query(
-                `UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = ? AND booking_status = 'pending'`,
-                [booking_id]
-            );
-            if (upd.affectedRows > 0) {
-                const [bk] = await connection.query(
-                    `SELECT ride_id, seats_booked FROM bookings WHERE booking_id = ?`,
-                    [booking_id]
-                );
-                if (bk.length) {
-                    await connection.query(
-                        `UPDATE rides SET available_seats = available_seats - ? WHERE ride_id = ?`,
-                        [bk[0].seats_booked, bk[0].ride_id]
-                    );
+            const updated = await tx.booking.updateMany({
+                where: {
+                    bookingId: parseInt(booking_id),
+                    bookingStatus: 'pending'
+                },
+                data: {
+                    bookingStatus: 'confirmed'
                 }
+            });
+            
+            if (updated.count > 0) {
+                // Decrement seats
+                await tx.ride.update({
+                    where: { rideId: booking.rideId },
+                    data: {
+                        availableSeats: {
+                            decrement: booking.seatsBooked
+                        }
+                    }
+                });
             }
+        });
 
-            await connection.commit();
-        } catch (e) {
-            await connection.rollback();
-            throw e;
-        } finally {
-            connection.release();
-        }
-
-        const [newPayment] = await promisePool.query('SELECT * FROM payments WHERE payment_id = ?', [result.insertId]);
-        return successResponse(res, 201, 'Cash payment initialized and booking confirmed', newPayment[0]);
+        const newPayment = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(booking_id) },
+            orderBy: { paymentId: 'desc' }
+        });
+        
+        return successResponse(res, 201, 'Cash payment initialized and booking confirmed', {
+            payment_id: newPayment.paymentId,
+            booking_id: newPayment.bookingId,
+            amount: newPayment.amount,
+            payment_method: newPayment.paymentMethod,
+            payment_status: newPayment.paymentStatus,
+            transaction_id: newPayment.transactionId,
+            payment_date: newPayment.paymentDate
+        });
     } catch (error) {
         console.error('Cash init error:', error);
         return errorResponse(res, 500, 'Server error while initializing cash payment');
@@ -264,67 +291,89 @@ export const completeCashPayment = async (req, res) => {
         const user_id = req.user.id;
 
         // Ensure payment belongs to a booking owned by the passenger
-        const [rows] = await promisePool.query(
-            `SELECT p.*, b.passenger_id FROM payments p
-             JOIN bookings b ON b.booking_id = p.booking_id
-             WHERE p.payment_id = ?`,
-            [paymentId]
-        );
-        if (rows.length === 0) {
-            return errorResponse(res, 404, 'Payment not found');
-        }
-        const payment = rows[0];
-
-        if (payment.passenger_id !== user_id) {
-            return errorResponse(res, 403, 'Unauthorized to complete this payment');
-        }
-
-        if (payment.payment_status === 'completed') {
-            return successResponse(res, 200, 'Payment already completed', payment);
-        }
-
-        const transaction_id = `CASH${Date.now()}`;
-        await promisePool.query(
-            `UPDATE payments SET payment_status = 'completed', transaction_id = ? WHERE payment_id = ?`,
-            [transaction_id, paymentId]
-        );
-
-        // Confirm booking and decrement seats if needed
-        const connection = await promisePool.getConnection();
-        try {
-            await connection.beginTransaction();
-
-            // Get booking id and seats
-            const [bk] = await connection.query(
-                `SELECT b.booking_id, b.booking_status, b.seats_booked, b.ride_id FROM payments p JOIN bookings b ON b.booking_id = p.booking_id WHERE p.payment_id = ?`,
-                [paymentId]
-            );
-            if (bk.length) {
-                const b = bk[0];
-                if (b.booking_status === 'pending') {
-                    const [upd] = await connection.query(
-                        `UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = ? AND booking_status = 'pending'`,
-                        [b.booking_id]
-                    );
-                    if (upd.affectedRows > 0) {
-                        await connection.query(
-                            `UPDATE rides SET available_seats = available_seats - ? WHERE ride_id = ?`,
-                            [b.seats_booked, b.ride_id]
-                        );
+        const payment = await prisma.payment.findUnique({
+            where: { paymentId: parseInt(paymentId) },
+            include: {
+                booking: {
+                    select: {
+                        passengerId: true,
+                        bookingStatus: true,
+                        seatsBooked: true,
+                        rideId: true
                     }
                 }
             }
-
-            await connection.commit();
-        } catch (e) {
-            await connection.rollback();
-            throw e;
-        } finally {
-            connection.release();
+        });
+        
+        if (!payment) {
+            return errorResponse(res, 404, 'Payment not found');
         }
 
-        const [updated] = await promisePool.query('SELECT * FROM payments WHERE payment_id = ?', [paymentId]);
-        return successResponse(res, 200, 'Cash payment completed', updated[0]);
+        if (Number(payment.booking.passengerId) !== Number(user_id)) {
+            return errorResponse(res, 403, 'Unauthorized to complete this payment');
+        }
+
+        if (payment.paymentStatus === 'completed') {
+            return successResponse(res, 200, 'Payment already completed', {
+                payment_id: payment.paymentId,
+                booking_id: payment.bookingId,
+                amount: payment.amount,
+                payment_method: payment.paymentMethod,
+                payment_status: payment.paymentStatus,
+                transaction_id: payment.transactionId,
+                payment_date: payment.paymentDate
+            });
+        }
+
+        const transaction_id = `CASH${Date.now()}`;
+        
+        // Update payment and booking in transaction
+        await prisma.$transaction(async (tx) => {
+            // Update payment
+            await tx.payment.update({
+                where: { paymentId: parseInt(paymentId) },
+                data: {
+                    paymentStatus: 'completed',
+                    transactionId: transaction_id
+                }
+            });
+
+            // Confirm booking and decrement seats if needed
+            if (payment.booking.bookingStatus === 'pending') {
+                await tx.booking.updateMany({
+                    where: {
+                        bookingId: payment.bookingId,
+                        bookingStatus: 'pending'
+                    },
+                    data: {
+                        bookingStatus: 'confirmed'
+                    }
+                });
+                
+                await tx.ride.update({
+                    where: { rideId: payment.booking.rideId },
+                    data: {
+                        availableSeats: {
+                            decrement: payment.booking.seatsBooked
+                        }
+                    }
+                });
+            }
+        });
+
+        const updated = await prisma.payment.findUnique({
+            where: { paymentId: parseInt(paymentId) }
+        });
+        
+        return successResponse(res, 200, 'Cash payment completed', {
+            payment_id: updated.paymentId,
+            booking_id: updated.bookingId,
+            amount: updated.amount,
+            payment_method: updated.paymentMethod,
+            payment_status: updated.paymentStatus,
+            transaction_id: updated.transactionId,
+            payment_date: updated.paymentDate
+        });
     } catch (error) {
         console.error('Complete cash payment error:', error);
         return errorResponse(res, 500, 'Server error while completing cash payment');
@@ -340,29 +389,37 @@ export const getPaymentByBooking = async (req, res) => {
         const user_id = req.user.id;
 
         // Check if booking belongs to user
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [bookingId, user_id]
-        );
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(bookingId),
+                passengerId: parseInt(user_id)
+            }
+        });
 
-        if (bookings.length === 0) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
         // Get payment
-        const [payments] = await promisePool.query(
-            `SELECT p.*, b.amount as booking_amount
-             FROM payments p
-             JOIN bookings b ON p.booking_id = b.booking_id
-             WHERE p.booking_id = ?`,
-            [bookingId]
-        );
+        const payment = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(bookingId) },
+            orderBy: { paymentId: 'desc' }
+        });
 
-        if (payments.length === 0) {
+        if (!payment) {
             return errorResponse(res, 404, 'Payment not found');
         }
 
-        return successResponse(res, 200, 'Payment retrieved successfully', payments[0]);
+        return successResponse(res, 200, 'Payment retrieved successfully', {
+            payment_id: payment.paymentId,
+            booking_id: payment.bookingId,
+            amount: payment.amount,
+            booking_amount: Number(booking.amount),
+            payment_method: payment.paymentMethod,
+            payment_status: payment.paymentStatus,
+            transaction_id: payment.transactionId,
+            payment_date: payment.paymentDate
+        });
 
     } catch (error) {
         console.error('Get payment error:', error);
@@ -377,18 +434,45 @@ export const getMyPayments = async (req, res) => {
     try {
         const user_id = req.user.id;
 
-        const [payments] = await promisePool.query(
-            `SELECT p.*, b.booking_id, b.seats_booked,
-                    r.source, r.destination, r.date, r.time
-             FROM payments p
-             JOIN bookings b ON p.booking_id = b.booking_id
-             JOIN rides r ON b.ride_id = r.ride_id
-             WHERE b.passenger_id = ?
-             ORDER BY p.payment_date DESC`,
-            [user_id]
-        );
+        const payments = await prisma.payment.findMany({
+            where: {
+                booking: {
+                    passengerId: parseInt(user_id)
+                }
+            },
+            include: {
+                booking: {
+                    include: {
+                        ride: {
+                            select: {
+                                source: true,
+                                destination: true,
+                                date: true,
+                                time: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { paymentDate: 'desc' }
+        });
 
-        return successResponse(res, 200, 'Payments retrieved successfully', payments);
+        return successResponse(res, 200, 'Payments retrieved successfully', 
+            payments.map(p => ({
+                payment_id: p.paymentId,
+                booking_id: p.bookingId,
+                seats_booked: p.booking.seatsBooked,
+                amount: p.amount,
+                payment_method: p.paymentMethod,
+                payment_status: p.paymentStatus,
+                transaction_id: p.transactionId,
+                payment_date: p.paymentDate,
+                source: p.booking.ride.source,
+                destination: p.booking.ride.destination,
+                date: p.booking.ride.date,
+                time: p.booking.ride.time
+            }))
+        );
 
     } catch (error) {
         console.error('Get my payments error:', error);
@@ -407,10 +491,6 @@ export const walletTopup = async (req, res) => {
         
         if (!amt) return errorResponse(res, 400, 'Invalid amount');
         if (amt < 10) return errorResponse(res, 400, 'Minimum topup amount is ₹10');
-        
-        // Ensure tables exist
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet (user_id INT PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet_transaction (tx_id INT PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL, amount DECIMAL(12,2) NOT NULL, type ENUM('topup','debit','refund') NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
         
         // Create Razorpay order (amount in paise)
         const amountPaise = Math.round(amt * 100);
@@ -434,6 +514,10 @@ export const walletTopup = async (req, res) => {
         });
     } catch (error) {
         console.error('Wallet topup order error:', error);
+        // Check if it's a Razorpay configuration error
+        if (error.message && error.message.includes('Razorpay keys missing')) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
+        }
         return errorResponse(res, 500, 'Failed to create wallet topup order');
     }
 };
@@ -449,6 +533,11 @@ export const verifyWalletTopup = async (req, res) => {
             return errorResponse(res, 400, 'Missing verification parameters');
         }
         
+        // Check if Razorpay is configured
+        if (!process.env.RAZORPAY_SECRET_KEY) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
+        }
+        
         // Verify signature
         const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET_KEY);
         hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
@@ -462,35 +551,47 @@ export const verifyWalletTopup = async (req, res) => {
         const amt = Math.max(0, Number(amount || 0));
         if (!amt) return errorResponse(res, 400, 'Invalid amount');
         
-        // Ensure tables exist
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet (user_id INT PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet_transaction (tx_id INT PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL, amount DECIMAL(12,2) NOT NULL, type ENUM('topup','debit','refund') NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        
         // Credit wallet
-        const conn = await promisePool.getConnection();
-        try {
-            await conn.beginTransaction();
-            await conn.query(`INSERT INTO wallet (user_id, balance) VALUES (?, 0) ON DUPLICATE KEY UPDATE balance = balance`, [user_id]);
-            await conn.query(`UPDATE wallet SET balance = balance + ? WHERE user_id = ?`, [amt, user_id]);
-            await conn.query(`INSERT INTO wallet_transaction (user_id, amount, type) VALUES (?, ?, 'topup')`, [user_id, amt]);
-            await conn.commit();
-        } catch (e) {
-            await conn.rollback();
-            throw e;
-        } finally {
-            conn.release();
-        }
+        await prisma.$transaction(async (tx) => {
+            await tx.wallet.upsert({
+                where: { userId: parseInt(user_id) },
+                update: {
+                    balance: {
+                        increment: amt
+                    }
+                },
+                create: {
+                    userId: parseInt(user_id),
+                    balance: amt
+                }
+            });
+            
+            await tx.walletTransaction.create({
+                data: {
+                    userId: parseInt(user_id),
+                    amount: amt,
+                    type: 'topup'
+                }
+            });
+        });
         
         // Get updated wallet balance
-        const [wallet] = await promisePool.query(`SELECT user_id, balance FROM wallet WHERE user_id = ?`, [user_id]);
+        const wallet = await prisma.wallet.findUnique({
+            where: { userId: parseInt(user_id) },
+            select: { balance: true }
+        });
         
         return successResponse(res, 200, 'Wallet topped up successfully', {
             amount: amt,
-            balance: wallet[0]?.balance || 0,
+            balance: wallet ? Number(wallet.balance) : 0,
             transaction_id: razorpay_payment_id
         });
     } catch (error) {
         console.error('Verify wallet topup error:', error);
+        // Check if it's a Razorpay configuration error
+        if (error.message && error.message.includes('Razorpay keys missing')) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
+        }
         return errorResponse(res, 500, 'Failed to verify wallet topup');
     }
 };
@@ -502,21 +603,30 @@ export const walletRefund = async (req, res) => {
         const { amount } = req.body || {};
         const amt = Math.max(0, Number(amount || 0));
         if (!amt) return errorResponse(res, 400, 'Invalid amount');
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet (user_id INT PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet_transaction (tx_id INT PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL, amount DECIMAL(12,2) NOT NULL, type ENUM('topup','debit','refund') NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        const conn = await promisePool.getConnection();
-        try {
-            await conn.beginTransaction();
-            await conn.query(`INSERT INTO wallet (user_id, balance) VALUES (?, 0) ON DUPLICATE KEY UPDATE balance = balance`, [user_id]);
-            await conn.query(`UPDATE wallet SET balance = balance + ? WHERE user_id = ?`, [amt, user_id]);
-            await conn.query(`INSERT INTO wallet_transaction (user_id, amount, type) VALUES (?, ?, 'refund')`, [user_id, amt]);
-            await conn.commit();
-        } catch (e) {
-            await conn.rollback();
-            throw e;
-        } finally {
-            conn.release();
-        }
+        
+        await prisma.$transaction(async (tx) => {
+            await tx.wallet.upsert({
+                where: { userId: parseInt(user_id) },
+                update: {
+                    balance: {
+                        increment: amt
+                    }
+                },
+                create: {
+                    userId: parseInt(user_id),
+                    balance: amt
+                }
+            });
+            
+            await tx.walletTransaction.create({
+                data: {
+                    userId: parseInt(user_id),
+                    amount: amt,
+                    type: 'refund'
+                }
+            });
+        });
+        
         return successResponse(res, 201, 'Refund added to wallet', { amount: amt });
     } catch (error) {
         return errorResponse(res, 500, 'Failed to refund to wallet');
@@ -527,15 +637,25 @@ export const walletRefund = async (req, res) => {
 export const getWallet = async (req, res) => {
     try {
         const user_id = req.user.id;
-        // Ensure tables exist
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet (user_id INT PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet_transaction (tx_id INT PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL, amount DECIMAL(12,2) NOT NULL, type ENUM('topup','debit','refund') NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
         
         // Get or create wallet
-        await promisePool.query(`INSERT INTO wallet (user_id, balance) VALUES (?, 0) ON DUPLICATE KEY UPDATE balance = balance`, [user_id]);
-        const [rows] = await promisePool.query(`SELECT user_id, balance FROM wallet WHERE user_id = ?`, [user_id]);
+        const wallet = await prisma.wallet.upsert({
+            where: { userId: parseInt(user_id) },
+            update: {},
+            create: {
+                userId: parseInt(user_id),
+                balance: 0
+            },
+            select: {
+                userId: true,
+                balance: true
+            }
+        });
         
-        return successResponse(res, 200, 'Wallet retrieved', rows[0] || { user_id, balance: 0 });
+        return successResponse(res, 200, 'Wallet retrieved', {
+            user_id: wallet.userId,
+            balance: Number(wallet.balance)
+        });
     } catch (error) {
         console.error('Get wallet error:', error);
         return errorResponse(res, 500, 'Failed to get wallet');
@@ -546,16 +666,28 @@ export const getWallet = async (req, res) => {
 export const getWalletTransactions = async (req, res) => {
     try {
         const user_id = req.user.id;
-        // Ensure tables exist
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet (user_id INT PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
-        await promisePool.query(`CREATE TABLE IF NOT EXISTS wallet_transaction (tx_id INT PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL, amount DECIMAL(12,2) NOT NULL, type ENUM('topup','debit','refund') NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE)`);
         
-        const [transactions] = await promisePool.query(
-            `SELECT tx_id, user_id, amount, type, created_at FROM wallet_transaction WHERE user_id = ? ORDER BY created_at DESC`,
-            [user_id]
+        const transactions = await prisma.walletTransaction.findMany({
+            where: { userId: parseInt(user_id) },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                txId: true,
+                userId: true,
+                amount: true,
+                type: true,
+                createdAt: true
+            }
+        });
+        
+        return successResponse(res, 200, 'Transactions retrieved', 
+            transactions.map(t => ({
+                tx_id: t.txId,
+                user_id: t.userId,
+                amount: Number(t.amount),
+                type: t.type,
+                created_at: t.createdAt
+            }))
         );
-        
-        return successResponse(res, 200, 'Transactions retrieved', transactions);
     } catch (error) {
         console.error('Get wallet transactions error:', error);
         return errorResponse(res, 500, 'Failed to get wallet transactions');
@@ -575,14 +707,16 @@ export const createRazorpayOrder = async (req, res) => {
         }
 
         // Ensure booking belongs to passenger
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [booking_id, user_id]
-        );
-        if (bookings.length === 0) {
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(booking_id),
+                passengerId: parseInt(user_id)
+            }
+        });
+        
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
-        const booking = bookings[0];
 
         // If amount is provided, it's already discounted by frontend
         // Otherwise, calculate discount on backend
@@ -595,10 +729,20 @@ export const createRazorpayOrder = async (req, res) => {
             // Just mark promo as used if provided
             if (promo_code) {
                 try {
-                    await promisePool.query(
-                        `INSERT INTO user_promo_codes (user_id, code, is_used) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE is_used = 1`,
-                        [user_id, promo_code]
-                    );
+                    await prisma.userPromoCode.upsert({
+                        where: {
+                            userId_code: {
+                                userId: parseInt(user_id),
+                                code: promo_code
+                            }
+                        },
+                        update: { isUsed: true },
+                        create: {
+                            userId: parseInt(user_id),
+                            code: promo_code,
+                            isUsed: true
+                        }
+                    });
                 } catch (err) {
                     console.error('Promo marking error:', err);
                 }
@@ -609,23 +753,41 @@ export const createRazorpayOrder = async (req, res) => {
             
             if (promo_code) {
                 try {
-                    const [pcRows] = await promisePool.query(
-                        `SELECT * FROM promo_codes WHERE code = ? AND (expiry_date IS NULL OR expiry_date >= CURDATE())`, 
-                        [promo_code]
-                    );
-                    if (pcRows.length > 0) {
-                        const promo = pcRows[0];
-                        if (promo.discount_percent) {
-                            finalAmount = finalAmount * (1 - Number(promo.discount_percent) / 100);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    const promo = await prisma.promoCode.findFirst({
+                        where: {
+                            code: promo_code,
+                            OR: [
+                                { expiryDate: null },
+                                { expiryDate: { gte: today } }
+                            ]
                         }
-                        if (promo.discount_amount) {
-                            finalAmount = Math.max(0, finalAmount - Number(promo.discount_amount));
+                    });
+                    
+                    if (promo) {
+                        if (promo.discountPercent) {
+                            finalAmount = finalAmount * (1 - Number(promo.discountPercent) / 100);
+                        }
+                        if (promo.discountAmount) {
+                            finalAmount = Math.max(0, finalAmount - Number(promo.discountAmount));
                         }
                         // Mark promo as used
-                        await promisePool.query(
-                            `INSERT INTO user_promo_codes (user_id, code, is_used) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE is_used = 1`,
-                            [user_id, promo_code]
-                        );
+                        await prisma.userPromoCode.upsert({
+                            where: {
+                                userId_code: {
+                                    userId: parseInt(user_id),
+                                    code: promo_code
+                                }
+                            },
+                            update: { isUsed: true },
+                            create: {
+                                userId: parseInt(user_id),
+                                code: promo_code,
+                                isUsed: true
+                            }
+                        });
                     }
                 } catch (err) {
                     console.error('Promo code validation error:', err);
@@ -648,24 +810,31 @@ export const createRazorpayOrder = async (req, res) => {
             }
         });
 
-        // Upsert a pending payment row linked to this order (store order_id for now)
-        const [existing] = await promisePool.query(
-            'SELECT * FROM payments WHERE booking_id = ? ORDER BY payment_id DESC LIMIT 1',
-            [booking_id]
-        );
+        // Upsert a pending payment row linked to this order
+        const existing = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(booking_id) },
+            orderBy: { paymentId: 'desc' }
+        });
 
-        if (!existing.length || existing[0].payment_status !== 'pending') {
-            await promisePool.query(
-                `INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id)
-                 VALUES (?, ?, 'card', 'pending', ?)`,
-                [booking_id, finalAmount, order.id]
-            );
+        if (!existing || existing.paymentStatus !== 'pending') {
+            await prisma.payment.create({
+                data: {
+                    bookingId: parseInt(booking_id),
+                    amount: finalAmount,
+                    paymentMethod: 'card',
+                    paymentStatus: 'pending',
+                    transactionId: order.id
+                }
+            });
         } else {
-            // refresh existing pending to tie with latest order id
-            await promisePool.query(
-                `UPDATE payments SET amount = ?, transaction_id = ? WHERE payment_id = ?`,
-                [finalAmount, order.id, existing[0].payment_id]
-            );
+            // Refresh existing pending to tie with latest order id
+            await prisma.payment.update({
+                where: { paymentId: existing.paymentId },
+                data: {
+                    amount: finalAmount,
+                    transactionId: order.id
+                }
+            });
         }
 
         return successResponse(res, 201, 'Razorpay order created', {
@@ -676,6 +845,10 @@ export const createRazorpayOrder = async (req, res) => {
         });
     } catch (error) {
         console.error('Create Razorpay order error:', error);
+        // Check if it's a Razorpay configuration error
+        if (error.message && error.message.includes('Razorpay keys missing')) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
+        }
         return errorResponse(res, 500, 'Failed to create Razorpay order');
     }
 };
@@ -693,12 +866,20 @@ export const verifyRazorpayPayment = async (req, res) => {
         }
 
         // Ensure booking belongs to passenger
-        const [bookings] = await promisePool.query(
-            'SELECT * FROM bookings WHERE booking_id = ? AND passenger_id = ?',
-            [booking_id, user_id]
-        );
-        if (bookings.length === 0) {
+        const booking = await prisma.booking.findFirst({
+            where: {
+                bookingId: parseInt(booking_id),
+                passengerId: parseInt(user_id)
+            }
+        });
+        
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
+        }
+
+        // Check if Razorpay is configured
+        if (!process.env.RAZORPAY_SECRET_KEY) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
         }
 
         // Verify signature
@@ -713,55 +894,80 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         // UPDATE payments as completed; store final payment id and updated amount
         const finalAmount = amount ? Number(amount) : null;
-        if (finalAmount) {
-            await promisePool.query(
-                `UPDATE payments SET payment_status = 'completed', transaction_id = ?, amount = ? WHERE booking_id = ?`,
-                [razorpay_payment_id, finalAmount, booking_id]
-            );
-        } else {
-            await promisePool.query(
-                `UPDATE payments SET payment_status = 'completed', transaction_id = ? WHERE booking_id = ?`,
-                [razorpay_payment_id, booking_id]
-            );
-        }
-
-        // Confirm booking and decrement seats if needed
-        const connection = await promisePool.getConnection();
-        try {
-            await connection.beginTransaction();
-            const [bk] = await connection.query(
-                `SELECT booking_status, seats_booked, ride_id FROM bookings WHERE booking_id = ?`,
-                [booking_id]
-            );
-            if (bk.length && bk[0].booking_status === 'pending') {
-                const [upd] = await connection.query(
-                    `UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = ? AND booking_status = 'pending'`,
-                    [booking_id]
-                );
-                if (upd.affectedRows > 0) {
-                    await connection.query(
-                        `UPDATE rides SET available_seats = available_seats - ? WHERE ride_id = ?`,
-                        [bk[0].seats_booked, bk[0].ride_id]
-                    );
-                }
+        
+        await prisma.$transaction(async (tx) => {
+            if (finalAmount) {
+                await tx.payment.updateMany({
+                    where: { bookingId: parseInt(booking_id) },
+                    data: {
+                        paymentStatus: 'completed',
+                        transactionId: razorpay_payment_id,
+                        amount: finalAmount
+                    }
+                });
+            } else {
+                await tx.payment.updateMany({
+                    where: { bookingId: parseInt(booking_id) },
+                    data: {
+                        paymentStatus: 'completed',
+                        transactionId: razorpay_payment_id
+                    }
+                });
             }
-            await connection.commit();
-        } catch (e) {
-            await connection.rollback();
-            throw e;
-        } finally {
-            connection.release();
-        }
+
+            // Confirm booking and decrement seats if needed
+            const bookingData = await tx.booking.findUnique({
+                where: { bookingId: parseInt(booking_id) },
+                select: {
+                    bookingStatus: true,
+                    seatsBooked: true,
+                    rideId: true
+                }
+            });
+            
+            if (bookingData && bookingData.bookingStatus === 'pending') {
+                await tx.booking.updateMany({
+                    where: {
+                        bookingId: parseInt(booking_id),
+                        bookingStatus: 'pending'
+                    },
+                    data: {
+                        bookingStatus: 'confirmed'
+                    }
+                });
+                
+                await tx.ride.update({
+                    where: { rideId: bookingData.rideId },
+                    data: {
+                        availableSeats: {
+                            decrement: bookingData.seatsBooked
+                        }
+                    }
+                });
+            }
+        });
 
         // Return final payment record
-        const [rows] = await promisePool.query(
-            `SELECT * FROM payments WHERE booking_id = ? ORDER BY payment_id DESC LIMIT 1`,
-            [booking_id]
-        );
+        const payment = await prisma.payment.findFirst({
+            where: { bookingId: parseInt(booking_id) },
+            orderBy: { paymentId: 'desc' }
+        });
 
-        return successResponse(res, 200, 'Payment verified successfully', rows[0] || null);
+        return successResponse(res, 200, 'Payment verified successfully', payment ? {
+            payment_id: payment.paymentId,
+            booking_id: payment.bookingId,
+            amount: payment.amount,
+            payment_method: payment.paymentMethod,
+            payment_status: payment.paymentStatus,
+            transaction_id: payment.transactionId,
+            payment_date: payment.paymentDate
+        } : null);
     } catch (error) {
         console.error('Verify Razorpay error:', error);
+        // Check if it's a Razorpay configuration error
+        if (error.message && error.message.includes('Razorpay keys missing')) {
+            return errorResponse(res, 503, 'Payment service is not configured. Please contact support.');
+        }
         return errorResponse(res, 500, 'Failed to verify Razorpay payment');
     }
 };

@@ -287,77 +287,77 @@ export default function Payment() {
   }
 
   return (
-    <div className="min-h-screen px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-4 sm:mb-6 gradient-text">Payment</h1>
-      <div className="glass-thick rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/20 space-y-3 sm:space-y-4">
+    <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-2xl mx-auto">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6 sm:mb-8 text-white">Payment</h1>
+      <div className="rounded-xl p-6 sm:p-8 border border-[#1A1A1A] bg-[#111111] space-y-4 sm:space-y-6">
         <div className="flex items-center justify-between">
-          <div className="font-semibold">Booking ID</div>
-          <div>#{bookingId}</div>
+          <div className="font-semibold text-white/60">Booking ID</div>
+          <div className="text-white font-bold">#{bookingId}</div>
         </div>
         <div className="flex items-center justify-between">
-          <div className="font-semibold">Amount</div>
-          <div className="text-2xl font-bold">₹{originalAmount.toFixed(2)}</div>
+          <div className="font-semibold text-white/60">Amount</div>
+          <div className="text-2xl font-bold text-white">₹{originalAmount.toFixed(2)}</div>
         </div>
         
         {/* Payment Methods */}
-        <div className="space-y-3 pt-4">
-          <div className="text-sm font-semibold mb-3">Select Payment Method</div>
+        <div className="space-y-4 pt-4">
+          <div className="text-sm font-semibold mb-4 text-white">Select Payment Method</div>
           
           {/* Payment Method Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <button
               onClick={() => setPaymentMethod('razorpay')}
-              className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+              className={`p-4 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
                 paymentMethod === 'razorpay'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-white/20 bg-white/5'
+                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/10'
+                  : 'border-[#1A1A1A] bg-[#0A0A0A] hover:bg-[#1A1A1A]'
               }`}
             >
-              <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-semibold">Razorpay</span>
+              <CreditCard className={`w-5 h-5 ${paymentMethod === 'razorpay' ? 'text-[#0EA5E9]' : 'text-white/60'}`} />
+              <span className={`text-sm font-semibold ${paymentMethod === 'razorpay' ? 'text-[#0EA5E9]' : 'text-white/60'}`}>Razorpay</span>
             </button>
             <button
               onClick={() => setPaymentMethod('wallet')}
-              className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+              className={`p-4 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
                 paymentMethod === 'wallet'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-white/20 bg-white/5'
+                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/10'
+                  : 'border-[#1A1A1A] bg-[#0A0A0A] hover:bg-[#1A1A1A]'
               }`}
             >
-              <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-semibold">Wallet</span>
+              <Wallet className={`w-5 h-5 ${paymentMethod === 'wallet' ? 'text-[#0EA5E9]' : 'text-white/60'}`} />
+              <span className={`text-sm font-semibold ${paymentMethod === 'wallet' ? 'text-[#0EA5E9]' : 'text-white/60'}`}>Wallet</span>
             </button>
             <button
               onClick={() => setPaymentMethod('cash')}
-              className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+              className={`p-4 rounded-xl border transition-all duration-200 flex items-center justify-center gap-2 ${
                 paymentMethod === 'cash'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-white/20 bg-white/5'
+                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/10'
+                  : 'border-[#1A1A1A] bg-[#0A0A0A] hover:bg-[#1A1A1A]'
               }`}
             >
-              <Banknote className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-semibold">Cash</span>
+              <Banknote className={`w-5 h-5 ${paymentMethod === 'cash' ? 'text-[#0EA5E9]' : 'text-white/60'}`} />
+              <span className={`text-sm font-semibold ${paymentMethod === 'cash' ? 'text-[#0EA5E9]' : 'text-white/60'}`}>Cash</span>
             </button>
           </div>
 
           {/* Wallet Balance Display */}
           {paymentMethod === 'wallet' && (
-            <div className="p-3 rounded-xl bg-white/10 border border-white/20">
+            <div className="p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Wallet Balance</span>
-                <span className="font-bold">₹{(Number(walletBalance) || 0).toFixed(2)}</span>
+                <span className="text-white/60">Wallet Balance</span>
+                <span className="font-bold text-white">₹{(Number(walletBalance) || 0).toFixed(2)}</span>
               </div>
               {walletBalance < finalAmount && (
-                <p className="text-xs text-red-500 mt-1">Insufficient balance. Top up wallet first.</p>
+                <p className="text-xs text-[#ef4444] mt-2">Insufficient balance. Top up wallet first.</p>
               )}
             </div>
           )}
         </div>
 
         {/* Promo Code Section - Now appears after payment method selection */}
-        <div className="border-t border-white/10 pt-4">
-          <div className="font-semibold mb-3 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-primary" />
+        <div className="border-t border-[#1A1A1A] pt-6">
+          <div className="font-semibold mb-4 flex items-center gap-2 text-white">
+            <Tag className="w-5 h-5 text-[#0EA5E9]" />
             <span>Have a Promo Code?</span>
           </div>
           
@@ -370,12 +370,12 @@ export default function Payment() {
                 onKeyPress={(e) => e.key === 'Enter' && validatePromoCode()}
                 placeholder="Enter promo code"
                 disabled={promoValidating}
-                className="flex-1 px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none uppercase"
+                className="flex-1 px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none uppercase text-white placeholder:text-white/40"
               />
               <button
                 onClick={validatePromoCode}
                 disabled={!promoCode.trim() || promoValidating}
-                className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {promoValidating ? (
                   <>
@@ -391,14 +391,14 @@ export default function Payment() {
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-green-500/10 border-2 border-green-500/30 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+            <div className="p-4 rounded-xl bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center">
                   <Check className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="font-bold text-green-600 dark:text-green-400">{promoApplied.code}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="font-bold text-[#10b981]">{promoApplied.code}</div>
+                  <div className="text-sm text-white/60">
                     {promoApplied.discount_percent 
                       ? `${promoApplied.discount_percent}% discount` 
                       : `₹${promoApplied.discount_amount} off`}
@@ -407,37 +407,37 @@ export default function Payment() {
               </div>
               <button
                 onClick={removePromoCode}
-                className="p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                className="p-2 rounded-lg hover:bg-[#ef4444]/10 transition-colors duration-200"
                 title="Remove promo code"
               >
-                <X className="w-5 h-5 text-red-500" />
+                <X className="w-5 h-5 text-[#ef4444]" />
               </button>
             </div>
           )}
         </div>
 
         {/* Amount Display with Discount Breakdown */}
-        <div className="border-t border-white/10 pt-4 space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground">
+        <div className="border-t border-[#1A1A1A] pt-6 space-y-3">
+          <div className="flex items-center justify-between text-white/60">
             <div>Original Amount</div>
             <div>₹{originalAmount.toFixed(2)}</div>
           </div>
           
           {discount > 0 && (
-            <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+            <div className="flex items-center justify-between text-[#10b981]">
               <div>Discount</div>
               <div>- ₹{discount.toFixed(2)}</div>
             </div>
           )}
           
-          <div className="flex items-center justify-between border-t border-white/10 pt-2">
-            <div className="font-bold text-base sm:text-lg">Total Amount</div>
-            <div className="text-2xl sm:text-3xl font-bold text-primary">₹{finalAmount.toFixed(2)}</div>
+          <div className="flex items-center justify-between border-t border-[#1A1A1A] pt-3">
+            <div className="font-bold text-lg text-white">Total Amount</div>
+            <div className="text-3xl font-bold text-[#0EA5E9]">₹{finalAmount.toFixed(2)}</div>
           </div>
         </div>
 
         {/* Payment Action Section */}
-        <div className="space-y-3 pt-4">
+        <div className="space-y-3 pt-6">
           {/* Pay Button */}
           <button
             onClick={() => {
@@ -446,7 +446,7 @@ export default function Payment() {
               else payOnline() // Razorpay
             }}
             disabled={loading || processing || (paymentMethod === 'wallet' && walletBalance < finalAmount)}
-            className="w-full py-3 sm:py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
+            className="w-full py-4 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-base"
           >
             {loading || processing ? (
               <>
@@ -464,41 +464,41 @@ export default function Payment() {
           </button>
         </div>
         {message && (
-          <div className="mt-2 text-sm text-muted-foreground">{message}</div>
+          <div className="mt-3 text-sm text-white/60">{message}</div>
         )}
         {processing && (
-          <div className="mt-2 text-xs break-all text-muted-foreground">Verifying payment...</div>
+          <div className="mt-2 text-xs break-all text-white/40">Verifying payment...</div>
         )}
-        <div className="pt-4 border-t border-white/10 space-y-3">
-          <div className="font-semibold">Message your driver</div>
+        <div className="pt-6 border-t border-[#1A1A1A] space-y-3">
+          <div className="font-semibold text-white">Message your driver</div>
           <div className="flex gap-2">
             <input
               type="text"
               value={driverMsg}
               onChange={(e) => setDriverMsg(e.target.value)}
               placeholder="I'm at the blue gate"
-              className="flex-1 px-4 py-3 bg-white/50 dark:bg-white/5 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+              className="flex-1 px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
             />
             <button
               disabled={!driverMsg.trim()}
               onClick={sendMessageToDriver}
-              className="px-5 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Send
             </button>
           </div>
-          <div className="text-xs text-muted-foreground">This sends a real-time message to your driver.</div>
+          <div className="text-xs text-white/40">This sends a real-time message to your driver.</div>
         </div>
       </div>
 
       {/* Ride Booked Popup */}
         {showConfirmed && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowConfirmed(false)}>
-          <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-md w-full shadow-glow border border-white/20" onClick={(e) => e.stopPropagation()}>
-            <div className="text-xl sm:text-2xl font-bold mb-2">Ride booked</div>
-            <div className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">Your ride is booked with pay-after-ride. Please pay the driver after completion.</div>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6" onClick={() => setShowConfirmed(false)}>
+          <div className="rounded-xl p-6 sm:p-8 max-w-md w-full border border-[#1A1A1A] bg-[#111111] shadow-[0_4px_16px_rgba(0,0,0,0.4)]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-xl sm:text-2xl font-bold mb-2 text-white">Ride booked</div>
+            <div className="text-sm sm:text-base text-white/60 mb-6">Your ride is booked with pay-after-ride. Please pay the driver after completion.</div>
             <div className="flex gap-3">
-              <button onClick={() => setShowConfirmed(false)} className="flex-1 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 font-semibold rounded-xl transition-all text-sm sm:text-base">
+              <button onClick={() => setShowConfirmed(false)} className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200">
                 Close
               </button>
             </div>

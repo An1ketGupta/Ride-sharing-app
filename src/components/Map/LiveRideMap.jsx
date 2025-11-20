@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, Marker, useLoadScript, Circle, DirectionsService, DirectionsRenderer, Polyline } from '@react-google-maps/api';
+import ORSMap from './ORSMap';
 
 const containerStyle = { width: '100%', height: '260px', borderRadius: '16px' };
 
@@ -17,19 +18,8 @@ export default function LiveRideMap({ driver, passenger }) {
     const [route, setRoute] = useState(null);
     const [orsRoute, setOrsRoute] = useState(null); // OpenRouteService route
 
-    // Debug: Log driver and passenger props (development only)
-    useEffect(() => {
-        if (import.meta.env.DEV) {
-            console.log('LiveRideMap props:', { driver, passenger });
-        }
-    }, [driver, passenger]);
-
     // Update ORS route when driver location includes route data
     useEffect(() => {
-        if (import.meta.env.DEV) {
-            console.log('🗺️ Driver route data:', driver?.route);
-        }
-        
         if (driver?.route && driver.route.coordinates && Array.isArray(driver.route.coordinates) && driver.route.coordinates.length > 0) {
             // Convert ORS coordinates to Google Maps format [{lat, lng}, ...]
             const routePath = driver.route.coordinates.map(coord => {
@@ -49,9 +39,6 @@ export default function LiveRideMap({ driver, passenger }) {
                 
                 // Validate coordinates
                 if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                    if (import.meta.env.DEV) {
-                        console.warn('Invalid coordinate:', coord);
-                    }
                     return null;
                 }
                 
@@ -60,21 +47,10 @@ export default function LiveRideMap({ driver, passenger }) {
             
             if (routePath.length > 0) {
                 setOrsRoute(routePath);
-                
-                if (import.meta.env.DEV) {
-                    console.log('🗺️ Route updated:', routePath.length, 'coordinates');
-                    console.log('🗺️ First few coordinates:', routePath.slice(0, 3));
-                }
             } else {
-                if (import.meta.env.DEV) {
-                    console.warn('⚠️ No valid coordinates in route data');
-                }
                 setOrsRoute(null);
             }
         } else {
-            if (import.meta.env.DEV) {
-                console.log('⚠️ No route data or invalid format:', driver?.route);
-            }
             setOrsRoute(null);
         }
     }, [driver?.route]);
@@ -100,9 +76,7 @@ export default function LiveRideMap({ driver, passenger }) {
                 points.forEach((p) => bounds.extend(p));
                 mapRef.current.fitBounds(bounds, 40);
             } catch (err) {
-                if (import.meta.env.DEV) {
-                    console.error('Error setting map bounds:', err);
-                }
+                // Error setting map bounds
             }
         } else if (driver?.lat && driver?.lon) {
             // Always center on driver location if available (even without passenger)
@@ -110,9 +84,6 @@ export default function LiveRideMap({ driver, passenger }) {
             mapRef.current.setCenter(driverPos);
             // Use higher zoom level for better visibility when only showing driver
             mapRef.current.setZoom(16);
-            if (import.meta.env.DEV) {
-                console.log('📍 Map centered on driver location (using ORS):', driverPos);
-            }
         } else if (points.length === 1) {
             // If only passenger point, center on it
             mapRef.current.setCenter(points[0]);
@@ -158,12 +129,9 @@ export default function LiveRideMap({ driver, passenger }) {
         };
     }, [isLoaded]);
 
+    // Fallback to ORSMap (Leaflet/OpenStreetMap) if Google Maps API key is not configured
     if (!apiKey) {
-        return (
-            <div style={{ ...containerStyle }} className="flex items-center justify-center bg-white/50 dark:bg-white/5 border border-white/20">
-                <div className="text-sm text-muted-foreground">Google Maps API key not configured</div>
-            </div>
-        );
+        return <ORSMap driver={driver} passenger={passenger} />;
     }
 
     if (!isLoaded) {
@@ -212,14 +180,9 @@ export default function LiveRideMap({ driver, passenger }) {
                     }}
                     onLoad={(polyline) => {
                         polylineRef.current = polyline;
-                        if (import.meta.env.DEV) {
-                            console.log('✅ Polyline rendered with', orsRoute.length, 'points');
-                        }
                     }}
                     onError={(error) => {
-                        if (import.meta.env.DEV) {
-                            console.error('❌ Polyline error:', error);
-                        }
+                        // Polyline error
                     }}
                 />
             )}
@@ -235,8 +198,6 @@ export default function LiveRideMap({ driver, passenger }) {
                     callback={(res) => {
                         if (res && res.status === 'OK') {
                             setRoute(res);
-                        } else if (res && res.status !== 'OK') {
-                            console.warn('Directions service error:', res.status);
                         }
                     }}
                 />

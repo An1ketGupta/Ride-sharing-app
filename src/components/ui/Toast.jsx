@@ -14,13 +14,16 @@ export const useToast = () => {
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
+  const [toastCounter, setToastCounter] = useState(0);
 
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
   const addToast = useCallback((message, type = 'info', duration = 3000) => {
-    const id = Date.now();
+    // Use counter + timestamp + random to ensure unique IDs
+    const id = `toast-${Date.now()}-${toastCounter}-${Math.random().toString(36).substr(2, 9)}`;
+    setToastCounter((prev) => prev + 1);
     setToasts((prev) => [...prev, { id, message, type, duration }]);
 
     if (duration > 0) {
@@ -30,7 +33,7 @@ export const ToastProvider = ({ children }) => {
     }
 
     return id;
-  }, [removeToast]);
+  }, [removeToast, toastCounter]);
 
   const toast = {
     success: (message, duration) => addToast(message, 'success', duration),
@@ -49,7 +52,7 @@ export const ToastProvider = ({ children }) => {
 
 const ToastContainer = ({ toasts, removeToast }) => {
   return (
-    <div className="fixed top-20 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-24 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
       <AnimatePresence>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
@@ -61,34 +64,34 @@ const ToastContainer = ({ toasts, removeToast }) => {
 
 const Toast = ({ toast, onClose }) => {
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
-    error: <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />,
-    warning: <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />,
-    info: <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+    success: <CheckCircle className="w-5 h-5 text-[#10b981]" />,
+    error: <AlertCircle className="w-5 h-5 text-[#ef4444]" />,
+    warning: <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />,
+    info: <Info className="w-5 h-5 text-[#0EA5E9]" />,
   };
 
   const colors = {
-    success: 'border-emerald-500/30 bg-emerald-50/90 dark:bg-emerald-950/90',
-    error: 'border-red-500/30 bg-red-50/90 dark:bg-red-950/90',
-    warning: 'border-amber-500/30 bg-amber-50/90 dark:bg-amber-950/90',
-    info: 'border-blue-500/30 bg-blue-50/90 dark:bg-blue-950/90',
+    success: 'border-[#10b981]/30 bg-[#111111] border',
+    error: 'border-[#ef4444]/30 bg-[#111111] border',
+    warning: 'border-[#f59e0b]/30 bg-[#111111] border',
+    info: 'border-[#0EA5E9]/30 bg-[#111111] border',
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 100, scale: 0.95 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`pointer-events-auto flex items-start gap-3 min-w-[300px] max-w-md p-4 rounded-2xl border-2 backdrop-blur-xl shadow-glow ${colors[toast.type]}`}
+      exit={{ opacity: 0, x: 20, scale: 0.98 }}
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+      className={`pointer-events-auto flex items-start gap-3 min-w-[320px] max-w-md p-4 rounded-xl ${colors[toast.type]} shadow-[0_4px_16px_rgba(0,0,0,0.4)]`}
     >
       <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
-      <p className="flex-1 text-sm font-medium text-foreground leading-relaxed">{toast.message}</p>
+      <p className="flex-1 text-base font-medium text-white leading-relaxed">{toast.message}</p>
       <button
         onClick={onClose}
-        className="flex-shrink-0 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors"
+        className="flex-shrink-0 p-1 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
       >
-        <X className="w-4 h-4 text-muted-foreground" />
+        <X className="w-4 h-4 text-white/60 hover:text-white" />
       </button>
     </motion.div>
   );

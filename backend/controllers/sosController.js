@@ -1,6 +1,7 @@
-import { promisePool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { errorResponse, successResponse } from '../utils/helpers.js';
 import { sendNotification, sendSMS, sendEmail } from '../utils/notifications.js';
+import { haversineKm } from '../utils/geo.js';
 
 // @desc Log SOS alert and mock notify admin
 // @route POST /api/rides/:ride_id/sos
@@ -22,115 +23,70 @@ export const raiseSOS = async (req, res) => {
             return errorResponse(res, 400, 'Invalid booking ID');
         }
 
-        // 2) First verify booking exists and get context: passenger, driver, vehicle, route
-        const [rows] = await promisePool.query(
-            `SELECT 
-                b.booking_id,
-                b.ride_id AS ride_ref_id,
-                b.passenger_id,
-                b.seats_booked,
-                b.amount,
-                b.booking_status,
-                b.booking_date,
-                r.driver_id,
-                r.source,
-                r.destination,
-                r.date AS ride_date,
-                r.time AS ride_time,
-                r.status AS ride_status,
-                r.fare_per_km,
-                r.distance_km,
-                uP.name AS passenger_name,
-                uP.phone AS passenger_phone,
-                uP.email AS passenger_email,
-                uP.emergency_contact_name,
-                uP.emergency_contact_phone,
-                uP.emergency_contact_email,
-                uD.name AS driver_name,
-                uD.phone AS driver_phone,
-                uD.email AS driver_email,
-                v.model AS vehicle_model,
-                v.license_plate AS vehicle_plate,
-                v.color AS vehicle_color,
-                v.capacity AS vehicle_capacity
-            FROM bookings b
-            JOIN rides r ON r.ride_id = b.ride_id
-            JOIN users uP ON uP.user_id = b.passenger_id
-            JOIN users uD ON uD.user_id = r.driver_id
-            LEFT JOIN vehicles v ON v.user_id = r.driver_id
-            WHERE b.booking_id = ?`,
-            [bookingId]
-        );
-        const info = rows?.[0];
+        // Verify booking exists and get context: passenger, driver, vehicle, route
+        const booking = await prisma.booking.findUnique({
+            where: { bookingId: bookingId },
+            include: {
+                passenger: {
+                    select: {
+                        name: true,
+                        phone: true,
+                        email: true,
+                        emergencyContactName: true,
+                        emergencyContactPhone: true,
+                        emergencyContactEmail: true
+                    }
+                },
+                ride: {
+                    include: {
+                        driver: {
+                            select: {
+                                name: true,
+                                phone: true,
+                                email: true
+                            }
+                        },
+                        vehicle: {
+                            select: {
+                                model: true,
+                                licensePlate: true,
+                                color: true,
+                                capacity: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
-        if (!info) {
+        if (!booking) {
             return errorResponse(res, 404, 'Booking not found');
         }
 
         // Verify user_id matches passenger_id or is admin
-        if (info.passenger_id !== userId) {
+        if (Number(booking.passengerId) !== userId) {
             // Check if user is admin
-            const [adminCheck] = await promisePool.query(
-                `SELECT user_id FROM users WHERE user_id = ? AND user_type = 'admin'`,
-                [userId]
-            );
-            if (!adminCheck || adminCheck.length === 0) {
+            const admin = await prisma.user.findFirst({
+                where: {
+                    userId: userId,
+                    userType: 'admin'
+                }
+            });
+            if (!admin) {
                 return errorResponse(res, 403, 'Unauthorized: Only the passenger or admin can raise SOS for this booking');
             }
         }
 
-        // 1) Log SOS - try different table name variations for case sensitivity
-        let insertRes;
-        try {
-            [insertRes] = await promisePool.query(
-                `INSERT INTO sos_alerts (ride_id, user_id, details) VALUES (?, ?, ?)`,
-                [bookingId, userId, details || null]
-            );
-        } catch (e) {
-            // Try SOS_Alerts if sos_alerts doesn't exist
-            if (e?.code === 'ER_NO_SUCH_TABLE' || String(e?.message || '').includes('sos_alerts') || String(e?.message || '').includes('SOS_Alerts')) {
-                try {
-                    // Try creating with lowercase first
-                    await promisePool.query(`CREATE TABLE IF NOT EXISTS sos_alerts (
-                      alert_id INT PRIMARY KEY AUTO_INCREMENT,
-                      ride_id INT NOT NULL,
-                      user_id INT NOT NULL,
-                      details TEXT,
-                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                      FOREIGN KEY (ride_id) REFERENCES bookings(booking_id) ON DELETE CASCADE,
-                      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-                    )`);
-                    [insertRes] = await promisePool.query(
-                        `INSERT INTO sos_alerts (ride_id, user_id, details) VALUES (?, ?, ?)`,
-                        [bookingId, userId, details || null]
-                    );
-                } catch (e2) {
-                    // If still fails, try uppercase table name
-                    try {
-                        await promisePool.query(`CREATE TABLE IF NOT EXISTS SOS_Alerts (
-                          alert_id INT PRIMARY KEY AUTO_INCREMENT,
-                          ride_id INT NOT NULL,
-                          user_id INT NOT NULL,
-                          details TEXT,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          FOREIGN KEY (ride_id) REFERENCES bookings(booking_id) ON DELETE CASCADE,
-                          FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-                        )`);
-                        [insertRes] = await promisePool.query(
-                            `INSERT INTO SOS_Alerts (ride_id, user_id, details) VALUES (?, ?, ?)`,
-                            [bookingId, userId, details || null]
-                        );
-                    } catch (e3) {
-                        console.error('Failed to create/insert SOS alert:', e3);
-                        throw e3;
-                    }
-                }
-            } else {
-                throw e;
+        // Log SOS alert
+        const sosAlert = await prisma.sosAlert.create({
+            data: {
+                rideId: bookingId, // Note: In schema, rideId in sos_alerts references booking_id
+                userId: userId,
+                details: details || null
             }
-        }
+        });
 
-        // 3) Build messages
+        // Build messages
         const mapsLink = (lat, lon) => lat != null && lon != null ? `https://maps.google.com/?q=${lat},${lon}` : null;
         const passengerLocLink = mapsLink(passenger_lat, passenger_lon);
         const parts = [];
@@ -138,52 +94,50 @@ export const raiseSOS = async (req, res) => {
         parts.push(`Booking ID: #${bookingId}`);
         parts.push(``);
         
-        if (info) {
-            // Passenger Information
-            parts.push(`📱 PASSENGER INFORMATION:`);
-            parts.push(`   Name: ${info.passenger_name || 'N/A'}`);
-            parts.push(`   Phone: ${info.passenger_phone || 'N/A'}`);
-            parts.push(`   Email: ${info.passenger_email || 'N/A'}`);
-            parts.push(`   Passenger ID: ${info.passenger_id}`);
-            parts.push(``);
-            
-            // Driver Information
-            parts.push(`🚗 DRIVER INFORMATION:`);
-            parts.push(`   Name: ${info.driver_name || 'N/A'}`);
-            parts.push(`   Phone: ${info.driver_phone || 'N/A'}`);
-            parts.push(`   Email: ${info.driver_email || 'N/A'}`);
-            parts.push(`   Driver ID: ${info.driver_id}`);
-            parts.push(``);
-            
-            // Vehicle Information
-            if (info.vehicle_model || info.vehicle_plate) {
-                parts.push(`🚙 VEHICLE INFORMATION:`);
-                parts.push(`   Model: ${info.vehicle_model || 'N/A'}`);
-                parts.push(`   Color: ${info.vehicle_color || 'N/A'}`);
-                parts.push(`   License Plate: ${info.vehicle_plate || 'N/A'}`);
-                parts.push(`   Capacity: ${info.vehicle_capacity || 'N/A'} seats`);
-                parts.push(``);
-            }
-            
-            // Ride Information
-            parts.push(`📍 RIDE INFORMATION:`);
-            parts.push(`   Source: ${info.source || 'N/A'}`);
-            parts.push(`   Destination: ${info.destination || 'N/A'}`);
-            if (info.ride_date) parts.push(`   Date: ${info.ride_date}`);
-            if (info.ride_time) parts.push(`   Time: ${info.ride_time}`);
-            if (info.distance_km) parts.push(`   Distance: ${info.distance_km} km`);
-            parts.push(`   Fare: ₹10 per seat per km`); // Fixed fare
-            parts.push(`   Ride Status: ${info.ride_status || 'N/A'}`);
-            parts.push(``);
-            
-            // Booking Information
-            parts.push(`🎫 BOOKING INFORMATION:`);
-            parts.push(`   Seats Booked: ${info.seats_booked || 'N/A'}`);
-            if (info.amount) parts.push(`   Amount: ₹${info.amount}`);
-            parts.push(`   Booking Status: ${info.booking_status || 'N/A'}`);
-            if (info.booking_date) parts.push(`   Booking Date: ${info.booking_date}`);
+        // Passenger Information
+        parts.push(`📱 PASSENGER INFORMATION:`);
+        parts.push(`   Name: ${booking.passenger.name || 'N/A'}`);
+        parts.push(`   Phone: ${booking.passenger.phone || 'N/A'}`);
+        parts.push(`   Email: ${booking.passenger.email || 'N/A'}`);
+        parts.push(`   Passenger ID: ${booking.passengerId}`);
+        parts.push(``);
+        
+        // Driver Information
+        parts.push(`🚗 DRIVER INFORMATION:`);
+        parts.push(`   Name: ${booking.ride.driver.name || 'N/A'}`);
+        parts.push(`   Phone: ${booking.ride.driver.phone || 'N/A'}`);
+        parts.push(`   Email: ${booking.ride.driver.email || 'N/A'}`);
+        parts.push(`   Driver ID: ${booking.ride.driverId}`);
+        parts.push(``);
+        
+        // Vehicle Information
+        if (booking.ride.vehicle) {
+            parts.push(`🚙 VEHICLE INFORMATION:`);
+            parts.push(`   Model: ${booking.ride.vehicle.model || 'N/A'}`);
+            parts.push(`   Color: ${booking.ride.vehicle.color || 'N/A'}`);
+            parts.push(`   License Plate: ${booking.ride.vehicle.licensePlate || 'N/A'}`);
+            parts.push(`   Capacity: ${booking.ride.vehicle.capacity || 'N/A'} seats`);
             parts.push(``);
         }
+        
+        // Ride Information
+        parts.push(`📍 RIDE INFORMATION:`);
+        parts.push(`   Source: ${booking.ride.source || 'N/A'}`);
+        parts.push(`   Destination: ${booking.ride.destination || 'N/A'}`);
+        if (booking.ride.date) parts.push(`   Date: ${booking.ride.date}`);
+        if (booking.ride.time) parts.push(`   Time: ${booking.ride.time}`);
+        if (booking.ride.distanceKm) parts.push(`   Distance: ${booking.ride.distanceKm} km`);
+        parts.push(`   Fare: ₹10 per seat per km`); // Fixed fare
+        parts.push(`   Ride Status: ${booking.ride.status || 'N/A'}`);
+        parts.push(``);
+        
+        // Booking Information
+        parts.push(`🎫 BOOKING INFORMATION:`);
+        parts.push(`   Seats Booked: ${booking.seatsBooked || 'N/A'}`);
+        if (booking.amount) parts.push(`   Amount: ₹${booking.amount}`);
+        parts.push(`   Booking Status: ${booking.bookingStatus || 'N/A'}`);
+        if (booking.bookingDate) parts.push(`   Booking Date: ${booking.bookingDate}`);
+        parts.push(``);
         
         // Emergency Details
         if (details) {
@@ -203,78 +157,33 @@ export const raiseSOS = async (req, res) => {
         }
         
         // Emergency Contact (if available)
-        if (info && info.emergency_contact_name) {
+        if (booking.passenger.emergencyContactName) {
             parts.push(`🆘 EMERGENCY CONTACT:`);
-            parts.push(`   Name: ${info.emergency_contact_name}`);
-            if (info.emergency_contact_phone) parts.push(`   Phone: ${info.emergency_contact_phone}`);
-            if (info.emergency_contact_email) parts.push(`   Email: ${info.emergency_contact_email}`);
+            parts.push(`   Name: ${booking.passenger.emergencyContactName}`);
+            if (booking.passenger.emergencyContactPhone) parts.push(`   Phone: ${booking.passenger.emergencyContactPhone}`);
+            if (booking.passenger.emergencyContactEmail) parts.push(`   Email: ${booking.passenger.emergencyContactEmail}`);
         }
 
         const message = parts.join('\n');
 
-        // 4) Notify all admins in-app (and realtime via socket)
-        let admins = []; // Declare outside try block for access in response
+        // Notify all admins in-app (and realtime via socket)
+        let admins = [];
         let adminNotificationStatus = { admins_found: 0, notifications_sent: 0, message: '' };
         
         try {
-            // Try different table name variations for case sensitivity
-            let tableName = 'users'; // default
-            
-            // Try lowercase first (most common)
-            try {
-                [admins] = await promisePool.query(`SELECT user_id, name, email, phone, user_type FROM users WHERE user_type = 'admin'`);
-                tableName = 'users';
-                console.log(`✅ Found ${admins.length} admin(s) using table 'users'`);
-            } catch (tableError) {
-                // Try with capital U if users table doesn't exist
-                if (tableError?.code === 'ER_NO_SUCH_TABLE' || String(tableError?.message || '').toLowerCase().includes('table') && String(tableError?.message || '').toLowerCase().includes('users')) {
-                    try {
-                        [admins] = await promisePool.query(`SELECT user_id, name, email, phone, user_type FROM User WHERE user_type = 'admin'`);
-                        tableName = 'User';
-                        console.log(`✅ Found ${admins.length} admin(s) using table 'User'`);
-                    } catch (e2) {
-                        console.error('❌ Failed to query admin users from both table names:', e2);
-                        // Try one more time with backticks for case sensitivity
-                        try {
-                            [admins] = await promisePool.query(`SELECT user_id, name, email, phone, user_type FROM \`users\` WHERE user_type = 'admin'`);
-                            tableName = '`users`';
-                            console.log(`✅ Found ${admins.length} admin(s) using table \`users\``);
-                        } catch (e3) {
-                            try {
-                                [admins] = await promisePool.query(`SELECT user_id, name, email, phone, user_type FROM \`User\` WHERE user_type = 'admin'`);
-                                tableName = '`User`';
-                                console.log(`✅ Found ${admins.length} admin(s) using table \`User\``);
-                            } catch (e4) {
-                                console.error('❌ All table name attempts failed. Error:', e4);
-                                throw e4;
-                            }
-                        }
-                    }
-                } else {
-                    console.error('❌ Unexpected error querying admin users:', tableError);
-                    throw tableError;
+            // Get all admin users
+            admins = await prisma.user.findMany({
+                where: { userType: 'admin' },
+                select: {
+                    userId: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    userType: true
                 }
-            }
+            });
             
-            // Debug: Log all users with admin type (case-insensitive check)
-            if (admins.length === 0) {
-                console.warn('⚠️ No admins found with user_type="admin". Checking all user types...');
-                try {
-                    const [allUsers] = await promisePool.query(`SELECT user_id, name, email, user_type FROM ${tableName} LIMIT 10`);
-                    console.log('Sample users:', allUsers);
-                    // Also try case-insensitive search
-                    const [adminCheck] = await promisePool.query(`SELECT user_id, name, email, user_type FROM ${tableName} WHERE LOWER(user_type) = 'admin'`);
-                    if (adminCheck.length > 0) {
-                        console.log(`⚠️ Found ${adminCheck.length} user(s) with case-insensitive 'admin' match:`, adminCheck);
-                        admins = adminCheck;
-                    }
-                } catch (debugError) {
-                    console.error('Debug query failed:', debugError);
-                }
-            }
-            
-            console.log(`🔍 Querying admin users from table: ${tableName}`);
-            console.log(`🔍 Found ${admins?.length || 0} admin user(s) in database:`, admins.map(a => ({ id: a.user_id, name: a.name, email: a.email, type: a.user_type })));
+            console.log(`✅ Found ${admins.length} admin(s)`);
             
             // Also broadcast SOS via socket to all admins
             try {
@@ -287,77 +196,71 @@ export const raiseSOS = async (req, res) => {
                     
                     for (const a of admins) {
                         try {
-                            console.log(`📤 Attempting to notify admin ${a.user_id} (${a.name || a.email || 'Unknown'})...`);
+                            console.log(`📤 Attempting to notify admin ${a.userId} (${a.name || a.email || 'Unknown'})...`);
                             
                             // Send database notification
-                            const notifResult = await sendNotification(a.user_id, `🚨 SOS ALERT: ${message}`);
+                            const notifResult = await sendNotification(a.userId, `🚨 SOS ALERT: ${message}`);
                             successCount++;
-                            console.log(`✅ Sent DB notification to admin ${a.user_id} (${a.name || a.email || 'Unknown'}) - Notification ID: ${notifResult.notification_id}`);
+                            console.log(`✅ Sent DB notification to admin ${a.userId} (${a.name || a.email || 'Unknown'}) - Notification ID: ${notifResult?.notification_id || 'N/A'}`);
                             
                             // Also emit via socket for real-time notification
-                            const adminSocketId = getSocketIdForUser(Number(a.user_id));
-                            console.log(`🔍 Admin ${a.user_id} socket lookup: socketId=${adminSocketId || 'null'}, io=${io ? 'available' : 'null'}`);
+                            const adminSocketId = getSocketIdForUser(Number(a.userId));
+                            console.log(`🔍 Admin ${a.userId} socket lookup: socketId=${adminSocketId || 'null'}, io=${io ? 'available' : 'null'}`);
                             
                             if (io && adminSocketId) {
                                 const sosPayload = {
-                                    alert_id: insertRes.insertId,
+                                    alert_id: sosAlert.alertId,
                                     booking_id: bookingId,
-                                    ride_id: info.ride_ref_id,
+                                    ride_id: booking.rideId,
                                     // Passenger Information
                                     passenger_id: userId,
-                                    passenger_name: info.passenger_name,
-                                    passenger_phone: info.passenger_phone,
-                                    passenger_email: info.passenger_email,
+                                    passenger_name: booking.passenger.name,
+                                    passenger_phone: booking.passenger.phone,
+                                    passenger_email: booking.passenger.email,
                                     // Driver Information
-                                    driver_id: info.driver_id,
-                                    driver_name: info.driver_name,
-                                    driver_phone: info.driver_phone,
-                                    driver_email: info.driver_email,
+                                    driver_id: booking.ride.driverId,
+                                    driver_name: booking.ride.driver.name,
+                                    driver_phone: booking.ride.driver.phone,
+                                    driver_email: booking.ride.driver.email,
                                     // Vehicle Information
-                                    vehicle_model: info.vehicle_model,
-                                    vehicle_color: info.vehicle_color,
-                                    vehicle_plate: info.vehicle_plate,
-                                    vehicle_capacity: info.vehicle_capacity,
+                                    vehicle_model: booking.ride.vehicle?.model || null,
+                                    vehicle_color: booking.ride.vehicle?.color || null,
+                                    vehicle_plate: booking.ride.vehicle?.licensePlate || null,
+                                    vehicle_capacity: booking.ride.vehicle?.capacity || null,
                                     // Ride Information
-                                    source: info.source,
-                                    destination: info.destination,
-                                    ride_date: info.ride_date,
-                                    ride_time: info.ride_time,
-                                    ride_status: info.ride_status,
-                                    distance_km: info.distance_km,
-                                    fare_per_km: info.fare_per_km,
+                                    source: booking.ride.source,
+                                    destination: booking.ride.destination,
+                                    ride_date: booking.ride.date,
+                                    ride_time: booking.ride.time,
+                                    ride_status: booking.ride.status,
+                                    distance_km: booking.ride.distanceKm ? Number(booking.ride.distanceKm) : null,
+                                    fare_per_km: booking.ride.farePerKm ? Number(booking.ride.farePerKm) : null,
                                     // Booking Information
-                                    seats_booked: info.seats_booked,
-                                    amount: info.amount,
-                                    booking_status: info.booking_status,
-                                    booking_date: info.booking_date,
+                                    seats_booked: booking.seatsBooked,
+                                    amount: booking.amount ? Number(booking.amount) : null,
+                                    booking_status: booking.bookingStatus,
+                                    booking_date: booking.bookingDate,
                                     // Location
                                     location: { lat: passenger_lat, lon: passenger_lon },
                                     location_link: passengerLocLink,
                                     // Emergency Details
                                     details: details || null,
                                     // Emergency Contact
-                                    emergency_contact_name: info.emergency_contact_name,
-                                    emergency_contact_phone: info.emergency_contact_phone,
-                                    emergency_contact_email: info.emergency_contact_email,
+                                    emergency_contact_name: booking.passenger.emergencyContactName,
+                                    emergency_contact_phone: booking.passenger.emergencyContactPhone,
+                                    emergency_contact_email: booking.passenger.emergencyContactEmail,
                                     // Full formatted message
                                     message: message,
                                     timestamp: new Date().toISOString()
                                 };
                                 io.to(adminSocketId).emit('sos_alert_admin', sosPayload);
                                 socketCount++;
-                                console.log(`📡 Sent socket notification 'sos_alert_admin' to admin ${a.user_id} (socket: ${adminSocketId})`);
+                                console.log(`📡 Sent socket notification 'sos_alert_admin' to admin ${a.userId} (socket: ${adminSocketId})`);
                             } else {
-                                console.warn(`⚠️ Admin ${a.user_id} not connected via socket (socketId: ${adminSocketId || 'null'}, io: ${io ? 'available' : 'null'})`);
-                                console.warn(`   Admin needs to be logged in and have socket connection active to receive real-time alerts.`);
+                                console.warn(`⚠️ Admin ${a.userId} not connected via socket (socketId: ${adminSocketId || 'null'}, io: ${io ? 'available' : 'null'})`);
                             }
                         } catch (adminError) {
-                            console.error(`❌ Failed to notify admin ${a.user_id}:`, adminError);
-                            console.error(`   Error details:`, {
-                                message: adminError.message,
-                                code: adminError.code,
-                                stack: adminError.stack
-                            });
+                            console.error(`❌ Failed to notify admin ${a.userId}:`, adminError);
                         }
                     }
                     
@@ -372,47 +275,38 @@ export const raiseSOS = async (req, res) => {
                     // Also broadcast to all connected admin sockets as fallback
                     if (io) {
                         io.emit('sos_alert_admin_broadcast', {
-                            alert_id: insertRes.insertId,
+                            alert_id: sosAlert.alertId,
                             booking_id: bookingId,
-                            ride_id: info.ride_ref_id,
-                            // Passenger Information
+                            ride_id: booking.rideId,
                             passenger_id: userId,
-                            passenger_name: info.passenger_name,
-                            passenger_phone: info.passenger_phone,
-                            passenger_email: info.passenger_email,
-                            // Driver Information
-                            driver_id: info.driver_id,
-                            driver_name: info.driver_name,
-                            driver_phone: info.driver_phone,
-                            driver_email: info.driver_email,
-                            // Vehicle Information
-                            vehicle_model: info.vehicle_model,
-                            vehicle_color: info.vehicle_color,
-                            vehicle_plate: info.vehicle_plate,
-                            vehicle_capacity: info.vehicle_capacity,
-                            // Ride Information
-                            source: info.source,
-                            destination: info.destination,
-                            ride_date: info.ride_date,
-                            ride_time: info.ride_time,
-                            ride_status: info.ride_status,
-                            distance_km: info.distance_km,
-                            fare_per_km: info.fare_per_km,
-                            // Booking Information
-                            seats_booked: info.seats_booked,
-                            amount: info.amount,
-                            booking_status: info.booking_status,
-                            booking_date: info.booking_date,
-                            // Location
+                            passenger_name: booking.passenger.name,
+                            passenger_phone: booking.passenger.phone,
+                            passenger_email: booking.passenger.email,
+                            driver_id: booking.ride.driverId,
+                            driver_name: booking.ride.driver.name,
+                            driver_phone: booking.ride.driver.phone,
+                            driver_email: booking.ride.driver.email,
+                            vehicle_model: booking.ride.vehicle?.model || null,
+                            vehicle_color: booking.ride.vehicle?.color || null,
+                            vehicle_plate: booking.ride.vehicle?.licensePlate || null,
+                            vehicle_capacity: booking.ride.vehicle?.capacity || null,
+                            source: booking.ride.source,
+                            destination: booking.ride.destination,
+                            ride_date: booking.ride.date,
+                            ride_time: booking.ride.time,
+                            ride_status: booking.ride.status,
+                            distance_km: booking.ride.distanceKm ? Number(booking.ride.distanceKm) : null,
+                            fare_per_km: booking.ride.farePerKm ? Number(booking.ride.farePerKm) : null,
+                            seats_booked: booking.seatsBooked,
+                            amount: booking.amount ? Number(booking.amount) : null,
+                            booking_status: booking.bookingStatus,
+                            booking_date: booking.bookingDate,
                             location: { lat: passenger_lat, lon: passenger_lon },
                             location_link: passengerLocLink,
-                            // Emergency Details
                             details: details || null,
-                            // Emergency Contact
-                            emergency_contact_name: info.emergency_contact_name,
-                            emergency_contact_phone: info.emergency_contact_phone,
-                            emergency_contact_email: info.emergency_contact_email,
-                            // Full formatted message
+                            emergency_contact_name: booking.passenger.emergencyContactName,
+                            emergency_contact_phone: booking.passenger.emergencyContactPhone,
+                            emergency_contact_email: booking.passenger.emergencyContactEmail,
                             message: message,
                             timestamp: new Date().toISOString()
                         });
@@ -430,7 +324,7 @@ export const raiseSOS = async (req, res) => {
                     // Also broadcast to all connected sockets
                     if (io) {
                         io.emit('sos_alert_admin_broadcast', {
-                            alert_id: insertRes.insertId,
+                            alert_id: sosAlert.alertId,
                             booking_id: bookingId,
                             passenger_id: userId,
                             message: message,
@@ -438,11 +332,9 @@ export const raiseSOS = async (req, res) => {
                         });
                         console.log('📢 Broadcasted SOS alert to all connected sockets (no admins found)');
                     }
-                    console.log('⚠️ No admin users found, sent broadcast notification');
                 }
                 
                 // ALWAYS create a broadcast notification (user_id = NULL) so ALL admins can see SOS alerts
-                // This ensures SOS alerts are visible even if individual admin notifications fail
                 try {
                     await sendNotification(null, `🚨 SOS ALERT: ${message}`);
                     console.log('✅ Created broadcast SOS notification (visible to all admins)');
@@ -455,10 +347,10 @@ export const raiseSOS = async (req, res) => {
                 if (admins && admins.length > 0) {
                     for (const a of admins) {
                         try {
-                            await sendNotification(a.user_id, message);
-                            console.log(`✅ Sent DB notification to admin ${a.user_id} (fallback)`);
+                            await sendNotification(a.userId, message);
+                            console.log(`✅ Sent DB notification to admin ${a.userId} (fallback)`);
                         } catch (e) {
-                            console.error(`❌ Failed to send fallback notification to admin ${a.user_id}:`, e);
+                            console.error(`❌ Failed to send fallback notification to admin ${a.userId}:`, e);
                         }
                     }
                 } else {
@@ -468,53 +360,58 @@ export const raiseSOS = async (req, res) => {
             }
         } catch (notifError) {
             console.error('❌ Failed to send admin notifications:', notifError);
-            console.error('Error details:', {
-                message: notifError.message,
-                code: notifError.code,
-                stack: notifError.stack
-            });
             // Continue execution - don't fail the whole request
         }
 
-        // 4b) Broadcast SOS to nearby drivers via socket
+        // Broadcast SOS to nearby drivers via socket
         try {
             const { getIO, getSocketIdForDriver } = await import('../utils/socketRegistry.js');
             const io = getIO();
-            if (io && info && passenger_lat != null && passenger_lon != null) {
+            if (io && passenger_lat != null && passenger_lon != null) {
                 // Find nearby available drivers within 5km radius
-                const [nearbyDrivers] = await promisePool.query(
-                    `SELECT user_id, latitude, longitude,
-                        (6371 * 2 * ASIN(
-                            SQRT(
-                                POWER(SIN(RADIANS((latitude - ?) / 2)), 2) +
-                                COS(RADIANS(?)) * COS(RADIANS(latitude)) *
-                                POWER(SIN(RADIANS((longitude - ?) / 2)), 2)
-                            )
-                        )) AS distance_km
-                     FROM users
-                     WHERE user_type IN ('driver', 'both')
-                     AND is_available = 1
-                     AND latitude IS NOT NULL
-                     AND longitude IS NOT NULL
-                     HAVING distance_km <= 5
-                     ORDER BY distance_km ASC
-                     LIMIT 10`,
-                    [passenger_lat, passenger_lat, passenger_lon]
-                );
+                // Get all available drivers first, then filter by distance in JavaScript
+                const allDrivers = await prisma.user.findMany({
+                    where: {
+                        userType: { in: ['driver', 'both'] },
+                        isAvailable: true,
+                        latitude: { not: null },
+                        longitude: { not: null }
+                    },
+                    select: {
+                        userId: true,
+                        latitude: true,
+                        longitude: true
+                    }
+                });
+
+                // Calculate distance for each driver and filter those within 5km
+                const nearbyDrivers = allDrivers
+                    .map(driver => {
+                        const distance = haversineKm(
+                            Number(driver.latitude),
+                            Number(driver.longitude),
+                            passenger_lat,
+                            passenger_lon
+                        );
+                        return { ...driver, distance_km: distance };
+                    })
+                    .filter(driver => driver.distance_km <= 5)
+                    .sort((a, b) => a.distance_km - b.distance_km)
+                    .slice(0, 10); // Limit to 10 nearest drivers
 
                 const sosPayload = {
-                    alert_id: insertRes.insertId,
+                    alert_id: sosAlert.alertId,
                     ride_id: bookingId,
                     passenger_id: userId,
-                    passenger_name: info.passenger_name,
-                    passenger_phone: info.passenger_phone,
+                    passenger_name: booking.passenger.name,
+                    passenger_phone: booking.passenger.phone,
                     location: { lat: passenger_lat, lon: passenger_lon },
                     message: message,
                     timestamp: new Date().toISOString()
                 };
 
                 nearbyDrivers.forEach((driver) => {
-                    const driverSocketId = getSocketIdForDriver(Number(driver.user_id));
+                    const driverSocketId = getSocketIdForDriver(Number(driver.userId));
                     if (driverSocketId && io) {
                         io.to(driverSocketId).emit('sos_alert', sosPayload);
                     }
@@ -525,26 +422,24 @@ export const raiseSOS = async (req, res) => {
             // Continue execution - don't fail the whole request
         }
 
-        // 5) Notify passenger's emergency contact via SMS/Email if available
-        if (info) {
-            try {
-                const smsText = `${message}`;
-                if (info.emergency_contact_phone) {
-                    await sendSMS(info.emergency_contact_phone, smsText);
-                }
-                if (info.emergency_contact_email) {
-                    const subject = `Emergency alert for ${info.passenger_name}`;
-                    await sendEmail(info.emergency_contact_email, subject, smsText);
-                }
-            } catch (contactError) {
-                console.error('Failed to notify emergency contact:', contactError);
-                // Continue execution - don't fail the whole request
+        // Notify passenger's emergency contact via SMS/Email if available
+        try {
+            const smsText = `${message}`;
+            if (booking.passenger.emergencyContactPhone) {
+                await sendSMS(booking.passenger.emergencyContactPhone, smsText);
             }
+            if (booking.passenger.emergencyContactEmail) {
+                const subject = `Emergency alert for ${booking.passenger.name}`;
+                await sendEmail(booking.passenger.emergencyContactEmail, subject, smsText);
+            }
+        } catch (contactError) {
+            console.error('Failed to notify emergency contact:', contactError);
+            // Continue execution - don't fail the whole request
         }
 
         // Return response with admin notification status
         const responseData = {
-            alert_id: insertRes.insertId,
+            alert_id: sosAlert.alertId,
             booking_id: bookingId,
             admin_notifications: {
                 admins_found: admins?.length || 0,
@@ -562,5 +457,3 @@ export const raiseSOS = async (req, res) => {
         return errorResponse(res, 500, errorMessage);
     }
 };
-
-
