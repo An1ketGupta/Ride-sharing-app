@@ -1,4 +1,4 @@
-# 🚗 Ride Sharing DBMS
+# Ride Sharing DBMS
 
 A full-stack ride-sharing application built with React and Node.js, featuring real-time ride matching, payment integration, and comprehensive safety features.
 
@@ -6,7 +6,7 @@ A full-stack ride-sharing application built with React and Node.js, featuring re
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.3.1-blue.svg)
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
@@ -20,41 +20,41 @@ A full-stack ride-sharing application built with React and Node.js, featuring re
 - [Contributing](#-contributing)
 - [License](#-license)
 
-## ✨ Features
+## Features
 
 ### For Passengers
-- 🔍 **Search & Book Rides** - Search available rides with filters
-- 📍 **Request Rides** - Request a ride with pickup and destination
-- 💳 **Multiple Payment Methods** - Razorpay, Stripe, and Wallet integration
-- 📱 **Real-time Updates** - Live ride tracking and notifications
-- 🎫 **Promo Codes** - Apply discount codes for rides
-- 📜 **Ride History** - View past rides with detailed information
-- 💰 **Wallet System** - Manage wallet balance and transactions
-- 🆘 **Emergency SOS** - Quick access to emergency services
-- 📍 **Saved Locations** - Quick access to frequently used locations
-- ⭐ **Feedback System** - Rate and review drivers
+-  **Search & Book Rides** - Search available rides with filters
+-  **Request Rides** - Request a ride with pickup and destination
+-  **Multiple Payment Methods** - Razorpay, Stripe, and Wallet integration
+-  **Real-time Updates** - Live ride tracking and notifications
+-  **Promo Codes** - Apply discount codes for rides
+-  **Ride History** - View past rides with detailed information
+-  **Wallet System** - Manage wallet balance and transactions
+-  **Emergency SOS** - Quick access to emergency services
+-  **Saved Locations** - Quick access to frequently used locations
+-  **Feedback System** - Rate and review drivers
 
 ### For Drivers
-- 🚗 **Vehicle Management** - Register and manage multiple vehicles
-- 📊 **Driver Dashboard** - View bookings, earnings, and statistics
-- 🗺️ **Route Navigation** - Integrated route planning with OpenRouteService
-- 📄 **Document Management** - Upload and manage driver documents
-- 💵 **Earnings Tracking** - Monitor payments and receipts
-- 🔔 **Real-time Notifications** - Get instant booking notifications
+-  **Vehicle Management** - Register and manage multiple vehicles
+-  **Driver Dashboard** - View bookings, earnings, and statistics
+-  **Route Navigation** - Integrated route planning with OpenRouteService
+-  **Document Management** - Upload and manage driver documents
+-  **Earnings Tracking** - Monitor payments and receipts
+-  **Real-time Notifications** - Get instant booking notifications
 
 ### Safety Features
-- 🌙 **Night Ride Safety Checks** - Automated safety verification for night rides
-- 🆘 **SOS Alerts** - Emergency assistance system
-- 📍 **Live Location Tracking** - Real-time location sharing
-- ✅ **Safety Confirmations** - Driver and passenger safety check-ins
+-  **Night Ride Safety Checks** - Automated safety verification for night rides
+-  **SOS Alerts** - Emergency assistance system
+-  **Live Location Tracking** - Real-time location sharing
+-  **Safety Confirmations** - Driver and passenger safety check-ins
 
 ### Admin Features
-- 👥 **User Management** - Manage users, drivers, and passengers
-- 📄 **Document Verification** - Review and approve driver documents
-- 📊 **Analytics Dashboard** - View platform statistics and insights
-- 🔔 **Notification Management** - Send system-wide notifications
+-  **User Management** - Manage users, drivers, and passengers
+-  **Document Verification** - Review and approve driver documents
+-  **Analytics Dashboard** - View platform statistics and insights
+-  **Notification Management** - Send system-wide notifications
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - **React 18.3.1** - UI library
@@ -81,7 +81,7 @@ A full-stack ride-sharing application built with React and Node.js, featuring re
 - **Nodemailer** - Email service
 - **OpenRouteService API** - Route planning
 
-## 📦 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
@@ -90,7 +90,7 @@ Before you begin, ensure you have the following installed:
 - **PostgreSQL** database (or Neon account)
 - **Git**
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone the repository
 
@@ -176,7 +176,7 @@ Or push the schema directly:
 npm run prisma:push
 ```
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Development Mode
 
@@ -212,7 +212,7 @@ cd backend
 npm start
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Ride_Sharing_DBMS/
@@ -238,7 +238,7 @@ Ride_Sharing_DBMS/
 └── package.json        # Frontend dependencies
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
@@ -287,7 +287,7 @@ Ride_Sharing_DBMS/
 - `POST /api/safety/sos` - Send SOS alert
 - `POST /api/safety/night-ride-check` - Night ride safety check
 
-## 🎯 Features Overview
+## Features Overview
 
 ### Real-time Communication
 - Socket.io integration for live updates
@@ -319,37 +319,3 @@ Ride_Sharing_DBMS/
 - Smooth animations
 - Mobile-friendly design
 - Toast notifications
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the ISC License.
-
-## 👥 Authors
-
-- **Your Name** - *Initial work*
-
-## 🙏 Acknowledgments
-
-- OpenRouteService for route planning API
-- Razorpay and Stripe for payment integration
-- Prisma for excellent ORM
-- React and Express communities
-
-## 📞 Support
-
-For support, email your-email@example.com or open an issue in the repository.
-
----
-
-Made with ❤️ for seamless rides
-
