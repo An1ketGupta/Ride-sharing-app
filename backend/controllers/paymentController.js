@@ -699,7 +699,7 @@ export const getWalletTransactions = async (req, res) => {
 // @access  Private (Passenger)
 export const createRazorpayOrder = async (req, res) => {
     try {
-        const { booking_id, amount, promo_code } = req.body || {};
+        const { booking_id, amount } = req.body || {};
         const user_id = req.user.id;
 
         if (!booking_id) {
@@ -718,82 +718,8 @@ export const createRazorpayOrder = async (req, res) => {
             return errorResponse(res, 404, 'Booking not found');
         }
 
-        // If amount is provided, it's already discounted by frontend
-        // Otherwise, calculate discount on backend
-        let finalAmount;
-        
-        if (amount) {
-            // Amount already discounted, just use it
-            finalAmount = Number(amount);
-            
-            // Just mark promo as used if provided
-            if (promo_code) {
-                try {
-                    await prisma.userPromoCode.upsert({
-                        where: {
-                            userId_code: {
-                                userId: parseInt(user_id),
-                                code: promo_code
-                            }
-                        },
-                        update: { isUsed: true },
-                        create: {
-                            userId: parseInt(user_id),
-                            code: promo_code,
-                            isUsed: true
-                        }
-                    });
-                } catch (err) {
-                    console.error('Promo marking error:', err);
-                }
-            }
-        } else {
-            // No amount provided, calculate from booking amount with promo
-            finalAmount = Number(booking.amount);
-            
-            if (promo_code) {
-                try {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    
-                    const promo = await prisma.promoCode.findFirst({
-                        where: {
-                            code: promo_code,
-                            OR: [
-                                { expiryDate: null },
-                                { expiryDate: { gte: today } }
-                            ]
-                        }
-                    });
-                    
-                    if (promo) {
-                        if (promo.discountPercent) {
-                            finalAmount = finalAmount * (1 - Number(promo.discountPercent) / 100);
-                        }
-                        if (promo.discountAmount) {
-                            finalAmount = Math.max(0, finalAmount - Number(promo.discountAmount));
-                        }
-                        // Mark promo as used
-                        await prisma.userPromoCode.upsert({
-                            where: {
-                                userId_code: {
-                                    userId: parseInt(user_id),
-                                    code: promo_code
-                                }
-                            },
-                            update: { isUsed: true },
-                            create: {
-                                userId: parseInt(user_id),
-                                code: promo_code,
-                                isUsed: true
-                            }
-                        });
-                    }
-                } catch (err) {
-                    console.error('Promo code validation error:', err);
-                }
-            }
-        }
+        // Use provided amount or booking amount
+        const finalAmount = amount ? Number(amount) : Number(booking.amount);
 
         // Create an order in Razorpay (amount in paise)
         const amountPaise = Math.round(finalAmount * 100);
@@ -805,8 +731,7 @@ export const createRazorpayOrder = async (req, res) => {
             receipt,
             notes: {
                 booking_id: String(booking_id),
-                passenger_id: String(user_id),
-                promo_code: promo_code || 'none'
+                passenger_id: String(user_id)
             }
         });
 
@@ -858,7 +783,7 @@ export const createRazorpayOrder = async (req, res) => {
 // @access  Private (Passenger)
 export const verifyRazorpayPayment = async (req, res) => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, booking_id, amount, promo_code } = req.body || {};
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, booking_id, amount } = req.body || {};
         const user_id = req.user.id;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !booking_id) {

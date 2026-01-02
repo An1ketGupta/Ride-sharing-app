@@ -77,7 +77,7 @@ const Receipts = () => {
                             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                         </div>
                     ) : bookings.length === 0 ? (
-                        <div className="rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
+                        <div className="rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
                             <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                             <p className="text-muted-foreground">No completed bookings yet</p>
                         </div>
@@ -111,7 +111,7 @@ const Receipts = () => {
                 <div>
                     <h2 className="text-xl font-bold mb-4">Receipt</h2>
                     {!selectedBooking ? (
-                        <div className="rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
+                        <div className="rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
                             <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                             <p className="text-muted-foreground">Select a booking to view receipt</p>
                         </div>
@@ -119,7 +119,7 @@ const Receipts = () => {
                         <motion.div
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
+                            className="rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-2xl font-bold">Receipt</h3>
@@ -197,7 +197,7 @@ const Receipts = () => {
                             </div>
                         </motion.div>
                     ) : (
-                        <div className="rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
+                        <div className="rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-10 text-center">
                             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                         </div>
                     )}

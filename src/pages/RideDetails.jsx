@@ -123,11 +123,11 @@ const RideDetails = () => {
         return (
             <div className="min-h-screen px-4 py-8 max-w-5xl mx-auto">
                 <div className="mb-6">
-                    <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-white/50 dark:bg-white/10 border border-white/20 hover:bg-white/70 transition">
+                    <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-white border border-gray-200 hover:bg-white/70 transition">
                         <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                 </div>
-                <div className="p-6 rounded-2xl border border-destructive/20 bg-destructive/10 text-destructive">{error || 'Ride not found'}</div>
+                <div className="p-6 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive">{error || 'Ride not found'}</div>
             </div>
         );
     }
@@ -138,20 +138,20 @@ const RideDetails = () => {
     return (
         <div className="min-h-screen px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-5xl mx-auto">
             <div className="mb-4 sm:mb-6 flex items-center justify-between">
-                <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/50 dark:bg-white/10 border border-white/20 hover:bg-white/70 transition">
+                <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white border border-gray-200 hover:bg-white/70 transition">
                     <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" /> Back
                 </button>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-thick rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-soft-xl border border-white/20">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-gray-200 rounded-xl sm:rounded-xl p-4 sm:p-6 md:p-8 shadow-soft-xl border border-gray-200">
                 <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     <div className="lg:col-span-2 space-y-6">
                         {ride.vehicle_image_url ? (
-                            <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-white/20">
+                            <div className="overflow-hidden rounded-xl sm:rounded-xl border border-gray-200">
                                 <img src={ride.vehicle_image_url} alt="Vehicle" className="w-full h-48 sm:h-64 md:h-72 object-cover" />
                             </div>
                         ) : (
-                            <div className="h-48 sm:h-64 md:h-72 rounded-xl sm:rounded-2xl border border-white/20 bg-white/30 dark:bg-white/5 flex items-center justify-center text-muted-foreground">
+                            <div className="h-48 sm:h-64 md:h-72 rounded-xl sm:rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-muted-foreground">
                                 <Car className="w-8 h-8 sm:w-10 sm:h-10" />
                             </div>
                         )}
@@ -194,9 +194,9 @@ const RideDetails = () => {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="rounded-2xl border border-white/20 p-5 bg-white/50 dark:bg-white/5">
+                        <div className="rounded-xl border border-gray-200 p-5 bg-white/50 dark:bg-white/5">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 text-white flex items-center justify-center font-bold shadow-soft">
+                                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-soft">
                                     {(ride.driver_name || '?').toString().trim().charAt(0).toUpperCase()}
                                 </div>
                                 <div>
@@ -212,7 +212,7 @@ const RideDetails = () => {
                             )}
                         </div>
 
-                        <div className="rounded-2xl border border-white/20 p-5 bg-white/50 dark:bg-white/5 space-y-4">
+                        <div className="rounded-xl border border-gray-200 p-5 bg-white/50 dark:bg-white/5 space-y-4">
                             <div className="text-lg font-bold">Book this ride</div>
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold">Number of Seats</label>
@@ -237,7 +237,7 @@ const RideDetails = () => {
                             </div>
                             <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border-2 border-primary/20">
                                 <span className="font-semibold">Total Fare</span>
-                                <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                                <span className="text-2xl font-bold bg-blue-600 bg-clip-text text-transparent">
                                     ₹{(farePerKmPerSeat * ride.distance_km * seats).toFixed(2)}
                                 </span>
                             </div>
@@ -249,7 +249,7 @@ const RideDetails = () => {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleBook}
                                 disabled={bookingLoading}
-                                className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-glow hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {bookingLoading ? 'Booking...' : 'Book Ride'}
                             </motion.button>

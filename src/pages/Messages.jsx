@@ -302,7 +302,7 @@ const Messages = () => {
                     ) : (
                         <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm flex flex-col max-h-[calc(100vh-200px)]">
                             {/* Header */}
-                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-900">
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-white">
                                 <p className="font-semibold text-gray-900 dark:text-gray-100">
                                     {user.user_type === 'driver' ? `Passenger #${selectedBooking.passenger_id}` : `Driver: ${selectedBooking.driver_name || 'Unknown'}`}
                                 </p>
@@ -312,7 +312,7 @@ const Messages = () => {
                             </div>
 
                             {/* Messages */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-gray-50 dark:bg-gray-900">
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-gray-50 dark:bg-white">
                                 {messages.length === 0 ? (
                                     <div className="text-center py-10 text-gray-500 dark:text-gray-400">
                                         <p>No messages yet. Start the conversation!</p>
@@ -331,12 +331,12 @@ const Messages = () => {
                                                 <div
                                                     className={`max-w-[70%] rounded-lg p-3 ${
                                                         isFromMe
-                                                            ? 'bg-primary text-white'
+                                                            ? 'bg-primary text-gray-900'
                                                             : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
                                                     }`}
                                                 >
                                                     <p className="text-sm">{msg.text}</p>
-                                                    <p className={`text-xs mt-1 ${isFromMe ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                    <p className={`text-xs mt-1 ${isFromMe ? 'text-gray-900/80' : 'text-gray-500 dark:text-gray-400'}`}>
                                                         {new Date(msg.timestamp).toLocaleTimeString()}
                                                     </p>
                                                 </div>
@@ -360,7 +360,7 @@ const Messages = () => {
                                 <button
                                     onClick={sendMessage}
                                     disabled={!newMessage.trim()}
-                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 bg-primary text-gray-900 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     <Send className="w-4 h-4" />
                                     Send

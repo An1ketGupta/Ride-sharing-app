@@ -57,7 +57,7 @@ class ErrorBoundary extends Component {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                            className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-red-100 dark:bg-red-950 mb-8"
+                            className="inline-flex items-center justify-center w-24 h-24 rounded-xl bg-red-100 dark:bg-red-950 mb-8"
                         >
                             <AlertTriangle className="w-12 h-12 text-red-600 dark:text-red-400" />
                         </motion.div>
@@ -82,7 +82,7 @@ class ErrorBoundary extends Component {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.4 }}
-                                className="mb-8 p-6 rounded-2xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-900 text-left max-w-xl mx-auto overflow-auto"
+                                className="mb-8 p-6 rounded-xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-900 text-left max-w-xl mx-auto overflow-auto"
                             >
                                 <h3 className="font-bold text-red-800 dark:text-red-200 mb-2">
                                     Error Details (Development Mode):
@@ -114,7 +114,7 @@ class ErrorBoundary extends Component {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={this.handleReset}
-                                className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl shadow-glow-lg hover:shadow-glow transition-all flex items-center gap-2 relative overflow-hidden group"
+                                className="px-6 py-3 bg-[#0EA5E9] text-white font-bold rounded-lg hover:brightness-110 transition-all flex items-center gap-2"
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     <RefreshCw className="w-5 h-5" />
@@ -127,7 +127,7 @@ class ErrorBoundary extends Component {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={this.handleGoHome}
-                                className="px-6 py-3 bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/15 font-semibold rounded-xl transition-all flex items-center gap-2 shadow-soft"
+                                className="px-6 py-3 bg-[#111111] border border-[#2A2A2A] hover:bg-[#1A1A1A] font-semibold rounded-lg transition-all flex items-center gap-2"
                             >
                                 <Home className="w-5 h-5" />
                                 Back to Home

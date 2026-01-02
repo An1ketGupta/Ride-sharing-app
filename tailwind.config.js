@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Design tokens from SearchRides page
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         muted: 'hsl(var(--muted))',
@@ -20,20 +21,40 @@ module.exports = {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#2563EB', // blue-600 - Primary action color
+          foreground: '#FFFFFF',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: '#F3F4F6', // gray-100 - Secondary backgrounds
+          foreground: '#111827',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: '#F3F4F6',
+          foreground: '#111827',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: '#EF4444', // red-500
+          foreground: '#FFFFFF',
+        },
+        success: {
+          DEFAULT: '#10B981', // green-500
+          light: '#D1FAE5', // green-100
+          dark: '#059669', // green-700
+        },
+        warning: {
+          DEFAULT: '#F59E0B', // amber-500
+          light: '#FEF3C7', // amber-100
+          dark: '#D97706', // amber-700
         },
       },
       borderRadius: {
@@ -41,8 +62,10 @@ module.exports = {
         '3xl': '1.5rem',
         '2xl': '1.25rem',
         xl: '1rem',
-        lg: '0.75rem',
-        md: '0.5rem',
+        lg: '0.5rem', // 8px - Standard for cards, inputs, buttons (from SearchRides)
+        md: '0.375rem', // 6px
+        sm: '0.25rem', // 4px
+        full: '9999px', // For circular elements
       },
       boxShadow: {
         'soft': '0 10px 30px -12px rgba(2, 6, 23, 0.25)',
@@ -52,6 +75,14 @@ module.exports = {
         'glow-cyan': '0 4px 12px rgba(6, 182, 212, 0.2)',
         'glow-emerald': '0 4px 12px rgba(16, 185, 129, 0.2)',
         'inner-glow': 'inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1)',
+        // From SearchRides - subtle shadows
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      },
+      spacing: {
+        // Consistent spacing scale from SearchRides
+        '18': '4.5rem', // 72px
+        '88': '22rem', // 352px
       },
       keyframes: {
         'fade-up': {

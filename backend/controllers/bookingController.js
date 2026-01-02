@@ -34,51 +34,8 @@ export const createBooking = async (req, res) => {
         }
 
         // Calculate amount - Fixed 10rs per seat per km
-        let amount = (10 * Number(ride.distanceKm) * seats_booked);
-        const { promo_code, notes, stops, save_location } = req.body || {};
-        
-        // Optional: apply flat/percent promo if present in promo_codes
-        if (promo_code) {
-            try {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                const promo = await prisma.promoCode.findFirst({
-                    where: {
-                        code: promo_code,
-                        OR: [
-                            { expiryDate: null },
-                            { expiryDate: { gte: today } }
-                        ]
-                    }
-                });
-                
-                if (promo) {
-                    if (promo.discountPercent) {
-                        amount = amount * (1 - Number(promo.discountPercent) / 100);
-                    }
-                    if (promo.discountAmount) {
-                        amount = Math.max(0, amount - Number(promo.discountAmount));
-                    }
-                    // Mark user promo used (upsert)
-                    await prisma.userPromoCode.upsert({
-                        where: {
-                            userId_code: {
-                                userId: parseInt(passenger_id),
-                                code: promo_code
-                            }
-                        },
-                        update: { isUsed: true },
-                        create: {
-                            userId: parseInt(passenger_id),
-                            code: promo_code,
-                            isUsed: true
-                        }
-                    });
-                }
-            } catch {}
-        }
-        amount = parseFloat(amount.toFixed(2));
+        const amount = parseFloat((10 * Number(ride.distanceKm) * seats_booked).toFixed(2));
+        const { notes, stops, save_location } = req.body || {};
 
         // Create booking
         const booking = await prisma.booking.create({

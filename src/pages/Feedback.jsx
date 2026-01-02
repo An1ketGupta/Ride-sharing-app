@@ -78,7 +78,7 @@ const Feedback = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowForm(true)}
-                    className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold shadow-glow flex items-center justify-center gap-2 text-sm sm:text-base"
+                    className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary text-gray-900 rounded-xl font-semibold shadow-glow flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                     <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                     Submit Feedback
@@ -90,7 +90,7 @@ const Feedback = () => {
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 sm:mb-6 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-4 sm:p-6"
+                    className="mb-4 sm:mb-6 rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-4 sm:p-6"
                 >
                     <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Submit Feedback</h2>
                     <form onSubmit={handleSubmitFeedback} className="space-y-3 sm:space-y-4">
@@ -112,7 +112,7 @@ const Feedback = () => {
                                         onClick={() => setNewFeedback({ ...newFeedback, rating: rate })}
                                         className={`p-2 rounded-lg transition-all ${
                                             newFeedback.rating >= rate
-                                                ? 'bg-yellow-400 text-white'
+                                                ? 'bg-yellow-400 text-gray-900'
                                                 : 'bg-white/50 dark:bg-white/5'
                                         }`}
                                     >
@@ -142,7 +142,7 @@ const Feedback = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold shadow-glow"
+                                className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-secondary text-gray-900 rounded-xl font-semibold shadow-glow"
                             >
                                 {loading ? 'Submitting...' : 'Submit'}
                             </button>
@@ -156,7 +156,7 @@ const Feedback = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
+                    className="mb-6 rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
                 >
                     <h2 className="text-xl font-bold mb-4">Feedback Received</h2>
                     <div className="space-y-4">
@@ -188,7 +188,7 @@ const Feedback = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
+                className="rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70 backdrop-blur-2xl shadow-soft p-6"
             >
                 <h2 className="text-xl font-bold mb-4">My Feedback</h2>
                 {feedback.length === 0 ? (

@@ -300,7 +300,7 @@ export default function ORSMap({ driver, passenger }) {
     }, [driver?.route]);
 
     return (
-        <div className="relative w-full h-[260px] overflow-hidden rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+        <div className="relative w-full h-[260px] overflow-hidden rounded-xl bg-[#0A0A0A] border border-[#2A2A2A]">
             <div ref={mapRef} className="w-full h-full z-[1]" />
         </div>
     );

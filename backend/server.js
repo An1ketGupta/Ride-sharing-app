@@ -21,8 +21,8 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import receiptRoutes from './routes/receiptRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
-import promoRoutes from './routes/promoRoutes.js';
 import safetyRoutes from './routes/safetyRoutes.js';
+import earningsRoutes from './routes/earningsRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -66,8 +66,8 @@ app.use('/api', requestRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api', notificationRoutes);
-app.use('/api', promoRoutes);
 app.use('/api/safety', safetyRoutes);
+app.use('/api/earnings', earningsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -494,8 +494,13 @@ io.on('connection', (socket) => {
 
                 const ride_id = rideResult.rideId;
 
-                // Create booking for passenger with correct number of seats - Fixed 10rs per seat per km
-                const estimatedAmount = 10 * distance_km * numPeople;
+                // Calculate booking amount with surge pricing if available
+                let estimatedAmount = 10 * distance_km * numPeople;
+                if (ride.surge_multiplier && ride.surge_multiplier > 1.0) {
+                    // Use surge pricing from request if available
+                    estimatedAmount = ride.final_fare || estimatedAmount;
+                }
+                
                 const bookingResult = await prisma.booking.create({
                     data: {
                         rideId: ride_id,
@@ -745,6 +750,14 @@ io.on('connection', (socket) => {
 });
 
 // Removed demo broadcaster to avoid noisy emissions in production
+
+// Start cron job processor for scheduled rides
+try {
+    const { startCronProcessor } = await import('./utils/cron.js');
+    startCronProcessor();
+} catch (cronError) {
+    console.warn('⚠️  Failed to start cron processor:', cronError.message);
+}
 
 // Start server
 const PORT = process.env.PORT || 5000;

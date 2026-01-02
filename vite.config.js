@@ -5,12 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@react-google-maps/api'],
     esbuildOptions: {
       target: 'esnext'
     }
-  },
-  ssr: {
-    noExternal: ['@react-google-maps/api']
   }
 })

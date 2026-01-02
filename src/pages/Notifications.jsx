@@ -100,7 +100,7 @@ const Notifications = () => {
 
       {/* List */}
       {items.length === 0 && !loading ? (
-        <div className="text-center py-20 rounded-2xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
+        <div className="text-center py-20 rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
           <Bell className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
           <div className="font-semibold">No notifications</div>
           <div className="text-sm text-muted-foreground">You're all caught up</div>
@@ -116,7 +116,7 @@ const Notifications = () => {
                 key={id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-2xl border ${n.is_read ? 'border-white/10 bg-white/30 dark:bg-white/5' : 'border-primary/30 bg-primary/5'}`}
+                className={`p-4 rounded-xl border ${n.is_read ? 'border-white/10 bg-white/30 dark:bg-white/5' : 'border-primary/30 bg-primary/5'}`}
               >
                 <div className="text-xs text-muted-foreground mb-1">{new Date(n.created_at).toLocaleString?.() || ''}</div>
                 <div className="font-medium mb-3">{msg}</div>

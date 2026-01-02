@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 export const RideCardSkeleton = () => {
     return (
-        <div className="glass-thick rounded-3xl p-6 sm:p-8 border border-white/20 animate-pulse">
+        <div className="glass-thick rounded-xl p-6 sm:p-8 border border-white/20 animate-pulse">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex-1 space-y-4">
                     {/* Header */}

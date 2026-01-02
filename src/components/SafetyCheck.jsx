@@ -47,7 +47,7 @@ const SafetyCheck = () => {
         if (!window.confirm('Are you sure you want to report that you are NOT SAFE? This will immediately notify our safety team and administrators.')) {
             return;
         }
-        
+
         try {
             await safetyService.reportUnsafe(bookingId);
             toast.success('Safety alert sent! Our team has been notified and will contact you shortly. If this is an emergency, please call 911 immediately.');
@@ -68,24 +68,22 @@ const SafetyCheck = () => {
                 const completedAt = new Date(check.ride_completed_at);
                 const now = new Date();
                 const hoursSinceCompletion = (now - completedAt) / (1000 * 60 * 60);
-                
+
                 return (
                     <motion.div
                         key={check.safety_check_id}
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`p-6 rounded-2xl border-2 ${
-                            hoursSinceCompletion >= 1
+                        className={`p-6 rounded-xl border-2 ${hoursSinceCompletion >= 1
                                 ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                                 : 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
-                        }`}
+                            }`}
                     >
                         <div className="flex items-start gap-4">
-                            <div className={`p-3 rounded-xl ${
-                                hoursSinceCompletion >= 1
+                            <div className={`p-3 rounded-xl ${hoursSinceCompletion >= 1
                                     ? 'bg-red-100 dark:bg-red-900/40'
                                     : 'bg-yellow-100 dark:bg-yellow-900/40'
-                            }`}>
+                                }`}>
                                 {hoursSinceCompletion >= 1 ? (
                                     <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
                                 ) : (
@@ -125,11 +123,10 @@ const SafetyCheck = () => {
                                 <div className="flex gap-3 flex-wrap">
                                     <button
                                         onClick={() => confirmSafety(check.booking_id)}
-                                        className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all ${
-                                            hoursSinceCompletion >= 1
+                                        className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all ${hoursSinceCompletion >= 1
                                                 ? 'bg-red-600 hover:bg-red-700 text-white'
                                                 : 'bg-green-600 hover:bg-green-700 text-white'
-                                        }`}
+                                            }`}
                                     >
                                         <CheckCircle className="w-5 h-5" />
                                         I'm Safe - Confirm Safety

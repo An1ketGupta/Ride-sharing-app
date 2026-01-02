@@ -125,7 +125,7 @@ const SavedLocations = () => {
         if (lower.includes('home')) return <Home className="w-5 h-5 text-blue-400" />;
         if (lower.includes('work') || lower.includes('office')) return <Briefcase className="w-5 h-5 text-purple-400" />;
         if (lower.includes('favorite') || lower.includes('favourite')) return <Heart className="w-5 h-5 text-red-400" />;
-        return <MapPin className="w-5 h-5 text-[#0EA5E9]" />;
+        return <MapPin className="w-5 h-5 text-blue-600" />;
     };
 
     const getIconColor = (name) => {
@@ -142,7 +142,7 @@ const SavedLocations = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-black text-gray-900 p-4 sm:p-6 lg:p-8">
             <div className="max-w-6xl mx-auto">
                 {/* Header Section */}
                 <motion.div
@@ -163,7 +163,7 @@ const SavedLocations = () => {
                             whileHover={{ scale: 1.02, y: -2 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setShowAddForm(!showAddForm)}
-                            className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-600/90 text-gray-900 rounded-lg font-semibold shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                             <Plus className="w-5 h-5" />
                             <span>Add New Location</span>
@@ -183,12 +183,12 @@ const SavedLocations = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search locations..."
-                                className="w-full pl-12 pr-4 py-3 bg-[#111111] border border-[#1A1A1A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent text-white placeholder-gray-500"
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent text-gray-900 placeholder-gray-500"
                             />
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -206,9 +206,9 @@ const SavedLocations = () => {
                             exit={{ opacity: 0, height: 0, y: -20 }}
                             className="mb-8 overflow-hidden"
                         >
-                            <div className="p-6 bg-[#111111] border border-[#1A1A1A] rounded-2xl shadow-xl">
+                            <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-xl">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-semibold text-white">Add New Location</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900">Add New Location</h2>
                                     <button
                                         onClick={() => {
                                             setShowAddForm(false);
@@ -229,7 +229,7 @@ const SavedLocations = () => {
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="e.g., Home, Office, Gym, Favorite Restaurant"
-                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
+                                            className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
                                             autoFocus
                                         />
                                     </div>
@@ -239,13 +239,13 @@ const SavedLocations = () => {
                                         </label>
                                         <div className="flex gap-3">
                                             <div className="flex-1 relative">
-                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0EA5E9]" />
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600" />
                                                 <input
                                                     type="text"
                                                     value={formData.address}
                                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                                     placeholder="Enter full address or use current location"
-                                                    className="w-full pl-12 pr-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
+                                                    className="w-full pl-12 pr-4 py-3 bg-[#0A0A0A] border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:border-transparent transition-all"
                                                 />
                                             </div>
                                             <motion.button
@@ -269,7 +269,7 @@ const SavedLocations = () => {
                                                         toast.error('Geolocation is not supported');
                                                     }
                                                 }}
-                                                className="px-5 py-3 bg-[#1A1A1A] hover:bg-[#252525] border border-[#1A1A1A] text-white rounded-xl transition-all flex items-center gap-2"
+                                                className="px-5 py-3 bg-[#1A1A1A] hover:bg-[#252525] border border-gray-200 text-gray-900 rounded-lg transition-all flex items-center gap-2"
                                                 title="Use current location"
                                             >
                                                 <Navigation className="w-5 h-5" />
@@ -281,7 +281,7 @@ const SavedLocations = () => {
                                             type="submit"
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className="flex-1 px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)]"
+                                            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-600/90 text-gray-900 rounded-lg font-semibold transition-all shadow-lg hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)]"
                                         >
                                             Save Location
                                         </motion.button>
@@ -293,7 +293,7 @@ const SavedLocations = () => {
                                                 setShowAddForm(false);
                                                 setFormData({ name: '', address: '' });
                                             }}
-                                            className="px-6 py-3 bg-[#1A1A1A] hover:bg-[#252525] text-white rounded-xl font-semibold transition-all border border-[#1A1A1A]"
+                                            className="px-6 py-3 bg-[#1A1A1A] hover:bg-[#252525] text-gray-900 rounded-lg font-semibold transition-all border border-gray-200"
                                         >
                                             Cancel
                                         </motion.button>
@@ -314,12 +314,12 @@ const SavedLocations = () => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-20 bg-[#111111] border border-[#1A1A1A] rounded-2xl"
+                        className="text-center py-20 bg-white border border-gray-200 rounded-lg"
                     >
                         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#0EA5E9]/20 to-purple-500/20 mb-6">
-                            <MapPin className="w-10 h-10 text-[#0EA5E9]" />
+                            <MapPin className="w-10 h-10 text-blue-600" />
                         </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">No saved locations yet</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No saved locations yet</h3>
                         <p className="text-gray-400 mb-6 max-w-md mx-auto">
                             Add your frequently visited places for quick access when booking rides
                         </p>
@@ -327,7 +327,7 @@ const SavedLocations = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowAddForm(true)}
-                            className="px-6 py-3 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white rounded-xl font-semibold transition-all flex items-center gap-2 mx-auto"
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-600/90 text-gray-900 rounded-lg font-semibold transition-all flex items-center gap-2 mx-auto"
                         >
                             <Plus className="w-5 h-5" />
                             Add Your First Location
@@ -337,10 +337,10 @@ const SavedLocations = () => {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center py-20 bg-[#111111] border border-[#1A1A1A] rounded-2xl"
+                        className="text-center py-20 bg-white border border-gray-200 rounded-lg"
                     >
                         <Search className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-                        <h3 className="text-xl font-semibold text-white mb-2">No locations found</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No locations found</h3>
                         <p className="text-gray-400">Try adjusting your search query</p>
                     </motion.div>
                 ) : (
@@ -352,10 +352,10 @@ const SavedLocations = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                                 whileHover={{ y: -4, scale: 1.02 }}
-                                className="group relative p-6 bg-[#111111] border border-[#1A1A1A] rounded-2xl hover:border-[#0EA5E9]/50 transition-all cursor-pointer"
+                                className="group relative p-6 bg-white border border-gray-200 rounded-lg hover:border-[#0EA5E9]/50 transition-all cursor-pointer"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className={`p-3 rounded-xl bg-gradient-to-br ${getIconColor(loc.name)} border border-white/10`}>
+                                    <div className={`p-3 rounded-lg bg-gradient-to-br ${getIconColor(loc.name)} border border-white/10`}>
                                         {getIcon(loc.name)}
                                     </div>
                                     <motion.button
@@ -371,11 +371,11 @@ const SavedLocations = () => {
                                     </motion.button>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold text-white mb-2">{loc.name}</h3>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{loc.name}</h3>
                                     <div className="space-y-2">
                                         {locationAddresses[loc.location_id] ? (
                                             <p className="text-sm text-gray-400 line-clamp-2 flex items-start gap-2">
-                                                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-[#0EA5E9]" />
+                                                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
                                                 <span>{locationAddresses[loc.location_id]}</span>
                                             </p>
                                         ) : (
@@ -406,10 +406,10 @@ const SavedLocations = () => {
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mt-8 p-4 bg-[#111111] border border-[#1A1A1A] rounded-xl text-center"
+                        className="mt-8 p-4 bg-white border border-gray-200 rounded-lg text-center"
                     >
                         <p className="text-sm text-gray-400">
-                            You have <span className="text-[#0EA5E9] font-semibold">{locations.length}</span> saved location{locations.length !== 1 ? 's' : ''}
+                            You have <span className="text-blue-600 font-semibold">{locations.length}</span> saved location{locations.length !== 1 ? 's' : ''}
                         </p>
                     </motion.div>
                 )}

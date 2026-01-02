@@ -379,18 +379,18 @@ const PassengerDashboard = () => {
         const normalized = (status || '').toLowerCase();
         const colors = {
             pending: 'bg-[#f59e0b]/20 text-[#f59e0b] border-[#f59e0b]/30',
-            confirmed: 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30',
-            in_progress: 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30',
+            confirmed: 'bg-blue-600/20 text-[#0EA5E9] border-[#0EA5E9]/30',
+            in_progress: 'bg-blue-600/20 text-[#0EA5E9] border-[#0EA5E9]/30',
             completed: 'bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30',
             cancelled: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30',
             canceled_by_driver: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30',
             canceled_by_passenger: 'bg-[#ef4444]/20 text-[#ef4444] border-[#ef4444]/30'
         };
-        return colors[normalized] || 'bg-[#1A1A1A] text-white/60 border-[#1A1A1A]';
+        return colors[normalized] || 'bg-[#1A1A1A] text-gray-900/60 border-gray-200';
     };
 
     return (
-        <div className="min-h-screen bg-[#000000] px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-7xl mx-auto page-transition">
+        <div className="min-h-screen bg-gray-50 px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12 max-w-7xl mx-auto page-transition">
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 8 }}
@@ -398,8 +398,8 @@ const PassengerDashboard = () => {
                 transition={{ duration: 0.25 }}
                 className="mb-8 sm:mb-10 md:mb-12"
             >
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-3 text-white">My Bookings</h1>
-                <p className="text-white/60 text-lg sm:text-xl">Manage your bookings and track payment history</p>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-3 text-gray-900">My Bookings</h1>
+                <p className="text-gray-900/60 text-lg sm:text-xl">Manage your bookings and track payment history</p>
             </motion.div>
 
             {/* Safety Check Alert */}
@@ -426,27 +426,27 @@ const PassengerDashboard = () => {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1, duration: 0.25 }}
-                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
+                                className="bg-white rounded-lg p-6 border border-gray-200 hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="text-sm text-white/60 mb-2 font-semibold">Upcoming bookings</div>
-                                <div className="text-3xl sm:text-4xl font-bold text-white">{upcoming}</div>
+                                <div className="text-sm text-gray-900/60 mb-2 font-semibold">Upcoming bookings</div>
+                                <div className="text-3xl sm:text-4xl font-bold text-gray-900">{upcoming}</div>
                             </motion.div>
                             <motion.div 
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.15, duration: 0.25 }}
-                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#f59e0b]/30 hover:bg-[#1A1A1A] transition-all duration-200"
+                                className="bg-white rounded-lg p-6 border border-gray-200 hover:border-[#f59e0b]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="text-sm text-white/60 mb-2 font-semibold">Pending payments</div>
-                                <div className={`text-3xl sm:text-4xl font-bold ${pendingPayments>0 ? 'text-[#f59e0b]' : 'text-white'}`}>{pendingPayments}</div>
+                                <div className="text-sm text-gray-900/60 mb-2 font-semibold">Pending payments</div>
+                                <div className={`text-3xl sm:text-4xl font-bold ${pendingPayments>0 ? 'text-[#f59e0b]' : 'text-gray-900'}`}>{pendingPayments}</div>
                             </motion.div>
                             <motion.div 
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2, duration: 0.25 }}
-                                className="bg-[#111111] rounded-xl p-6 border border-[#1A1A1A] hover:border-[#10b981]/30 hover:bg-[#1A1A1A] transition-all duration-200"
+                                className="bg-white rounded-lg p-6 border border-gray-200 hover:border-[#10b981]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                             >
-                                <div className="text-sm text-white/60 mb-2 font-semibold">Completed trips</div>
+                                <div className="text-sm text-gray-900/60 mb-2 font-semibold">Completed trips</div>
                                 <div className="text-3xl sm:text-4xl font-bold text-[#10b981]">{completed}</div>
                             </motion.div>
                         </>
@@ -457,14 +457,14 @@ const PassengerDashboard = () => {
             {/* Emergency contact moved to Profile page (Complete Profile) */}
 
             {/* Premium Tabs */}
-            <div className="flex flex-col sm:flex-row gap-2 mb-8 sm:mb-10 md:mb-12 p-1 bg-[#111111] rounded-xl border border-[#1A1A1A] w-full sm:w-fit">
+            <div className="flex flex-col sm:flex-row gap-2 mb-8 sm:mb-10 md:mb-12 p-1 bg-white rounded-lg border border-gray-200 w-full sm:w-fit">
                 <motion.button 
                     onClick={() => setActiveTab('bookings')}
                     whileTap={{ scale: 0.98 }}
                     className={`px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base ${
                         activeTab === 'bookings'
-                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
-                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
+                            ? 'bg-blue-600 text-gray-900 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-gray-900/60 hover:text-gray-900 hover:bg-[#1A1A1A]'
                     }`}
                 >
                     My Bookings
@@ -474,8 +474,8 @@ const PassengerDashboard = () => {
                     whileTap={{ scale: 0.98 }}
                     className={`px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base ${
                         activeTab === 'payments'
-                            ? 'bg-[#0EA5E9] text-white shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
-                            : 'text-white/60 hover:text-white hover:bg-[#1A1A1A]'
+                            ? 'bg-blue-600 text-gray-900 shadow-[0_4px_12px_rgba(14,165,233,0.3)]'
+                            : 'text-gray-900/60 hover:text-gray-900 hover:bg-[#1A1A1A]'
                     }`}
                 >
                     Payment History
@@ -497,21 +497,21 @@ const PassengerDashboard = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 8 }}
                             transition={{ duration: 0.2 }}
-                            className="bg-[#111111] rounded-xl p-6 sm:p-8 max-w-lg w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)] max-h-[90vh] overflow-y-auto"
+                            className="bg-white rounded-lg p-6 sm:p-8 max-w-lg w-full border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                         <div className="flex items-start justify-between mb-6 gap-3">
                             <div className="flex-1 min-w-0">
-                                <div className="text-xs sm:text-sm text-white/60 mb-1">Booking #{viewBooking.booking_id}</div>
-                                <h3 className="text-xl sm:text-2xl font-bold text-white break-words">{viewBooking.source} → {viewBooking.destination}</h3>
-                                <div className="text-xs sm:text-sm text-white/60 mt-1">{new Date(viewBooking.date).toLocaleDateString()} at {viewBooking.time}</div>
+                                <div className="text-xs sm:text-sm text-gray-900/60 mb-1">Booking #{viewBooking.booking_id}</div>
+                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{viewBooking.source} → {viewBooking.destination}</h3>
+                                <div className="text-xs sm:text-sm text-gray-900/60 mt-1">{new Date(viewBooking.date).toLocaleDateString()} at {viewBooking.time}</div>
                             </div>
-                            <button onClick={() => setViewBooking(null)} className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200 flex-shrink-0"><X className="w-5 h-5 text-white/60 hover:text-white" /></button>
+                            <button onClick={() => setViewBooking(null)} className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200 flex-shrink-0"><X className="w-5 h-5 text-gray-900/60 hover:text-gray-900" /></button>
                         </div>
 
                         {/* Vehicle Image */}
                         {viewBooking.vehicle_image_url && (
-                            <div className="mb-4 overflow-hidden rounded-xl border border-[#1A1A1A]">
+                            <div className="mb-4 overflow-hidden rounded-lg border border-gray-200">
                                 <img 
                                     src={viewBooking.vehicle_image_url} 
                                     alt="Vehicle" 
@@ -528,14 +528,14 @@ const PassengerDashboard = () => {
                                    bookingStatus === 'confirmed' || 
                                    bookingStatus === 'in_progress';
                         })() && (
-                            <div className="mb-4 p-4 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 flex items-center justify-between">
+                            <div className="mb-4 p-4 rounded-lg border border-[#0EA5E9]/30 bg-blue-600/10 flex items-center justify-between">
                                 <div className="text-sm">
-                                    <div className="font-semibold text-white">Driver live location</div>
-                                    <div className="text-white/60 text-xs">Lat {Number(livePos.lat).toFixed(5)}, Lon {Number(livePos.lon).toFixed(5)}</div>
+                                    <div className="font-semibold text-gray-900">Driver live location</div>
+                                    <div className="text-gray-900/60 text-xs">Lat {Number(livePos.lat).toFixed(5)}, Lon {Number(livePos.lon).toFixed(5)}</div>
                                 </div>
                                 {Number.isFinite(liveEta) && (
                                     <div className="text-right">
-                                        <div className="text-xs text-white/60">ETA to you</div>
+                                        <div className="text-xs text-gray-900/60">ETA to you</div>
                                         <div className="text-lg font-bold text-[#0EA5E9]">{liveEta} min</div>
                                     </div>
                                 )}
@@ -584,7 +584,7 @@ const PassengerDashboard = () => {
                                                 })()}
                                             />
                                             {liveEta != null && (
-                                                <div className="mt-2 text-sm text-center text-white/60">
+                                                <div className="mt-2 text-sm text-center text-gray-900/60">
                                                     Estimated arrival: {Math.round(liveEta)} minutes
                                                 </div>
                                             )}
@@ -593,11 +593,11 @@ const PassengerDashboard = () => {
                                 } else {
                                     // Show loading state while fetching driver location
                                     return (
-                                        <div className="mb-5 p-4 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 flex items-start gap-3">
+                                        <div className="mb-5 p-4 rounded-lg border border-[#0EA5E9]/30 bg-blue-600/10 flex items-start gap-3">
                                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#0EA5E9] flex-shrink-0 mt-0.5"></div>
                                             <div className="text-sm">
                                                 <div className="font-semibold text-[#0EA5E9]">Waiting for driver location...</div>
-                                                <div className="text-white/60 text-xs mt-1">
+                                                <div className="text-gray-900/60 text-xs mt-1">
                                                     The driver's location will appear here once they start sharing their location.
                                                     {viewBooking?.driver_id && (
                                                         <div className="mt-1">Driver ID: {viewBooking.driver_id}</div>
@@ -615,7 +615,7 @@ const PassengerDashboard = () => {
                         <div className="grid sm:grid-cols-2 gap-3 mb-4 text-sm">
                             <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-[#0EA5E9]" />
-                                <span className="font-semibold text-white">{viewBooking.driver_name}</span>
+                                <span className="font-semibold text-gray-900">{viewBooking.driver_name}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <DollarSign className="w-4 h-4 text-[#10b981]" />
@@ -623,30 +623,30 @@ const PassengerDashboard = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-[#0EA5E9]" />
-                                <span className="text-white">{new Date(viewBooking.date).toLocaleDateString()}</span>
+                                <span className="text-gray-900">{new Date(viewBooking.date).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-[#0EA5E9]" />
-                                <span className="text-white">{viewBooking.time}</span>
+                                <span className="text-gray-900">{viewBooking.time}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-white/60">Seats</span>
-                                <span className="font-semibold text-white">{viewBooking.seats_booked}</span>
+                                <span className="text-gray-900/60">Seats</span>
+                                <span className="font-semibold text-gray-900">{viewBooking.seats_booked}</span>
                             </div>
                             {viewBooking.payment_status && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white/60">Payment</span>
+                                    <span className="text-gray-900/60">Payment</span>
                                     <span className={`font-semibold ${viewBooking.payment_status === 'completed' ? 'text-[#10b981]' : 'text-[#f59e0b]'}`}>{viewBooking.payment_status}</span>
                                 </div>
                             )}
                         </div>
 
                         {viewBooking.notes && (
-                            <div className="flex items-start gap-2 p-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] mb-4">
+                            <div className="flex items-start gap-2 p-3 rounded-lg bg-white border border-gray-200 mb-4">
                                 <MessageSquare className="w-4 h-4 text-[#0EA5E9] mt-0.5" />
                                 <div>
-                                    <div className="text-xs text-white/60">Passenger note</div>
-                                    <div className="text-sm font-medium text-white">{viewBooking.notes}</div>
+                                    <div className="text-xs text-gray-900/60">Passenger note</div>
+                                    <div className="text-sm font-medium text-gray-900">{viewBooking.notes}</div>
                                 </div>
                             </div>
                         )}
@@ -654,42 +654,42 @@ const PassengerDashboard = () => {
                         <div className="flex flex-wrap gap-2 mb-4">
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'pending'; })() && (
                                 <>
-                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleConfirmBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#0EA5E9] text-white font-semibold rounded-lg hover:bg-[#0EA5E9] hover:brightness-110 transition-all duration-200 flex items-center gap-2">
+                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleConfirmBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-600 hover:brightness-110 transition-all duration-200 flex items-center gap-2">
                                         <CheckCircle className="w-4 h-4" />
                                         Confirm
                                     </motion.button>
-                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-white font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
+                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-gray-900 font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
                                         <XCircle className="w-4 h-4" />
                                         Cancel
                                     </motion.button>
                                 </>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'confirmed' && !viewBooking.payment_status; })() && (
-                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handlePayment(viewBooking); setViewBooking(null); }} className="px-4 py-2.5 bg-[#0EA5E9] text-white font-semibold rounded-lg hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handlePayment(viewBooking); setViewBooking(null); }} className="px-4 py-2.5 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-600 hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2">
                                     <CreditCard className="w-4 h-4" />
                                     Pay Now
                                 </motion.button>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return bookingStatus === 'confirmed'; })() && (
-                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-white font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCancelBooking(viewBooking.booking_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#ef4444] text-gray-900 font-semibold rounded-lg hover:bg-[#dc2626] transition-all duration-200 flex items-center gap-2">
                                     <XCircle className="w-4 h-4" />
                                     Cancel
                                 </motion.button>
                             )}
                             {(() => { const bookingStatus = viewBooking.booking_status || viewBooking.status; return (bookingStatus === 'confirmed' || viewBooking.ride_status === 'ongoing' || bookingStatus === 'in_progress'); })() && (
-                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={async () => { try { const getGeo = () => new Promise((resolve) => { if (!navigator.geolocation) return resolve({ lat: null, lon: null }); navigator.geolocation.getCurrentPosition((pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }), () => resolve({ lat: null, lon: null }), { enableHighAccuracy: true, timeout: 5000 }); }); const { lat, lon } = await getGeo(); await sosService.raise(viewBooking.booking_id, { user_id: viewBooking.passenger_id, details: 'Emergency', passenger_lat: lat, passenger_lon: lon }); toast.success('SOS sent to admin'); } catch { toast.error('Failed to send SOS'); } }} className="px-4 py-2.5 bg-[#f59e0b] text-white font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={async () => { try { const getGeo = () => new Promise((resolve) => { if (!navigator.geolocation) return resolve({ lat: null, lon: null }); navigator.geolocation.getCurrentPosition((pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }), () => resolve({ lat: null, lon: null }), { enableHighAccuracy: true, timeout: 5000 }); }); const { lat, lon } = await getGeo(); await sosService.raise(viewBooking.booking_id, { user_id: viewBooking.passenger_id, details: 'Emergency', passenger_lat: lat, passenger_lon: lon }); toast.success('SOS sent to admin'); } catch { toast.error('Failed to send SOS'); } }} className="px-4 py-2.5 bg-[#f59e0b] text-gray-900 font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
                                     <ShieldAlert className="w-4 h-4" />
                                     SOS
                                 </motion.button>
                             )}
                             {viewBooking.ride_status === 'completed' && (
-                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleAddFeedback(viewBooking.ride_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#f59e0b] text-white font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleAddFeedback(viewBooking.ride_id); setViewBooking(null); }} className="px-4 py-2.5 bg-[#f59e0b] text-gray-900 font-semibold rounded-lg hover:bg-[#d97706] transition-all duration-200 flex items-center gap-2">
                                     <Star className="w-4 h-4" />
                                     Feedback
                                 </motion.button>
                             )}
                             {viewBooking.ride_status === 'completed' && viewBooking.payment_method === 'cash' && viewBooking.payment_status === 'pending' && viewBooking.payment_id && (
-                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCompleteCashPayment(viewBooking.payment_id); }} className="px-4 py-2.5 bg-[#10b981] text-white font-semibold rounded-lg hover:bg-[#059669] transition-all duration-200 flex items-center gap-2">
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { handleCompleteCashPayment(viewBooking.payment_id); }} className="px-4 py-2.5 bg-[#10b981] text-gray-900 font-semibold rounded-lg hover:bg-[#059669] transition-all duration-200 flex items-center gap-2">
                                     <Banknote className="w-4 h-4" />
                                     Mark Cash Paid
                                 </motion.button>
@@ -703,18 +703,18 @@ const PassengerDashboard = () => {
                                 value={msgByBookingId[viewBooking.booking_id] || ''}
                                 onChange={(e) => setMsgByBookingId((prev) => ({ ...prev, [viewBooking.booking_id]: e.target.value }))}
                                 placeholder="Message your driver (e.g., I'm at the blue gate)"
-                                className="flex-1 px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none text-white placeholder:text-white/40"
+                                className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all outline-none text-gray-900 placeholder:text-gray-900/40"
                             />
                             <button
                                 onClick={() => { sendMessage(viewBooking.booking_id); }}
                                 disabled={!((msgByBookingId[viewBooking.booking_id] || '').trim())}
-                                className="px-5 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-5 py-3 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-600 hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 <MessageSquare className="w-4 h-4" />
                                 Send
                             </button>
                         </div>
-                        <div className="text-xs text-white/60 mt-1">Sends a real-time message to your driver.</div>
+                        <div className="text-xs text-gray-900/60 mt-1">Sends a real-time message to your driver.</div>
                     </motion.div>
                 </motion.div>
             )}
@@ -725,11 +725,11 @@ const PassengerDashboard = () => {
                     <div className="flex items-center justify-center py-20">
                         <div className="flex flex-col items-center gap-4">
                             <div className="w-12 h-12 border-4 border-[#0EA5E9]/30 border-t-[#0EA5E9] rounded-full animate-spin" />
-                            <p className="text-white/60">Loading...</p>
+                            <p className="text-gray-900/60">Loading...</p>
                         </div>
                     </div>
                 ) : error ? (
-                    <div className="p-4 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
+                    <div className="p-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
                         <p className="text-sm text-[#ef4444]">{error}</p>
                     </div>
@@ -742,11 +742,11 @@ const PassengerDashboard = () => {
                                         initial={{ opacity: 0, scale: 0.98 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.25 }}
-                                        className="bg-[#111111] rounded-xl p-12 text-center border border-[#1A1A1A]"
+                                        className="bg-white rounded-lg p-12 text-center border border-gray-200"
                                     >
-                                        <Receipt className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2 text-white">No bookings yet</h3>
-                                        <p className="text-white/60">
+                                        <Receipt className="w-16 h-16 text-gray-900/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-gray-900">No bookings yet</h3>
+                                        <p className="text-gray-900/60">
                                             <a href="/search" className="text-[#0EA5E9] hover:underline font-semibold">Search for rides</a> to get started
                                         </p>
                                     </motion.div>
@@ -771,13 +771,13 @@ const PassengerDashboard = () => {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: index * 0.05, duration: 0.25 }}
                                                 whileHover={{ y: -2 }}
-                                                className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1A1A1A] hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
+                                                className="bg-white rounded-lg p-6 sm:p-8 border border-gray-200 hover:border-[#0EA5E9]/30 hover:bg-[#1A1A1A] transition-all duration-200"
                                             >
                                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                                     <div className="flex-1 space-y-4">
                                                         {/* Vehicle Image Thumbnail */}
                                                         {booking.vehicle_image_url && (
-                                                            <div className="overflow-hidden rounded-xl border border-[#1A1A1A] w-full max-w-xs">
+                                                            <div className="overflow-hidden rounded-lg border border-gray-200 w-full max-w-xs">
                                                                 <img 
                                                                     src={booking.vehicle_image_url} 
                                                                     alt="Vehicle" 
@@ -790,12 +790,12 @@ const PassengerDashboard = () => {
                         onClick={() => setViewBooking(booking)}
                     >
                                                             {/* Driver avatar */}
-                                                            <div className="w-10 h-10 rounded-full bg-[#0EA5E9] text-white flex items-center justify-center font-bold">
+                                                            <div className="w-10 h-10 rounded-full bg-blue-600 text-gray-900 flex items-center justify-center font-bold">
                                                                 {(booking.driver_name || '?').toString().trim().charAt(0).toUpperCase()}
                                                             </div>
-                                                            <div className="text-2xl font-bold text-white">{booking.source}</div>
+                                                            <div className="text-2xl font-bold text-gray-900">{booking.source}</div>
                                                             <div className="text-[#0EA5E9] text-xl">→</div>
-                                                            <div className="text-2xl font-bold text-white">{booking.destination}</div>
+                                                            <div className="text-2xl font-bold text-gray-900">{booking.destination}</div>
                                                             {/* Status chip */}
                                                             {(() => { const bookingStatus = booking.booking_status || booking.status; return (
                                                                 <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(bookingStatus)}`}> 
@@ -803,29 +803,29 @@ const PassengerDashboard = () => {
                                                                 </span>
                                                             ); })()}
                                                             {/* Booking id chip */}
-                                                            <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[#0A0A0A] border border-[#1A1A1A] text-white/60">
+                                                            <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-900/60">
                                                                 #{booking.booking_id}
                                                             </span>
                                                         </div>
                                                 
                                                         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                                             <div className="flex items-center gap-2 text-sm">
-                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                <div className="p-2 rounded-lg bg-blue-600/10">
                                                                     <Calendar className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-semibold text-white">{new Date(booking.date).toLocaleDateString()}</span>
+                                                                <span className="font-semibold text-gray-900">{new Date(booking.date).toLocaleDateString()}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm">
-                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                <div className="p-2 rounded-lg bg-blue-600/10">
                                                                     <Clock className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-semibold text-white">{booking.time}</span>
+                                                                <span className="font-semibold text-gray-900">{booking.time}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm">
-                                                                <div className="p-2 rounded-lg bg-[#0EA5E9]/10">
+                                                                <div className="p-2 rounded-lg bg-blue-600/10">
                                                                     <User className="w-4 h-4 text-[#0EA5E9]" />
                                                                 </div>
-                                                                <span className="font-semibold text-white">{booking.driver_name}</span>
+                                                                <span className="font-semibold text-gray-900">{booking.driver_name}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-sm">
                                                                 <div className="p-2 rounded-lg bg-[#10b981]/10">
@@ -836,20 +836,20 @@ const PassengerDashboard = () => {
                                                         </div>
                                                         {/* Optional notes */}
                                                         {booking.notes && (
-                                                            <div className="flex items-start gap-2 mt-2 p-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                                            <div className="flex items-start gap-2 mt-2 p-3 rounded-lg bg-white border border-gray-200">
                                                                 <MessageSquare className="w-4 h-4 text-[#0EA5E9] mt-0.5" />
                                                                 <div>
-                                                                    <div className="text-xs text-white/60">Passenger note</div>
-                                                                    <div className="text-sm font-medium text-white">{booking.notes}</div>
+                                                                    <div className="text-xs text-gray-900/60">Passenger note</div>
+                                                                    <div className="text-sm font-medium text-gray-900">{booking.notes}</div>
                                                                 </div>
                                                             </div>
                                                         )}
 
                                                         {/* Vehicle Information */}
                                                         {booking.vehicle_model && (
-                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A0A0A] w-fit border border-[#1A1A1A]">
+                                                            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white w-fit border border-gray-200">
                                                                 <Car className="w-4 h-4 text-[#0EA5E9]" />
-                                                                <span className="text-sm font-medium text-white">
+                                                                <span className="text-sm font-medium text-gray-900">
                                                                     {booking.vehicle_model}
                                                                     {booking.vehicle_color && ` • ${booking.vehicle_color}`}
                                                                     {booking.license_plate && ` • ${booking.license_plate}`}
@@ -858,11 +858,11 @@ const PassengerDashboard = () => {
                                                         )}
 
                                                         <div className="mt-3 flex items-center gap-4 text-sm">
-                                                            <span className="text-white/60">
-                                                                Seats: <span className="font-semibold text-white">{booking.seats_booked}</span>
+                                                            <span className="text-gray-900/60">
+                                                                Seats: <span className="font-semibold text-gray-900">{booking.seats_booked}</span>
                                                             </span>
                                                     {booking.payment_status && (
-                                                                <span className="text-white/60">
+                                                                <span className="text-gray-900/60">
                                                                     Payment: <span className={`font-semibold ${booking.payment_status === 'completed' ? 'text-[#10b981]' : 'text-[#f59e0b]'}`}>
                                                                         {booking.payment_status}
                                                                     </span>
@@ -879,10 +879,10 @@ const PassengerDashboard = () => {
                                             <>
                                                 <div>
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <h3 className="text-xl font-bold text-white">Upcoming ({upcoming.length})</h3>
+                                                        <h3 className="text-xl font-bold text-gray-900">Upcoming ({upcoming.length})</h3>
                                                     </div>
                                                     {upcoming.length === 0 ? (
-                                                        <div className="p-6 text-sm text-white/60 border border-[#1A1A1A] rounded-xl bg-[#111111]">No upcoming bookings</div>
+                                                        <div className="p-6 text-sm text-gray-900/60 border border-gray-200 rounded-lg bg-white">No upcoming bookings</div>
                                                     ) : (
                                                         <div className="grid gap-5">
                                                             {upcoming.map((b, i) => renderCard(b, i))}
@@ -892,10 +892,10 @@ const PassengerDashboard = () => {
                                                 <div className="h-px bg-[#1A1A1A] my-6" />
                                                 <div>
                                                     <div className="flex items-center justify-between mb-4">
-                                                        <h3 className="text-xl font-bold text-white">Completed ({completed.length})</h3>
+                                                        <h3 className="text-xl font-bold text-gray-900">Completed ({completed.length})</h3>
                                                     </div>
                                                     {completed.length === 0 ? (
-                                                        <div className="p-6 text-sm text-white/60 border border-[#1A1A1A] rounded-xl bg-[#111111]">No completed rides yet</div>
+                                                        <div className="p-6 text-sm text-gray-900/60 border border-gray-200 rounded-lg bg-white">No completed rides yet</div>
                                                     ) : (
                                                         <div className="grid gap-5">
                                                             {completed.map((b, i) => renderCard(b, i))}
@@ -916,11 +916,11 @@ const PassengerDashboard = () => {
                                         initial={{ opacity: 0, scale: 0.98 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.25 }}
-                                        className="bg-[#111111] rounded-xl p-12 text-center border border-[#1A1A1A]"
+                                        className="bg-white rounded-lg p-12 text-center border border-gray-200"
                                     >
-                                        <CreditCard className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2 text-white">No payments yet</h3>
-                                        <p className="text-white/60">Your payment history will appear here</p>
+                                        <CreditCard className="w-16 h-16 text-gray-900/40 mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold mb-2 text-gray-900">No payments yet</h3>
+                                        <p className="text-gray-900/60">Your payment history will appear here</p>
                                     </motion.div>
                                 ) : (
                                     <div className="grid gap-4">
@@ -930,14 +930,14 @@ const PassengerDashboard = () => {
                                                 initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: index * 0.05, duration: 0.25 }}
-                                                className="bg-[#111111] rounded-xl p-6 border-l-4 border-l-[#10b981] border-y border-r border-[#1A1A1A] hover:bg-[#1A1A1A] transition-all duration-200"
+                                                className="bg-white rounded-lg p-6 border-l-4 border-l-[#10b981] border-y border-r border-gray-200 hover:bg-[#1A1A1A] transition-all duration-200"
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1">
-                                                        <h4 className="font-semibold text-lg mb-1 text-white">
+                                                        <h4 className="font-semibold text-lg mb-1 text-gray-900">
                                                             {payment.source} → {payment.destination}
                                                         </h4>
-                                                        <div className="grid sm:grid-cols-2 gap-2 mt-3 text-sm text-white/60">
+                                                        <div className="grid sm:grid-cols-2 gap-2 mt-3 text-sm text-gray-900/60">
                                                             <div className="flex items-center gap-2">
                                                                 <Calendar className="w-4 h-4" />
                                                                 {new Date(payment.date).toLocaleDateString()}
@@ -992,41 +992,41 @@ const PassengerDashboard = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 8 }}
                             transition={{ duration: 0.2 }}
-                            className="bg-[#111111] rounded-xl p-8 max-w-md w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                            className="bg-white rounded-lg p-8 max-w-md w-full border border-gray-200 shadow-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-white">Make Payment</h3>
+                                <h3 className="text-2xl font-bold text-gray-900">Make Payment</h3>
                                 <button
                                     onClick={() => setSelectedBooking(null)}
                                     className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
+                                    <X className="w-5 h-5 text-gray-900/60 hover:text-gray-900" />
                                 </button>
                             </div>
 
                             <div className="space-y-4 mb-6">
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/30">
-                                    <span className="font-semibold text-white">Total Amount</span>
+                                <div className="flex items-center justify-between p-4 rounded-lg bg-blue-600/10 border border-[#0EA5E9]/30">
+                                    <span className="font-semibold text-gray-900">Total Amount</span>
                                     <span className="text-2xl font-bold text-[#0EA5E9]">
                                         ₹{selectedBooking.amount}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A]">
+                                <div className="flex items-center gap-3 p-4 rounded-lg bg-white border border-gray-200">
                                     <MapPin className="w-5 h-5 text-[#0EA5E9]" />
                                     <div>
-                                        <div className="text-sm text-white/60">Route</div>
-                                        <div className="font-semibold text-white">{selectedBooking.source} → {selectedBooking.destination}</div>
+                                        <div className="text-sm text-gray-900/60">Route</div>
+                                        <div className="font-semibold text-gray-900">{selectedBooking.source} → {selectedBooking.destination}</div>
                                     </div>
                         </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-white">Payment Method</label>
+                                    <label className="text-sm font-semibold text-gray-900">Payment Method</label>
                                     <select
                                         value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
-                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none appearance-none cursor-pointer text-white"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all outline-none appearance-none cursor-pointer text-gray-900"
                                     >
                                         <option value="upi">💳 UPI</option>
                                         <option value="card">💰 Card</option>
@@ -1041,7 +1041,7 @@ const PassengerDashboard = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setSelectedBooking(null)}
-                                    className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
+                                    className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-gray-900 font-semibold rounded-lg transition-all duration-200"
                                 >
                                     Cancel
                                 </motion.button>
@@ -1049,7 +1049,7 @@ const PassengerDashboard = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={confirmPayment}
-                                    className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-600 hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Confirm Payment
@@ -1075,26 +1075,26 @@ const PassengerDashboard = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 8 }}
                             transition={{ duration: 0.2 }}
-                            className="bg-[#111111] rounded-xl p-8 max-w-md w-full border border-[#1A1A1A] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                            className="bg-white rounded-lg p-8 max-w-md w-full border border-gray-200 shadow-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-white">Add Feedback</h3>
+                                <h3 className="text-2xl font-bold text-gray-900">Add Feedback</h3>
                                 <button
                                     onClick={() => setFeedbackForm({ ride_id: null, rating: 5, comments: '' })}
                                     className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
                                 >
-                                    <X className="w-5 h-5 text-white/60 hover:text-white" />
+                                    <X className="w-5 h-5 text-gray-900/60 hover:text-gray-900" />
                                 </button>
                             </div>
 
                             <form onSubmit={submitFeedback} className="space-y-5">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-white">Rating</label>
+                                    <label className="text-sm font-semibold text-gray-900">Rating</label>
                                 <select 
                                     value={feedbackForm.rating}
                                     onChange={(e) => setFeedbackForm({...feedbackForm, rating: parseInt(e.target.value)})}
-                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none appearance-none cursor-pointer text-white"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all outline-none appearance-none cursor-pointer text-gray-900"
                                     >
                                         <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
                                         <option value="4">⭐⭐⭐⭐ Good</option>
@@ -1105,13 +1105,13 @@ const PassengerDashboard = () => {
                             </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-white">Comments</label>
+                                    <label className="text-sm font-semibold text-gray-900">Comments</label>
                                 <textarea
                                     value={feedbackForm.comments}
                                     onChange={(e) => setFeedbackForm({...feedbackForm, comments: e.target.value})}
                                     rows="4"
                                     placeholder="Share your experience..."
-                                        className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 transition-all outline-none resize-none text-white placeholder:text-white/40"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all outline-none resize-none text-gray-900 placeholder:text-gray-900/40"
                                 />
                             </div>
 
@@ -1121,7 +1121,7 @@ const PassengerDashboard = () => {
                                         whileTap={{ scale: 0.98 }}
                                     type="button" 
                                     onClick={() => setFeedbackForm({ ride_id: null, rating: 5, comments: '' })}
-                                        className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200"
+                                        className="flex-1 py-3 bg-[#1A1A1A] hover:bg-[#1F1F1F] text-gray-900 font-semibold rounded-lg transition-all duration-200"
                                 >
                                     Cancel
                                     </motion.button>
@@ -1129,7 +1129,7 @@ const PassengerDashboard = () => {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
-                                        className="flex-1 py-3 bg-[#0EA5E9] text-white font-semibold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 bg-blue-600 text-gray-900 font-semibold rounded-lg hover:bg-blue-600 hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center justify-center gap-2"
                                     >
                                         <MessageSquare className="w-4 h-4" />
                                     Submit Feedback

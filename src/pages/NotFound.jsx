@@ -6,7 +6,7 @@ const NotFound = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#000000] relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50 relative overflow-hidden">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -20,7 +20,7 @@ const NotFound = () => {
                     transition={{ delay: 0.1, duration: 0.25, ease: 'easeOut' }}
                     className="mb-8"
                 >
-                    <h1 className="text-9xl sm:text-[200px] font-extrabold text-white leading-none mb-4">
+                    <h1 className="text-9xl sm:text-[200px] font-extrabold text-gray-900 leading-none mb-4">
                         404
                     </h1>
                 </motion.div>
@@ -32,10 +32,10 @@ const NotFound = () => {
                     transition={{ delay: 0.2, duration: 0.25, ease: 'easeOut' }}
                     className="space-y-4 mb-10"
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
                         Page Not Found
                     </h2>
-                    <p className="text-lg text-white/60 max-w-md mx-auto">
+                    <p className="text-lg text-gray-500 max-w-md mx-auto">
                         Oops! The page you're looking for doesn't exist. It might have been moved or deleted.
                     </p>
                 </motion.div>
@@ -51,7 +51,7 @@ const NotFound = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => navigate(-1)}
-                        className="px-6 py-3 bg-[#1A1A1A] border border-[#1F1F1F] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
+                        className="px-6 py-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-lg transition-all duration-200 flex items-center gap-2"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         Go Back
@@ -61,7 +61,7 @@ const NotFound = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => navigate('/')}
-                        className="px-6 py-3 bg-[#0EA5E9] text-white font-bold rounded-xl hover:bg-[#0EA5E9] hover:brightness-110 hover:shadow-[0_4px_12px_rgba(14,165,233,0.3)] transition-all duration-200 flex items-center gap-2"
+                        className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 hover:shadow-md transition-all duration-200 flex items-center gap-2"
                     >
                         <Home className="w-5 h-5" />
                         Back to Home
@@ -71,7 +71,7 @@ const NotFound = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => navigate('/search')}
-                        className="px-6 py-3 bg-[#1A1A1A] border border-[#1F1F1F] hover:bg-[#1F1F1F] text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
+                        className="px-6 py-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-lg transition-all duration-200 flex items-center gap-2"
                     >
                         <Search className="w-5 h-5" />
                         Search Rides
@@ -85,9 +85,9 @@ const NotFound = () => {
                     transition={{ delay: 0.4, duration: 0.25, ease: 'easeOut' }}
                     className="mt-16"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111] border border-[#1A1A1A]">
-                        <div className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse"></div>
-                        <span className="text-sm font-medium text-white/60">Lost in the ride</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200">
+                        <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+                        <span className="text-sm font-medium text-gray-500">Lost in the ride</span>
                     </div>
                 </motion.div>
             </motion.div>
@@ -96,4 +96,3 @@ const NotFound = () => {
 };
 
 export default NotFound;
-

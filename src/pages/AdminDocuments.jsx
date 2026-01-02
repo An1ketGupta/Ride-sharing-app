@@ -30,7 +30,7 @@ const AdminDocuments = () => {
   // --------------------------------------------------------------------------
   const VERIFIABLE_TYPES = ['license', 'registration'];
   const isVerifiableType = (docType) => VERIFIABLE_TYPES.includes(String(docType || '').toLowerCase());
-  
+
   /**
    * Load all pending drivers with document counts
    * Groups documents by driver ID and counts pending items
@@ -39,13 +39,13 @@ const AdminDocuments = () => {
     try {
       const response = await documentService.listPending();
       const documentList = (Array.isArray(response.data) ? response.data : []).filter(d => isVerifiableType(d.doc_type));
-      
+
       // Group documents by driver and count them
       const driverMap = new Map();
-      
+
       for (const document of documentList) {
         const driverId = document.driver_id;
-        
+
         if (!driverMap.has(driverId)) {
           driverMap.set(driverId, {
             driver_id: document.driver_id,
@@ -58,7 +58,7 @@ const AdminDocuments = () => {
           driverMap.get(driverId).count += 1;
         }
       }
-      
+
       setPending(Array.from(driverMap.values()));
     } catch (error) {
       console.error('Failed to load pending drivers:', error);
@@ -72,10 +72,10 @@ const AdminDocuments = () => {
    */
   const loadDocs = async (driverId) => {
     if (!driverId) return;
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await documentService.list(driverId);
       const onlyVerifiable = (Array.isArray(response.data) ? response.data : []).filter(d => isVerifiableType(d.doc_type));
@@ -91,7 +91,7 @@ const AdminDocuments = () => {
   // --------------------------------------------------------------------------
   // Event Handlers
   // --------------------------------------------------------------------------
-  
+
   /**
    * Open driver modal and load their documents
    * @param {Object} driver - Driver object with id, name, email, phone
@@ -115,10 +115,10 @@ const AdminDocuments = () => {
    */
   const handleApprove = async (docId) => {
     if (!selectedDriver) return;
-    
+
     try {
       await documentService.approve(selectedDriver.driver_id, docId);
-      
+
       // Refresh both documents and pending list
       await Promise.all([
         loadDocs(selectedDriver.driver_id),
@@ -136,10 +136,10 @@ const AdminDocuments = () => {
    */
   const handleReject = async (docId) => {
     if (!selectedDriver) return;
-    
+
     try {
       await documentService.reject(selectedDriver.driver_id, docId);
-      
+
       // Refresh both documents and pending list
       await Promise.all([
         loadDocs(selectedDriver.driver_id),
@@ -171,8 +171,8 @@ const AdminDocuments = () => {
     try {
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const adminBase = apiBase.replace(/\/api\/?$/, '');
-      await api.put(`${adminBase}/admin/vehicles/${vehicleId}/approve`, 
-        { verification_status: 'approved' }, 
+      await api.put(`${adminBase}/admin/vehicles/${vehicleId}/approve`,
+        { verification_status: 'approved' },
         { baseURL: '' }
       );
       toast.success('Vehicle approved');
@@ -186,8 +186,8 @@ const AdminDocuments = () => {
     try {
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const adminBase = apiBase.replace(/\/api\/?$/, '');
-      await api.put(`${adminBase}/admin/vehicles/${vehicleId}/approve`, 
-        { verification_status: 'rejected' }, 
+      await api.put(`${adminBase}/admin/vehicles/${vehicleId}/approve`,
+        { verification_status: 'rejected' },
         { baseURL: '' }
       );
       toast.success('Vehicle rejected');
@@ -229,7 +229,7 @@ const AdminDocuments = () => {
       socket.emit('user_register', { user_id: user.user_id });
       console.log('✅ Admin socket connected:', socket.id);
     });
-    
+
     socket.on('notification', (notification) => {
       console.log('📬 New notification received:', notification);
       // Add notification to state and reload to get latest
@@ -293,12 +293,12 @@ const AdminDocuments = () => {
           if (payload.emergency_contact_phone) alertMsg += `   Phone: ${payload.emergency_contact_phone}\n`;
           if (payload.emergency_contact_email) alertMsg += `   Email: ${payload.emergency_contact_email}\n`;
         }
-        
+
         toast.error('🚨 URGENT SOS ALERT - ADMIN ACTION REQUIRED', { duration: 15000 });
         // Show critical alert dialog
-        const confirmed = window.confirm(`${alertMsg}\n\nDo you want to view the location on Google Maps?`);
+        const confirmed = window.confirm(`${alertMsg}\n\nDo you want to view the location on OpenStreetMap?`);
         if (confirmed && payload.location?.lat && payload.location?.lon) {
-          window.open(`https://maps.google.com/?q=${payload.location.lat},${payload.location.lon}`, '_blank');
+          window.open(`https://www.openstreetmap.org/?mlat=${payload.location.lat}&mlon=${payload.location.lon}&zoom=16`, '_blank');
         }
         // Reload notifications to show the new SOS alert in the list
         setTimeout(() => loadNotifications(), 1000);
@@ -315,9 +315,9 @@ const AdminDocuments = () => {
         const alertMsg = payload.message || `🚨🚨 BROADCAST SOS ALERT 🚨🚨\n\nBooking ID: ${payload.booking_id}\nPassenger: ${payload.passenger_name || 'Unknown'} (${payload.passenger_phone || 'N/A'})\nDriver: ${payload.driver_name || 'Unknown'} (${payload.driver_phone || 'N/A'})`;
         toast.error('🚨 URGENT SOS ALERT - ADMIN ACTION REQUIRED', { duration: 15000 });
         if (payload.location?.lat && payload.location?.lon) {
-          const confirmed = window.confirm(`${alertMsg}\n\nDo you want to view the location on Google Maps?`);
+          const confirmed = window.confirm(`${alertMsg}\n\nDo you want to view the location on OpenStreetMap?`);
           if (confirmed) {
-            window.open(`https://maps.google.com/?q=${payload.location.lat},${payload.location.lon}`, '_blank');
+            window.open(`https://www.openstreetmap.org/?mlat=${payload.location.lat}&mlon=${payload.location.lon}&zoom=16`, '_blank');
           }
         } else {
           alert(alertMsg);
@@ -329,20 +329,20 @@ const AdminDocuments = () => {
         toast.error('Broadcast SOS alert received but failed to process');
       }
     });
-    
+
     return () => socket.disconnect();
   }, [user, toast]);
 
   // --------------------------------------------------------------------------
   // Render Helpers
   // --------------------------------------------------------------------------
-  
+
   /**
    * Parse SOS notification message and extract structured information
    */
   const parseSOSNotification = (message) => {
     if (!message) return null;
-    
+
     const sections = {
       bookingId: null,
       passenger: {},
@@ -354,11 +354,11 @@ const AdminDocuments = () => {
       location: {},
       emergencyContact: {}
     };
-    
+
     // Extract Booking ID
     const bookingIdMatch = message.match(/Booking ID:\s*#?(\d+)/i);
     if (bookingIdMatch) sections.bookingId = bookingIdMatch[1];
-    
+
     // Extract Passenger Information
     const passengerMatch = message.match(/📱 PASSENGER INFORMATION:([\s\S]*?)(?=🚗|📍|📝|🆘|$)/);
     if (passengerMatch) {
@@ -368,7 +368,7 @@ const AdminDocuments = () => {
       sections.passenger.email = passengerText.match(/Email:\s*(.+)/)?.[1]?.trim();
       sections.passenger.id = passengerText.match(/Passenger ID:\s*(\d+)/)?.[1];
     }
-    
+
     // Extract Driver Information
     const driverMatch = message.match(/🚗 DRIVER INFORMATION:([\s\S]*?)(?=🚙|📍|📝|🆘|$)/);
     if (driverMatch) {
@@ -378,7 +378,7 @@ const AdminDocuments = () => {
       sections.driver.email = driverText.match(/Email:\s*(.+)/)?.[1]?.trim();
       sections.driver.id = driverText.match(/Driver ID:\s*(\d+)/)?.[1];
     }
-    
+
     // Extract Vehicle Information
     const vehicleMatch = message.match(/🚙 VEHICLE INFORMATION:([\s\S]*?)(?=📍|📝|🆘|$)/);
     if (vehicleMatch) {
@@ -388,7 +388,7 @@ const AdminDocuments = () => {
       sections.vehicle.plate = vehicleText.match(/License Plate:\s*(.+)/)?.[1]?.trim();
       sections.vehicle.capacity = vehicleText.match(/Capacity:\s*(.+)/)?.[1]?.trim();
     }
-    
+
     // Extract Ride Information
     const rideMatch = message.match(/📍 RIDE INFORMATION:([\s\S]*?)(?=🎫|📝|🆘|📍 CURRENT|$)/);
     if (rideMatch) {
@@ -401,7 +401,7 @@ const AdminDocuments = () => {
       sections.ride.fare = rideText.match(/Fare:\s*(.+)/)?.[1]?.trim();
       sections.ride.status = rideText.match(/Ride Status:\s*(.+)/)?.[1]?.trim();
     }
-    
+
     // Extract Booking Information
     const bookingMatch = message.match(/🎫 BOOKING INFORMATION:([\s\S]*?)(?=📝|🆘|📍 CURRENT|$)/);
     if (bookingMatch) {
@@ -411,25 +411,25 @@ const AdminDocuments = () => {
       sections.booking.status = bookingText.match(/Booking Status:\s*(.+)/)?.[1]?.trim();
       sections.booking.date = bookingText.match(/Booking Date:\s*(.+)/)?.[1]?.trim();
     }
-    
+
     // Extract Emergency Details
     const emergencyMatch = message.match(/📝 EMERGENCY DETAILS:\s*(.+?)(?=\n\n|🆘|📍 CURRENT|$)/s);
     if (emergencyMatch) {
       sections.emergencyDetails = emergencyMatch[1]?.trim();
     }
-    
+
     // Extract Location
     const locationMatch = message.match(/📍 CURRENT PASSENGER LOCATION:([\s\S]*?)(?=🆘|$)/);
     if (locationMatch) {
       const locationText = locationMatch[1];
-      sections.location.link = locationText.match(/https:\/\/maps\.google\.com\/\?q=([\d.-]+),([\d.-]+)/)?.[0];
+      sections.location.link = locationText.match(/https:\/\/www\.openstreetmap\.org\/\?mlat=([\d.-]+)&mlon=([\d.-]+)/)?.[0];
       const coordsMatch = locationText.match(/Coordinates:\s*([\d.-]+),\s*([\d.-]+)/);
       if (coordsMatch) {
         sections.location.lat = coordsMatch[1];
         sections.location.lon = coordsMatch[2];
       }
     }
-    
+
     // Extract Emergency Contact
     const contactMatch = message.match(/🆘 EMERGENCY CONTACT:([\s\S]*?)$/);
     if (contactMatch) {
@@ -438,16 +438,16 @@ const AdminDocuments = () => {
       sections.emergencyContact.phone = contactText.match(/Phone:\s*(.+)/)?.[1]?.trim();
       sections.emergencyContact.email = contactText.match(/Email:\s*(.+)/)?.[1]?.trim();
     }
-    
+
     return sections;
   };
-  
+
   /**
    * Render structured SOS notification card
    */
   const renderSOSNotification = (notification, parsedData) => {
     const isUnread = !notification.is_read;
-    
+
     return (
       <motion.div
         key={notification.notification_id || `sos-${notification.created_at}-${Math.random()}`}
@@ -458,7 +458,7 @@ const AdminDocuments = () => {
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 flex-1">
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-red-600 text-white animate-pulse flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-red-600 text-gray-900 animate-pulse flex items-center gap-2">
               <AlertTriangle className="w-3 h-3" />
               🚨 EMERGENCY SOS ALERT
             </span>
@@ -482,7 +482,7 @@ const AdminDocuments = () => {
                     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
                     const adminBase = apiBase.replace(/\/api\/?$/, '');
                     await api.patch(`${adminBase}/admin/notifications/${notification.notification_id}/read`, {}, { baseURL: '' });
-                    setNotifications(prev => prev.map(notif => 
+                    setNotifications(prev => prev.map(notif =>
                       notif.notification_id === notification.notification_id ? { ...notif, is_read: 1 } : notif
                     ));
                     toast.success('Notification marked as read');
@@ -498,7 +498,7 @@ const AdminDocuments = () => {
             )}
           </div>
         </div>
-        
+
         {/* Structured Information Grid */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           {/* Passenger Information */}
@@ -526,7 +526,7 @@ const AdminDocuments = () => {
               </div>
             </div>
           )}
-          
+
           {/* Driver Information */}
           {parsedData.driver.name && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -552,7 +552,7 @@ const AdminDocuments = () => {
               </div>
             </div>
           )}
-          
+
           {/* Vehicle Information */}
           {(parsedData.vehicle.model || parsedData.vehicle.plate) && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -568,7 +568,7 @@ const AdminDocuments = () => {
               </div>
             </div>
           )}
-          
+
           {/* Ride Information */}
           {parsedData.ride.source && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -593,7 +593,7 @@ const AdminDocuments = () => {
               </div>
             </div>
           )}
-          
+
           {/* Booking Information */}
           {parsedData.booking.seats && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -609,7 +609,7 @@ const AdminDocuments = () => {
               </div>
             </div>
           )}
-          
+
           {/* Emergency Contact */}
           {parsedData.emergencyContact.name && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10">
@@ -635,7 +635,7 @@ const AdminDocuments = () => {
             </div>
           )}
         </div>
-        
+
         {/* Emergency Details */}
         {parsedData.emergencyDetails && (
           <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -646,7 +646,7 @@ const AdminDocuments = () => {
             <p className="text-sm text-foreground">{parsedData.emergencyDetails}</p>
           </div>
         )}
-        
+
         {/* Location and Actions */}
         <div className="mt-4 pt-4 border-t border-red-500/20 flex flex-wrap items-center justify-between gap-3">
           {parsedData.location.lat && parsedData.location.lon ? (
@@ -658,14 +658,14 @@ const AdminDocuments = () => {
               </div>
             </div>
           ) : null}
-          
+
           <div className="flex items-center gap-2">
             {parsedData.location.lat && parsedData.location.lon && (
               <button
                 onClick={() => {
-                  window.open(`https://maps.google.com/?q=${parsedData.location.lat},${parsedData.location.lon}`, '_blank');
+                  window.open(`https://www.openstreetmap.org/?mlat=${parsedData.location.lat}&mlon=${parsedData.location.lon}&zoom=16`, '_blank');
                 }}
-                className="px-4 py-2 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-xs font-semibold bg-red-600 text-gray-900 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
               >
                 <MapPin className="w-3 h-3" />
                 View on Map
@@ -688,7 +688,7 @@ const AdminDocuments = () => {
       </motion.div>
     );
   };
-  
+
   /**
    * Render a single driver card in the pending list
    */
@@ -696,7 +696,7 @@ const AdminDocuments = () => {
     <button
       key={driver.driver_id}
       onClick={() => handleOpenDriver(driver)}
-      className="w-full text-left px-4 py-4 rounded-2xl border border-white/10 hover:border-primary/30 hover:bg-white/5 transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm"
+      className="w-full text-left px-4 py-4 rounded-xl border border-white/10 hover:border-primary/30 hover:bg-white/5 transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm"
     >
       <div className="flex items-start gap-3 min-w-0">
         <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-sm font-bold text-primary/90 shadow-inner">
@@ -733,7 +733,7 @@ const AdminDocuments = () => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleApprove(doc.document_id)}
-          className="px-3 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2"
+          className="px-3 py-2 bg-emerald-600 text-gray-900 rounded-lg flex items-center gap-2"
         >
           <CheckCircle2 className="w-4 h-4" />
           Approve
@@ -742,7 +742,7 @@ const AdminDocuments = () => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => handleReject(doc.document_id)}
-          className="px-3 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2"
+          className="px-3 py-2 bg-red-600 text-gray-900 rounded-lg flex items-center gap-2"
         >
           <XCircle className="w-4 h-4" />
           Reject
@@ -757,12 +757,12 @@ const AdminDocuments = () => {
   const renderDocumentCard = (doc) => (
     <div
       key={doc.doc_id}
-      className="glass rounded-2xl p-5 border border-white/20 flex items-start justify-between hover:border-primary/30 hover:bg-white/5 transition-colors"
+      className="glass rounded-xl p-5 border border-white/20 flex items-start justify-between hover:border-primary/30 hover:bg-white/5 transition-colors"
     >
       <div className="pr-4">
         <div className="font-semibold capitalize flex items-center gap-2">
           {doc.doc_type}
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${String(doc.status).toLowerCase()==='pending' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : String(doc.status).toLowerCase()==='approved' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20'}`}>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${String(doc.status).toLowerCase() === 'pending' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : String(doc.status).toLowerCase() === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20'}`}>
             {doc.status}
           </span>
         </div>
@@ -797,41 +797,38 @@ const AdminDocuments = () => {
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 p-2 glass-thick rounded-2xl border border-white/20 w-fit shadow-soft">
+      <div className="flex gap-2 mb-6 p-2 glass-thick rounded-xl border border-white/20 w-fit shadow-soft">
         <motion.button
           onClick={() => setActiveTab('notifications')}
-          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 relative ${
-            activeTab === 'notifications'
-              ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
+          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 relative ${activeTab === 'notifications'
+              ? 'bg-gradient-to-r from-primary to-secondary text-gray-900 shadow-glow'
               : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
-          }`}
+            }`}
         >
           <Bell className="w-4 h-4" />
           Notifications
           {notifications.filter(n => !n.is_read && (n.message?.toLowerCase().includes('sos') || n.message?.includes('🚨'))).length > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white min-w-[18px] text-center">
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-gray-900 min-w-[18px] text-center">
               {notifications.filter(n => !n.is_read && (n.message?.toLowerCase().includes('sos') || n.message?.includes('🚨'))).length}
             </span>
           )}
         </motion.button>
         <motion.button
           onClick={() => setActiveTab('documents')}
-          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
-            activeTab === 'documents'
-              ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
+          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${activeTab === 'documents'
+              ? 'bg-gradient-to-r from-primary to-secondary text-gray-900 shadow-glow'
               : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
-          }`}
+            }`}
         >
           <FileText className="w-4 h-4" />
           Documents
         </motion.button>
         <motion.button
           onClick={() => setActiveTab('vehicles')}
-          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
-            activeTab === 'vehicles'
-              ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-glow'
+          className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${activeTab === 'vehicles'
+              ? 'bg-gradient-to-r from-primary to-secondary text-gray-900 shadow-glow'
               : 'text-muted-foreground hover:text-foreground hover:bg-white/10'
-          }`}
+            }`}
         >
           <Car className="w-4 h-4" />
           Vehicles
@@ -840,7 +837,7 @@ const AdminDocuments = () => {
 
       {/* Notifications Section - Only show when notifications tab is active */}
       {activeTab === 'notifications' && (
-        <section className="glass-thick rounded-3xl p-6 border border-white/20 mb-6">
+        <section className="glass-thick rounded-xl p-6 border border-white/20 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">All Notifications</h2>
             {notifications.filter(n => !n.is_read).length > 0 && (
@@ -850,7 +847,7 @@ const AdminDocuments = () => {
                     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
                     const adminBase = apiBase.replace(/\/api\/?$/, '');
                     await Promise.all(
-                      notifications.filter(n => !n.is_read).map(n => 
+                      notifications.filter(n => !n.is_read).map(n =>
                         api.patch(`${adminBase}/admin/notifications/${n.notification_id}/read`, {}, { baseURL: '' })
                       )
                     );
@@ -881,7 +878,7 @@ const AdminDocuments = () => {
             <div className="space-y-4 max-h-[600px] overflow-auto pr-1 custom-scroll">
               {notifications.map((n) => {
                 const isSOS = n.message?.toLowerCase().includes('sos') || n.message?.includes('🚨') || n.message?.toLowerCase().includes('emergency');
-                
+
                 // Parse SOS notification if it's an SOS alert
                 if (isSOS) {
                   const parsedData = parseSOSNotification(n.message);
@@ -889,7 +886,7 @@ const AdminDocuments = () => {
                     return renderSOSNotification(n, parsedData);
                   }
                 }
-                
+
                 // Regular notification display
                 const isUnread = !n.is_read;
                 return (
@@ -897,11 +894,10 @@ const AdminDocuments = () => {
                     key={n.notification_id || `notif-${n.created_at}-${Math.random()}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      isUnread
+                    className={`p-4 rounded-xl border-2 transition-all ${isUnread
                         ? 'border-primary/30 bg-primary/5 hover:bg-primary/10'
                         : 'border-white/10 bg-white/5 hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2 flex-1">
@@ -919,7 +915,7 @@ const AdminDocuments = () => {
                               const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
                               const adminBase = apiBase.replace(/\/api\/?$/, '');
                               await api.patch(`${adminBase}/admin/notifications/${n.notification_id}/read`, {}, { baseURL: '' });
-                              setNotifications(prev => prev.map(notif => 
+                              setNotifications(prev => prev.map(notif =>
                                 notif.notification_id === n.notification_id ? { ...notif, is_read: 1 } : notif
                               ));
                               toast.success('Notification marked as read');
@@ -947,7 +943,7 @@ const AdminDocuments = () => {
 
       {/* Error Alert */}
       {error && (
-        <div 
+        <div
           role="alert"
           className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm"
         >
@@ -958,7 +954,7 @@ const AdminDocuments = () => {
       {/* Loading Indicator */}
       {loading && (
         <div className="flex items-center justify-center py-6">
-          <div 
+          <div
             className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"
             role="status"
             aria-label="Loading documents"
@@ -968,12 +964,12 @@ const AdminDocuments = () => {
 
       {/* Content based on active tab */}
       {activeTab === 'notifications' ? null : activeTab === 'documents' ? (
-        <section className="glass-thick rounded-3xl p-6 border border-white/20">
+        <section className="glass-thick rounded-xl p-6 border border-white/20">
           <h2 className="text-xl font-bold mb-2">
             Drivers Pending Verification
           </h2>
           <p className="text-sm text-muted-foreground mb-4">Select a driver to review and approve their documents.</p>
-          
+
           {pending.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No pending drivers.
@@ -985,12 +981,12 @@ const AdminDocuments = () => {
           )}
         </section>
       ) : (
-        <section className="glass-thick rounded-3xl p-6 border border-white/20">
+        <section className="glass-thick rounded-xl p-6 border border-white/20">
           <h2 className="text-xl font-bold mb-2">
             Vehicles Pending Verification
           </h2>
           <p className="text-sm text-muted-foreground mb-4">Review and approve vehicle registrations.</p>
-          
+
           {pendingVehicles.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No pending vehicles.
@@ -998,7 +994,7 @@ const AdminDocuments = () => {
           ) : (
             <div className="space-y-3">
               {pendingVehicles.map((vehicle) => (
-                <div key={vehicle.vehicle_id} className="glass rounded-2xl p-5 border border-white/20 flex items-start justify-between">
+                <div key={vehicle.vehicle_id} className="glass rounded-xl p-5 border border-white/20 flex items-start justify-between">
                   <div className="flex-1">
                     <div className="font-semibold capitalize flex items-center gap-2 mb-2">
                       <Car className="w-5 h-5 text-primary" />
@@ -1019,7 +1015,7 @@ const AdminDocuments = () => {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleApproveVehicle(vehicle.vehicle_id)}
-                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2"
+                      className="px-3 py-2 bg-emerald-600 text-gray-900 rounded-lg flex items-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       Approve
@@ -1028,7 +1024,7 @@ const AdminDocuments = () => {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleRejectVehicle(vehicle.vehicle_id)}
-                      className="px-3 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2"
+                      className="px-3 py-2 bg-red-600 text-gray-900 rounded-lg flex items-center gap-2"
                     >
                       <XCircle className="w-4 h-4" />
                       Reject
@@ -1058,7 +1054,7 @@ const AdminDocuments = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-glow border border-white/20"
+              className="glass rounded-xl p-6 sm:p-8 max-w-3xl w-full shadow-glow border border-white/20"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -1085,7 +1081,7 @@ const AdminDocuments = () => {
 
               {/* Documents List */}
               {docs.length === 0 ? (
-                <div className="p-8 glass rounded-2xl border border-border text-center mt-2">
+                <div className="p-8 glass rounded-xl border border-border text-center mt-2">
                   <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                   <p className="text-muted-foreground">
                     No documents loaded.

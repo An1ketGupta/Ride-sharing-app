@@ -111,7 +111,7 @@ const AdminAnalytics = () => {
                     <p className="text-3xl font-bold">{value}</p>
                 </div>
                 <div className={`p-3 rounded-lg ${color}`}>
-                    <Icon className="w-6 h-6 text-white" />
+                    <Icon className="w-6 h-6 text-gray-900" />
                 </div>
             </div>
             {trend && (
@@ -290,7 +290,7 @@ const AdminAnalytics = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 }}
-                            className="mt-8 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg text-white"
+                            className="mt-8 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg text-gray-900"
                         >
                             <h3 className="font-semibold mb-4">Quick Actions</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

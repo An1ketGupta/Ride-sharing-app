@@ -64,17 +64,24 @@ const ToastContainer = ({ toasts, removeToast }) => {
 
 const Toast = ({ toast, onClose }) => {
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-[#10b981]" />,
-    error: <AlertCircle className="w-5 h-5 text-[#ef4444]" />,
-    warning: <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />,
-    info: <Info className="w-5 h-5 text-[#0EA5E9]" />,
+    success: <CheckCircle className="w-5 h-5 text-green-600" />,
+    error: <AlertCircle className="w-5 h-5 text-red-600" />,
+    warning: <AlertTriangle className="w-5 h-5 text-amber-600" />,
+    info: <Info className="w-5 h-5 text-blue-600" />,
   };
 
   const colors = {
-    success: 'border-[#10b981]/30 bg-[#111111] border',
-    error: 'border-[#ef4444]/30 bg-[#111111] border',
-    warning: 'border-[#f59e0b]/30 bg-[#111111] border',
-    info: 'border-[#0EA5E9]/30 bg-[#111111] border',
+    success: 'border-green-200 bg-green-50 border',
+    error: 'border-red-200 bg-red-50 border',
+    warning: 'border-amber-200 bg-amber-50 border',
+    info: 'border-blue-200 bg-blue-50 border',
+  };
+
+  const textColors = {
+    success: 'text-green-800',
+    error: 'text-red-800',
+    warning: 'text-amber-800',
+    info: 'text-blue-800',
   };
 
   return (
@@ -83,17 +90,16 @@ const Toast = ({ toast, onClose }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, x: 20, scale: 0.98 }}
       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-      className={`pointer-events-auto flex items-start gap-3 min-w-[320px] max-w-md p-4 rounded-xl ${colors[toast.type]} shadow-[0_4px_16px_rgba(0,0,0,0.4)]`}
+      className={`pointer-events-auto flex items-start gap-3 min-w-[320px] max-w-md p-4 rounded-lg ${colors[toast.type]} shadow-lg`}
     >
       <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
-      <p className="flex-1 text-base font-medium text-white leading-relaxed">{toast.message}</p>
+      <p className={`flex-1 text-sm font-medium ${textColors[toast.type]} leading-relaxed`}>{toast.message}</p>
       <button
         onClick={onClose}
-        className="flex-shrink-0 p-1 hover:bg-[#1A1A1A] rounded-lg transition-colors duration-200"
+        className="flex-shrink-0 p-1 hover:bg-white/50 rounded-lg transition-colors duration-200"
       >
-        <X className="w-4 h-4 text-white/60 hover:text-white" />
+        <X className={`w-4 h-4 ${textColors[toast.type]} opacity-60 hover:opacity-100`} />
       </button>
     </motion.div>
   );
 };
-

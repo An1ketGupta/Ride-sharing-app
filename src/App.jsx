@@ -23,7 +23,6 @@ import Receipts from './pages/Receipts';
 import RequestRide from './pages/RequestRide';
 import Notifications from './pages/Notifications';
 import SavedLocations from './pages/SavedLocations';
-import PromoCodes from './pages/PromoCodes';
 import EmergencySOS from './pages/EmergencySOS';
 import RideHistory from './pages/RideHistory';
 import AdminAnalytics from './pages/AdminAnalytics';
@@ -36,9 +35,9 @@ function App() {
       <ToastProvider>
         <AuthProvider>
           <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <div className="app">
+            <div className="app bg-gray-50">
               <Navbar />
-              <main className="main-content">
+              <main className="main-content pt-20">
                 <Routes>
                   <Route path="/" element={<LandingRedirect />} />
                   <Route path="/home" element={<Home />} />
@@ -156,15 +155,6 @@ function App() {
                   />
 
                   <Route 
-                    path="/promo-codes" 
-                    element={
-                      <ProtectedRoute>
-                        <PromoCodes />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route 
                     path="/emergency" 
                     element={
                       <ProtectedRoute>
@@ -195,48 +185,43 @@ function App() {
                 </Routes>
               </main>
               
-              <footer className="border-t border-[#1A1A1A] bg-[#000000] mt-auto">
+              <footer className="border-t border-gray-200 bg-white mt-auto">
                 <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-12">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                     {/* Brand Section */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0EA5E9]/20 to-[#0891b2]/20 border-2 border-dashed border-[#0EA5E9]/40 flex items-center justify-center">
-                          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#0EA5E9] to-[#0891b2]"></div>
+                        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-lg bg-white"></div>
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold bg-gradient-to-r from-[#0EA5E9] to-[#0891b2] bg-clip-text text-transparent">
+                          <h3 className="text-lg font-bold text-blue-600">
                             Cab Bazaar
                           </h3>
-                          <p className="text-[10px] text-white/60 font-medium tracking-wider uppercase">Ride Sharing</p>
+                          <p className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Ride Sharing</p>
                         </div>
                       </div>
-                      <p className="text-sm text-white/60 leading-relaxed">
+                      <p className="text-sm text-gray-600 leading-relaxed">
                         Your trusted ride-sharing platform. Connecting drivers and passengers seamlessly.
                       </p>
                     </div>
 
                     {/* Quick Links */}
                     <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">Quick Links</h4>
+                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Quick Links</h4>
                       <ul className="space-y-2">
                         <li>
-                          <a href="/search" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/search" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             Search Rides
                           </a>
                         </li>
                         <li>
-                          <a href="/ride-history" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/ride-history" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             Ride History
                           </a>
                         </li>
                         <li>
-                          <a href="/promo-codes" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
-                            Promo Codes
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/feedback" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/feedback" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             Feedback
                           </a>
                         </li>
@@ -245,26 +230,26 @@ function App() {
 
                     {/* Support */}
                     <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">Support</h4>
+                      <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Support</h4>
                       <ul className="space-y-2">
                         <li>
-                          <a href="/emergency" className="text-sm text-white/60 hover:text-[#ef4444] transition-colors duration-200 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]"></span>
+                          <a href="/emergency" className="text-sm text-gray-600 hover:text-red-600 transition-colors duration-200 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                             Emergency SOS
                           </a>
                         </li>
                         <li>
-                          <a href="/profile" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/profile" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             My Profile
                           </a>
                         </li>
                         <li>
-                          <a href="/wallet" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/wallet" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             Wallet
                           </a>
                         </li>
                         <li>
-                          <a href="/receipts" className="text-sm text-white/60 hover:text-[#0EA5E9] transition-colors duration-200">
+                          <a href="/receipts" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
                             Receipts
                           </a>
                         </li>
@@ -273,17 +258,17 @@ function App() {
                   </div>
 
                   {/* Divider */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-[#1A1A1A] to-transparent mb-8"></div>
+                  <div className="h-px bg-gray-200 mb-8"></div>
 
                   {/* Copyright */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-white/60">
-                      &copy; 2025 <span className="font-bold bg-gradient-to-r from-[#0EA5E9] to-[#0891b2] bg-clip-text text-transparent">Ride Sharing DBMS</span>. All rights reserved.
+                    <p className="text-sm text-gray-600">
+                      &copy; 2025 <span className="font-bold text-blue-600">Ride Sharing DBMS</span>. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/40">Made with</span>
-                      <span className="text-[#ef4444] animate-pulse">❤️</span>
-                      <span className="text-xs text-white/40">for seamless rides</span>
+                      <span className="text-xs text-gray-400">Made with</span>
+                      <span className="text-red-500">❤️</span>
+                      <span className="text-xs text-gray-400">for seamless rides</span>
                     </div>
                   </div>
                 </div>
