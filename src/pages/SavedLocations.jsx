@@ -142,8 +142,8 @@ const SavedLocations = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-gray-900 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-gray-50 px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12">
+            <div className="max-w-7xl mx-auto">
                 {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}

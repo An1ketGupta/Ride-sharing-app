@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { rideService } from '../services/rideService';
 import { bookingService } from '../services/bookingService';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,7 @@ const SearchRides = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [rentalType, setRentalType] = useState('per-hour'); // 'any', 'per-day', 'per-hour'
   const [availableNow, setAvailableNow] = useState(false);
@@ -43,98 +44,61 @@ const SearchRides = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
 
-  // Mock vehicle data - replace with actual API call
-  const mockVehicles = [
-    {
-      id: 1,
-      brand: 'FORD',
-      model: 'FOCUS',
-      variant: '1.5 EcoBlue MT Titanium X',
-      price: 24.59,
-      rating: 4.7,
-      reviews: 109,
-      status: 'available',
-      distance: '120m',
-      time: '4 min',
-      bodyStyle: 'Hatchback',
-      transmission: 'Manual',
-      fuel: 'Diesel',
-      seats: 5,
-      images: ['https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800', 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'],
-      location: 'Noe Valley, Noe Str, 1337',
-      coordinates: { lat: 37.7509, lng: -122.4313 }
-    },
-    {
-      id: 2,
-      brand: 'FORD',
-      model: 'FOCUS',
-      variant: '1.5 EcoBlue ST-Line Style 115CV',
-      price: 28.00,
-      rating: 4.8,
-      reviews: 112,
-      status: 'available',
-      distance: '780m',
-      time: '12 min',
-      bodyStyle: 'Hatchback',
-      transmission: 'Manual',
-      fuel: 'Diesel',
-      seats: 5,
-      images: ['https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800', 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'],
-      location: 'Noe Valley, Noe Str, 1337',
-      coordinates: { lat: 37.7509, lng: -122.4313 }
-    },
-    {
-      id: 3,
-      brand: 'FORD',
-      model: 'KUGA II',
-      variant: '1.5 Ecoblue 120 Zetec',
-      price: 25.99,
-      rating: 4.7,
-      reviews: 95,
-      status: 'booked',
-      bookedTime: '09:45',
-      distance: '920m',
-      time: '17 min',
-      bodyStyle: 'Crossover',
-      transmission: 'Manual',
-      fuel: 'Petrol',
-      seats: 5,
-      images: ['https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'],
-      location: 'Noe Valley, Noe Str, 1337',
-      coordinates: { lat: 37.7509, lng: -122.4313 }
-    },
-    {
-      id: 4,
-      brand: 'FORD',
-      model: 'FOCUS',
-      variant: '1.5 EcoBlue ST-Line',
-      price: 26.50,
-      rating: 4.6,
-      reviews: 78,
-      status: 'available',
-      distance: '1km',
-      time: '23 min',
-      bodyStyle: 'Hatchback',
-      transmission: 'Automatic',
-      fuel: 'Diesel',
-      seats: 5,
-      images: ['https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800'],
-      location: 'Noe Valley, Noe Str, 1337',
-      coordinates: { lat: 37.7509, lng: -122.4313 }
-    }
-  ];
+  // Parse optional search params from navigation state or query string
+  const searchState = location.state || {};
 
   useEffect(() => {
-    // Load vehicles from API or use mock data
-    setLoading(true);
-    setTimeout(() => {
-      setVehicles(mockVehicles);
-      setFilteredVehicles(mockVehicles);
-      setLoading(false);
-    }, 500);
-  }, []);
+    const fetchRides = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const params = {
+          source: searchState.source || undefined,
+          destination: searchState.destination || undefined,
+          date: searchState.date || undefined,
+        };
+
+        const response = await rideService.searchRides(params);
+        const rides = Array.isArray(response?.data) ? response.data : response;
+
+        const mapped = (rides || []).map((ride) => ({
+          id: ride.ride_id || ride.id,
+          brand: ride.vehicle_model || 'Ride',
+          model: ride.vehicle_color ? `(${ride.vehicle_color})` : '',
+          variant: `${ride.source || ''} → ${ride.destination || ''}`.trim(),
+          price: Number(ride.estimated_fare || ride.fare_per_km || 0),
+          rating: ride.driver_rating ? Number(ride.driver_rating) : 4.5,
+          reviews: 0,
+          status: ride.status === 'scheduled' && ride.available_seats > 0 ? 'available' : 'booked',
+          bookedTime: ride.time || '',
+          distance: ride.distance_km != null ? `${ride.distance_km} km` : '',
+          time: ride.time || '',
+          bodyStyle: 'Ride sharing',
+          transmission: 'N/A',
+          fuel: 'N/A',
+          seats: ride.available_seats || ride.total_seats || 1,
+          images: ride.vehicle_image_url
+            ? [ride.vehicle_image_url]
+            : ['https://via.placeholder.com/128x96?text=Ride'],
+          location: ride.source || '',
+        }));
+
+        setVehicles(mapped);
+        setFilteredVehicles(mapped);
+      } catch (err) {
+        console.error('Failed to load rides', err);
+        setError('Failed to load rides. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRides();
+  }, [location.state]);
 
   useEffect(() => {
     // Apply filters
@@ -495,7 +459,7 @@ const SearchRides = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">
-              {filteredVehicles.length} vehicles to rent
+              {filteredVehicles.length} rides found
             </h2>
             <select
               value={sortBy}
@@ -510,9 +474,11 @@ const SearchRides = () => {
 
           <div className="space-y-4">
             {loading ? (
-              <div className="text-center py-12 text-gray-500">Loading vehicles...</div>
+              <div className="text-center py-12 text-gray-500">Loading rides...</div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-500">{error}</div>
             ) : filteredVehicles.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">No vehicles found</div>
+              <div className="text-center py-12 text-gray-500">No rides found</div>
             ) : (
               filteredVehicles.map((vehicle) => (
                 <div
@@ -547,7 +513,7 @@ const SearchRides = () => {
                               {vehicle.rating}
                             </span>
                             <span className="text-xs text-gray-500">
-                              ({vehicle.reviews} reviews)
+                              {vehicle.reviews ? `(${vehicle.reviews} reviews)` : ''}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -598,9 +564,9 @@ const SearchRides = () => {
                     {/* Price */}
                     <div className="flex-shrink-0 text-right">
                       <div className="text-2xl font-bold text-gray-900">
-                        ${vehicle.price.toFixed(2)}
+                        ₹{vehicle.price.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-500">/hour</div>
+                      <div className="text-sm text-gray-500">per seat (estimated)</div>
                     </div>
                   </div>
                 </div>
@@ -621,7 +587,7 @@ const SearchRides = () => {
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-gray-400" />
-              <span className="text-xs text-gray-500">San Francisco, US</span>
+              <span className="text-xs text-gray-500">Nearby area</span>
               <User className="w-4 h-4 text-gray-400 ml-2" />
             </div>
             <button
