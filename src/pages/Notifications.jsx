@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { notificationService } from '../services/notificationService';
-import { safetyService } from '../services/safetyService';
 import { useToast } from '../components/ui/Toast';
 import { motion } from 'framer-motion';
 import { Bell, CheckCircle, Trash2 } from 'lucide-react';
@@ -69,45 +68,56 @@ const Notifications = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 py-8 max-w-3xl mx-auto">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
+      >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/10">
-            <Bell className="w-5 h-5 text-primary" />
+          <div className="p-2 rounded-lg bg-blue-100">
+            <Bell className="w-5 h-5 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-extrabold">Notifications</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Notifications</h1>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm font-semibold">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer">
             <input
               type="checkbox"
               checked={unreadOnly}
               onChange={(e) => setUnreadOnly(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
             />
             Unread only
           </label>
           <button
             onClick={markAll}
-            className="px-3 py-2 rounded-xl border border-border hover:bg-white/20 text-sm font-semibold"
+            className="px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors"
           >
             Mark all read
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Safety Check Alert */}
       <SafetyCheck />
 
       {/* List */}
       {items.length === 0 && !loading ? (
-        <div className="text-center py-20 rounded-xl border border-white/20 bg-white/70 dark:bg-neutral-900/70">
-          <Bell className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-          <div className="font-semibold">No notifications</div>
-          <div className="text-sm text-muted-foreground">You're all caught up</div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-20 rounded-lg border border-gray-200 bg-white"
+        >
+          <Bell className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+          <div className="font-semibold text-gray-900">No notifications</div>
+          <div className="text-sm text-gray-500">You're all caught up</div>
+        </motion.div>
       ) : (
-        <div className="space-y-2">
-          {items.map((n) => {
+        <div className="space-y-3">
+          {items.map((n, index) => {
             const id = n.notification_id;
             const msg = String(n.message || '');
             const isSafety = /reached\s+safe|reached\s+safely|hope you reached/i.test(msg);
@@ -116,22 +126,28 @@ const Notifications = () => {
                 key={id}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-xl border ${n.is_read ? 'border-white/10 bg-white/30 dark:bg-white/5' : 'border-primary/30 bg-primary/5'}`}
+                transition={{ delay: index * 0.03, duration: 0.2 }}
+                className={`p-4 rounded-lg border ${n.is_read
+                    ? 'border-gray-200 bg-white'
+                    : 'border-blue-200 bg-blue-50'
+                  }`}
               >
-                <div className="text-xs text-muted-foreground mb-1">{new Date(n.created_at).toLocaleString?.() || ''}</div>
-                <div className="font-medium mb-3">{msg}</div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {new Date(n.created_at).toLocaleString?.() || ''}
+                </div>
+                <div className="font-medium text-gray-900 mb-3">{msg}</div>
                 <div className="flex items-center gap-2">
                   {isSafety && (
                     <button
                       onClick={() => ackSafety(id)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition-colors flex items-center gap-1"
                     >
                       <CheckCircle className="w-4 h-4" /> I'm Safe
                     </button>
                   )}
                   <button
                     onClick={() => markOne(id)}
-                    className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-white/20 flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1"
                   >
                     <Trash2 className="w-4 h-4" /> Dismiss
                   </button>
@@ -148,7 +164,7 @@ const Notifications = () => {
           <button
             disabled={loading}
             onClick={() => load({ reset: false, nextPage: page + 1 })}
-            className="px-4 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-white/20"
+            className="px-6 py-2.5 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             {loading ? 'Loading...' : 'Load more'}
           </button>

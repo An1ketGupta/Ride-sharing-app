@@ -49,14 +49,15 @@ model User {
 }
 
 model Vehicle {
-  vehicleId      Int      @id @default(autoincrement()) @map("vehicle_id")
-  userId        Int      @map("user_id")
-  model         String   @db.VarChar(100)
-  licensePlate  String   @unique @map("license_plate") @db.VarChar(20)
-  capacity      Int
-  color         String?  @db.VarChar(50)
-  vehicleImageUrl String? @map("vehicle_image_url") @db.Text
-  createdAt     DateTime @default(now()) @map("created_at")
+  vehicleId         Int      @id @default(autoincrement()) @map("vehicle_id")
+  userId            Int      @map("user_id")
+  model             String   @db.VarChar(100)
+  licensePlate      String   @unique @map("license_plate") @db.VarChar(20)
+  capacity          Int
+  color             String?  @db.VarChar(50)
+  vehicleImageUrl   String?  @map("vehicle_image_url") @db.Text
+  verificationStatus String? @default("pending") @map("verification_status") @db.VarChar(20) // pending, approved, rejected
+  createdAt         DateTime @default(now()) @map("created_at")
 
   // Relations
   user          User     @relation(fields: [userId], references: [userId], onDelete: Cascade)

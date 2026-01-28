@@ -7,7 +7,7 @@ export default function ThemeToggle() {
   return (
     <Button
       aria-label="Toggle theme"
-      variant="glass"
+      variant="ghost"
       onClick={toggle}
       className="h-10 w-10 p-0 rounded-full"
     >

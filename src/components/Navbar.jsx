@@ -395,14 +395,7 @@ const Navbar = () => {
                                                     <History className="w-4 h-4 text-[#0EA5E9]" />
                                                     <span>Ride History</span>
                                                 </button>
-                                                <button
-                                                    onClick={() => { setProfileMenuOpen(false); navigate('/saved-locations'); }}
-                                                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A] rounded-lg transition-colors flex items-center gap-3"
-                                                    role="menuitem"
-                                                >
-                                                    <MapPin className="w-4 h-4 text-[#0EA5E9]" />
-                                                    <span>Saved Locations</span>
-                                                </button>
+
                                                 <button
                                                     onClick={() => { setProfileMenuOpen(false); navigate('/emergency'); }}
                                                     className="w-full text-left px-3 py-2.5 text-sm font-medium text-white hover:bg-[#1A1A1A] rounded-lg transition-colors flex items-center gap-3"
@@ -523,13 +516,7 @@ const Navbar = () => {
                                             <History className="w-4 h-4 text-[#0EA5E9]" />
                                             <span>Ride History</span>
                                         </button>
-                                        <button
-                                            onClick={() => { setProfileMenuOpen(false); setMobileMenuOpen(false); navigate('/saved-locations'); }}
-                                            className="w-full text-left px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
-                                        >
-                                            <MapPin className="w-4 h-4 text-[#0EA5E9]" />
-                                            <span>Saved Locations</span>
-                                        </button>
+
                                         <button
                                             onClick={() => { setProfileMenuOpen(false); setMobileMenuOpen(false); navigate('/emergency'); }}
                                             className="w-full text-left px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-3"
